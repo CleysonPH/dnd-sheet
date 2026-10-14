@@ -7,7 +7,8 @@ As decisões de produto e de arquitetura estão em `openspec/changes/dnd-sheet-a
 ## Stack
 
 - Next.js 16.4 (App Router, TypeScript, Tailwind)
-- Postgres 18
+- Postgres 18 com Drizzle ORM
+- Better Auth (login por e-mail e senha, sessões no banco)
 - Vitest, ESLint e Prettier
 - Docker (imagem `standalone` para produção)
 
@@ -20,22 +21,43 @@ As decisões de produto e de arquitetura estão em `openspec/changes/dnd-sheet-a
 ## Desenvolvimento
 
 ```bash
-cp .env.example .env
+cp .env.example .env      # ajuste BETTER_AUTH_SECRET e as variáveis SEED_ADMIN_*
 npm install
 docker compose up -d db   # sobe o Postgres em localhost:5432
+npm run db:migrate        # cria as tabelas
+npm run db:seed           # cria o primeiro admin
 npm run dev               # http://localhost:3000
 ```
 
-| Comando                | O que faz                                 |
-| ---------------------- | ----------------------------------------- |
-| `npm run dev`          | Servidor de desenvolvimento               |
-| `npm run build`        | Build de produção                         |
-| `npm run lint`         | ESLint                                    |
-| `npm run typecheck`    | Gera os tipos do Next e roda `tsc`        |
-| `npm test`             | Testes unitários (Vitest)                 |
-| `npm run test:watch`   | Testes em modo watch                      |
-| `npm run format`       | Formata o código com Prettier             |
-| `npm run format:check` | Verifica a formatação sem alterar arquivo |
+Entre com o e-mail e a senha de `SEED_ADMIN_*`. No primeiro login o admin precisa trocar a senha. Não existe cadastro público: as outras contas são criadas pelo admin em **Contas**.
+
+### Variáveis de ambiente
+
+| Variável                                                     | Uso                                                                              |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                               | Conexão da aplicação com o Postgres                                              |
+| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`          | Credenciais do Postgres do Compose                                               |
+| `BETTER_AUTH_SECRET`                                         | Assina os cookies de sessão; no mínimo 32 caracteres (`openssl rand -base64 32`) |
+| `BETTER_AUTH_URL`                                            | URL pública da aplicação                                                         |
+| `SEED_ADMIN_NAME`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | Usadas só por `npm run db:seed`; podem ser removidas depois                      |
+
+| Comando                 | O que faz                                    |
+| ----------------------- | -------------------------------------------- |
+| `npm run dev`           | Servidor de desenvolvimento                  |
+| `npm run build`         | Build de produção                            |
+| `npm run lint`          | ESLint                                       |
+| `npm run typecheck`     | Gera os tipos do Next e roda `tsc`           |
+| `npm test`              | Testes unitários (Vitest)                    |
+| `npm run test:watch`    | Testes em modo watch                         |
+| `npm run test:int`      | Testes de integração (precisa do banco)      |
+| `npm run db:migrate`    | Aplica as migrações pendentes                |
+| `npm run db:generate`   | Gera uma migração a partir do schema         |
+| `npm run db:seed`       | Cria o primeiro admin (`SEED_ADMIN_*`)       |
+| `npm run auth:generate` | Regenera o schema das tabelas do Better Auth |
+| `npm run format`        | Formata o código com Prettier                |
+| `npm run format:check`  | Verifica a formatação sem alterar arquivo    |
+
+Os testes de integração usam um banco separado, `dnd_sheet_test`, no mesmo Postgres. Ele é criado e migrado automaticamente; basta o `db` estar rodando.
 
 Para parar o banco: `docker compose down`. Os dados ficam no volume `db-data`; `docker compose down -v` apaga esse volume.
 
@@ -46,8 +68,14 @@ src/
   app/          rotas do Next (UI e route handlers)
   components/   componentes React reutilizáveis
   engine/       motor de cálculo da ficha: TypeScript puro
-  server/       código só de servidor (banco, autenticação)
+  server/       código só de servidor
+    auth/       configuração do Better Auth, guards e troca de senha
+    accounts/   administração de contas e seed do primeiro admin
+    db/         cliente Drizzle e schema
   lib/          utilitários compartilhados (ex.: env.ts)
+  proxy.ts      redirecionamentos de login e troca de senha
+drizzle/        migrações SQL geradas (versionadas)
+scripts/        comandos de operação (seed, config da CLI do Better Auth)
 ```
 
 O `src/engine/` não pode importar React, Next, APIs do Node, `src/server/`, `src/app/` nem `src/components/`. O ESLint barra esses imports.
@@ -60,4 +88,4 @@ Para testar localmente a mesma imagem que vai para a VPS:
 docker compose --profile prod up --build   # http://localhost:3000
 ```
 
-O serviço `app` só sobe com o profile `prod` e se conecta ao serviço `db` do Compose.
+Os serviços `migrate` e `app` só sobem com o profile `prod`. O `migrate` aplica as migrações e, se `SEED_ADMIN_EMAIL` estiver definida, roda o seed; o `app` só inicia depois que ele termina com sucesso.

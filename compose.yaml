@@ -18,18 +18,43 @@ services:
       timeout: 5s
       retries: 10
 
+  # Migrações e seed do primeiro admin, rodados antes do app no profile "prod".
+  # Usa o estágio builder do Dockerfile, que tem as dependências completas.
+  migrate:
+    profiles: ["prod"]
+    build:
+      context: .
+      target: builder
+    # O seed só roda se SEED_ADMIN_EMAIL estiver definida, para que as variáveis
+    # do seed possam ser removidas depois da instalação.
+    command: >-
+      sh -c 'npm run db:migrate &&
+      if [ -n "$$SEED_ADMIN_EMAIL" ]; then npm run db:seed; fi'
+    environment:
+      DATABASE_URL: &database-url postgresql://${POSTGRES_USER:-dnd}:${POSTGRES_PASSWORD:-dnd}@db:5432/${POSTGRES_DB:-dnd_sheet}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?defina BETTER_AUTH_SECRET no .env}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+      SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+    depends_on:
+      db:
+        condition: service_healthy
+
   # Imagem de produção, para testar localmente: docker compose --profile prod up
   # Em desenvolvimento o app roda fora do Docker (npm run dev).
   app:
     profiles: ["prod"]
     build: .
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-dnd}:${POSTGRES_PASSWORD:-dnd}@db:5432/${POSTGRES_DB:-dnd_sheet}
+      DATABASE_URL: *database-url
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?defina BETTER_AUTH_SECRET no .env}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
     ports:
       - "3000:3000"
     depends_on:
-      db:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
   db-data:
