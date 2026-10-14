@@ -1,0 +1,15 @@
+.git
+.next
+node_modules
+npm-debug.log*
+coverage
+.env
+.env.*
+!.env.example
+Dockerfile
+.dockerignore
+compose.yaml
+openspec
+.claude
+README.md
+AGENTS.md
