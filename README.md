@@ -31,7 +31,7 @@ npm run dev               # http://localhost:3000
 | `npm run dev`          | Servidor de desenvolvimento               |
 | `npm run build`        | Build de produção                         |
 | `npm run lint`         | ESLint                                    |
-| `npm run typecheck`    | Checagem de tipos (`tsc --noEmit`)        |
+| `npm run typecheck`    | Gera os tipos do Next e roda `tsc`        |
 | `npm test`             | Testes unitários (Vitest)                 |
 | `npm run test:watch`   | Testes em modo watch                      |
 | `npm run format`       | Formata o código com Prettier             |

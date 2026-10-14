@@ -22,9 +22,9 @@
 - [x] 4.1 Criar `src/lib/env.ts` com validação preguiçosa via Zod de `DATABASE_URL`, além do `.env.example` (S7), com um teste unitário para URL ausente e válida; verificar que `npm test` passa e que `npm run build` passa sem `.env`
 - [x] 4.2 Criar o `compose.yaml` com o serviço `db` (`postgres:18-alpine`, volume em `/var/lib/postgresql`, healthcheck) (S6); verificar que `docker compose up -d db` fica `healthy` e que `psql` conecta com a `DATABASE_URL` do `.env.example`
 - [x] 4.3 Definir `output: 'standalone'` no `next.config.ts` e criar o `Dockerfile` multi-stage (`node:24-alpine`, `USER node`) e o `.dockerignore` (S6); verificar que `docker build` conclui
-- [ ] 4.4 Adicionar o serviço `app` no `compose.yaml` sob o profile `prod`; verificar que `docker compose --profile prod up` sobe e `curl` em `http://localhost:3000` retorna 200
+- [x] 4.4 Adicionar o serviço `app` no `compose.yaml` sob o profile `prod`; verificar que `docker compose --profile prod up` sobe e `curl` em `http://localhost:3000` retorna 200
 
 ## 5. Documentação e integração
 
-- [ ] 5.1 Escrever o `README.md` com pré-requisitos, comandos de desenvolvimento (`dev`, `lint`, `typecheck`, `test`, `format`), como subir o banco e como testar a imagem de produção, e a versão do Next usada; verificar seguindo o README do zero num clone limpo
-- [ ] 5.2 Rodar `npm run lint && npm run typecheck && npm test && npm run build` numa árvore limpa e fazer o commit inicial; verificar que todos passam e que `git status` fica limpo
+- [x] 5.1 Escrever o `README.md` com pré-requisitos, comandos de desenvolvimento (`dev`, `lint`, `typecheck`, `test`, `format`), como subir o banco e como testar a imagem de produção, e a versão do Next usada; verificar seguindo o README do zero num clone limpo
+- [x] 5.2 Rodar `npm run lint && npm run typecheck && npm test && npm run build` numa árvore limpa e fazer o commit inicial; verificar que todos passam e que `git status` fica limpo
