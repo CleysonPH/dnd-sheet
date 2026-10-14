@@ -68,15 +68,21 @@ src/
   app/          rotas do Next (UI e route handlers)
   components/   componentes React reutilizáveis
   engine/       motor de cálculo da ficha: TypeScript puro
+    sheet/      formato do documento da ficha (schema, versão, migrações)
   server/       código só de servidor
     auth/       configuração do Better Auth, guards e troca de senha
     accounts/   administração de contas e seed do primeiro admin
+    sheets/     fichas: listar, criar, abrir, salvar (com versão) e excluir
     db/         cliente Drizzle e schema
   lib/          utilitários compartilhados (ex.: env.ts)
   proxy.ts      redirecionamentos de login e troca de senha
 drizzle/        migrações SQL geradas (versionadas)
 scripts/        comandos de operação (seed, config da CLI do Better Auth)
 ```
+
+Rotas principais: `/` (Minhas fichas), `/fichas/[id]` (ficha com salvamento automático), `/conta`, `/admin/contas` (só admins), `/login` e `/trocar-senha`.
+
+A ficha é um documento JSON versionado (`schemaVersion`). Ao mudar o formato em `src/engine/sheet/document.ts`, incremente `SHEET_SCHEMA_VERSION` e acrescente a migração correspondente em `src/engine/sheet/migrate.ts`, com teste.
 
 O `src/engine/` não pode importar React, Next, APIs do Node, `src/server/`, `src/app/` nem `src/components/`. O ESLint barra esses imports.
 
