@@ -5,7 +5,7 @@ Esta change é um registro de decisões. As tarefas abaixo não implementam cód
 ## 1. Fundação
 
 - [x] 1.1 Abrir a change `project-setup` (scaffold Next.js com TypeScript, Postgres via Docker Compose, `output: 'standalone'`, lint e testes configurados, conforme D1); verificar que `openspec validate project-setup` passa
-- [ ] 1.2 Abrir a change da capacidade `account-management` (login, papéis, criação/ativação/desativação pelo admin, senha provisória, seed do primeiro admin, conforme D8), escolhendo a biblioteca de autenticação; verificar que `openspec validate` passa e que há cenários para conta desativada e troca de senha obrigatória
+- [x] 1.2 Abrir a change da capacidade `account-management` (login, papéis, criação/ativação/desativação pelo admin, senha provisória, seed do primeiro admin, conforme D8), escolhendo a biblioteca de autenticação; verificar que `openspec validate` passa e que há cenários para conta desativada e troca de senha obrigatória
 
 ## 2. Ficha: persistência e núcleo
 
