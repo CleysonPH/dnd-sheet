@@ -85,11 +85,11 @@ async function Accounts() {
 
 export default function AccountsPage() {
   return (
-    <>
+    <div className="mx-auto max-w-4xl">
       <h1 className="text-2xl font-semibold">Contas</h1>
       <Suspense>
         <Accounts />
       </Suspense>
-    </>
+    </div>
   );
 }

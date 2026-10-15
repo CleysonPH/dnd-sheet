@@ -9,7 +9,7 @@ async function Header() {
   const { user } = await getPageSession("user");
   return (
     <header className="border-b border-zinc-200 dark:border-zinc-800">
-      <nav className="mx-auto flex max-w-4xl items-center gap-4 px-4 py-3">
+      <nav className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
         <Link href="/" className="font-semibold">
           Ficha D&amp;D
         </Link>
@@ -41,7 +41,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       >
         <Header />
       </Suspense>
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
         {children}
       </main>
     </>

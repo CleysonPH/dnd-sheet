@@ -135,7 +135,7 @@ Um componente `NumberField` generaliza o `parseField` do cabeçalho:
 Cada valor derivado é mostrado por um componente `DerivedValue`:
 
 - **Aparência**: é um botão com o valor formatado (ex.: "+6" ou "55"). Quando há override, ele ganha destaque visual e o texto "manual", e o `aria-label` informa "valor manual; calculado +4".
-- **Painel**: o toque abre um painel embutido logo abaixo, sem modal nem `window.prompt`. O painel tem o valor calculado, o campo "Valor manual" (um `NumberField` com sinal), "Aplicar", e "Usar calculado" quando já houver override.
+- **Painel**: o toque abre um painel sem modal nem `window.prompt`. A partir de `sm`, ele aparece logo abaixo do valor, alinhado à esquerda ou à direita (prop `align`) para não sair da coluna. No celular, fica preso ao pé da tela, porque um painel ancorado ao valor sairia da tela nos valores perto das bordas. *(Ajustado na implementação.)* O painel tem o valor calculado, o campo "Valor manual" (um `NumberField` com sinal), "Aplicar", e "Usar calculado" quando já houver override.
 - **Um painel por vez**: o estado de qual painel está aberto fica no editor.
 - **Edição**: aplicar grava `overrides[chave]`; usar o calculado remove a chave. Os dois passam pelo `edit` do autosave, como qualquer outra edição.
 

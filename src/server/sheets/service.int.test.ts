@@ -212,6 +212,56 @@ describe("fichas", () => {
       expect(await stored(id)).toMatchObject({ name: "Thorin", version: 1 });
     });
 
+    it("grava os números da ficha e os valores manuais", async () => {
+      const { lyra } = await setup();
+      const id = await newSheet(lyra, "Thorin");
+      const document = {
+        ...edited("Thorin", { level: 5 }),
+        abilities: { str: 16, dex: 14, con: 16, int: 8, wis: 12, cha: 10 },
+        hitPoints: {
+          hitDie: 12 as const,
+          damage: 15,
+          temp: 5,
+          hitDiceSpent: 2,
+        },
+        overrides: { hitPointsMax: 61, "skill.perception": 6 },
+      };
+
+      expect(await saveSheet(lyra, id, { baseVersion: 1, document })).toEqual({
+        status: "saved",
+        version: 2,
+      });
+      expect((await getSheet(lyra, id))?.document).toEqual(document);
+    });
+
+    it("recusa valor manual de um valor que não existe", async () => {
+      const { lyra } = await setup();
+      const id = await newSheet(lyra, "Thorin");
+
+      const result = await saveSheet(lyra, id, {
+        baseVersion: 1,
+        document: { ...edited("Thorin"), overrides: { armorClass: 18 } },
+      });
+
+      expect(result).toEqual({ status: "invalid", reason: "schema" });
+      expect((await stored(id))?.version).toBe(1);
+    });
+
+    it("abre uma ficha gravada no formato 1 já no formato atual", async () => {
+      const { lyra } = await setup();
+      const id = await newSheet(lyra, "Thorin");
+      const identity = { ...edited("Thorin", { level: 5 }).identity };
+      await getDb()
+        .update(sheet)
+        .set({ data: { schemaVersion: 1, identity } })
+        .where(eq(sheet.id, id));
+
+      expect((await getSheet(lyra, id))?.document).toEqual({
+        ...createSheetDocument("Thorin"),
+        identity,
+      });
+    });
+
     it("recusa documento acima de 256 KB", async () => {
       const { lyra } = await setup();
       const id = await newSheet(lyra, "Thorin");

@@ -26,13 +26,13 @@ async function Account() {
 
 export default function AccountPage() {
   return (
-    <>
+    <div className="mx-auto max-w-4xl">
       <h1 className="text-2xl font-semibold">Minha conta</h1>
       <div className="mt-6">
         <Suspense>
           <Account />
         </Suspense>
       </div>
-    </>
+    </div>
   );
 }

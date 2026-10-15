@@ -57,7 +57,8 @@ async function SheetList() {
 
 export default function HomePage() {
   return (
-    <>
+    // Páginas de texto ficam estreitas; o layout é largo por causa da ficha.
+    <div className="mx-auto max-w-4xl">
       <h1 className="text-2xl font-semibold">Minhas fichas</h1>
       <div className="mt-6">
         <CreateSheetForm />
@@ -67,6 +68,6 @@ export default function HomePage() {
           <SheetList />
         </Suspense>
       </div>
-    </>
+    </div>
   );
 }

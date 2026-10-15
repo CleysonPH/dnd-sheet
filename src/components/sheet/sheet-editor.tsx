@@ -1,28 +1,21 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo } from "react";
 
-import { Button, FormMessage, TextField } from "@/components/form";
-import {
-  identitySchema,
-  type SheetDocument,
-  type SheetIdentity,
-} from "@/engine/sheet/document";
+import { Button, FormMessage } from "@/components/form";
+import type { SheetDocument } from "@/engine/sheet/document";
+import { deriveStats } from "@/engine/stats/derive";
+import type { DerivedKey } from "@/engine/stats/keys";
 
+import { AbilitiesSection } from "./abilities-section";
 import type { AutosaveStatus } from "./autosave";
+import { CombatSection } from "./combat-section";
 import { DeleteSheetPanel } from "./delete-sheet-panel";
+import { OverrideProvider } from "./derived-value";
+import { IdentitySection } from "./identity-section";
+import { SkillsSection } from "./skills-section";
 import { useSheetAutosave, type SaveOutcome } from "./use-sheet-autosave";
-
-type Field = keyof SheetIdentity;
-
-const FIELDS: { field: Field; label: string }[] = [
-  { field: "name", label: "Nome do personagem" },
-  { field: "species", label: "Espécie" },
-  { field: "class", label: "Classe" },
-  { field: "level", label: "Nível" },
-  { field: "background", label: "Antecedente" },
-];
 
 const STATUS_TEXT: Record<AutosaveStatus, string> = {
   saved: "Salvo",
@@ -33,23 +26,6 @@ const STATUS_TEXT: Record<AutosaveStatus, string> = {
   conflict: "Não salvo",
   deleted: "Não salvo",
 };
-
-function toRaw(identity: SheetIdentity): Record<Field, string> {
-  return {
-    name: identity.name,
-    species: identity.species,
-    class: identity.class,
-    level: String(identity.level),
-    background: identity.background,
-  };
-}
-
-/** Valida um campo com o mesmo schema do servidor (design C2/C5). */
-function parseField(field: Field, raw: string) {
-  const value =
-    field === "level" ? (raw.trim() === "" ? NaN : Number(raw)) : raw;
-  return identitySchema.shape[field].safeParse(value);
-}
 
 export function SheetEditor({
   id,
@@ -68,35 +44,32 @@ export function SheetEditor({
     initialVersion,
     save,
   });
-  const [raw, setRaw] = useState(() => toRaw(initialDocument.identity));
-  const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
+  // O motor roda no cliente a cada edição (design D3/S4).
+  const stats = useMemo(() => deriveStats(document), [document]);
 
-  function onChange(field: Field, value: string) {
-    setRaw((current) => ({ ...current, [field]: value }));
-    const parsed = parseField(field, value);
-    if (!parsed.success) {
-      // Valor inválido fica só na tela; o documento salvo não muda.
-      setErrors((current) => ({
-        ...current,
-        [field]: parsed.error.issues[0]?.message,
-      }));
-      return;
-    }
-    setErrors((current) => ({ ...current, [field]: undefined }));
-    edit({
-      ...document,
-      identity: { ...document.identity, [field]: parsed.data },
-    });
+  function update(patch: Partial<SheetDocument>) {
+    edit({ ...document, ...patch });
   }
+
+  function setOverride(key: DerivedKey, value: number | undefined) {
+    const overrides = { ...document.overrides };
+    if (value === undefined) delete overrides[key];
+    else overrides[key] = value;
+    update({ overrides });
+  }
+
+  const section = { document, stats, update };
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">{document.identity.name}</h1>
+        <h1 className="min-w-0 truncate text-2xl font-semibold">
+          {document.identity.name}
+        </h1>
         <p
           role="status"
           aria-live="polite"
-          className="text-sm text-zinc-500"
+          className="shrink-0 text-sm text-zinc-500"
           data-status={status}
         >
           {STATUS_TEXT[status]}
@@ -121,30 +94,17 @@ export function SheetEditor({
         </FormMessage>
       )}
 
-      <fieldset
-        disabled={locked}
-        className="grid gap-4 disabled:opacity-60 sm:grid-cols-2"
-      >
-        {FIELDS.map(({ field, label }) => (
-          <TextField
-            key={field}
-            label={label}
-            name={field}
-            value={raw[field]}
-            onChange={(event) => onChange(field, event.target.value)}
-            error={errors[field]}
-            {...(field === "level"
-              ? {
-                  type: "number",
-                  min: 1,
-                  max: 20,
-                  step: 1,
-                  inputMode: "numeric",
-                }
-              : { maxLength: 100 })}
-          />
-        ))}
-      </fieldset>
+      <OverrideProvider setOverride={setOverride}>
+        <fieldset disabled={locked} className="min-w-0 disabled:opacity-60">
+          {/* Ordem do DOM = ordem no celular; colunas no desktop via CSS. */}
+          <div className="sheet-grid">
+            <IdentitySection {...section} />
+            <CombatSection {...section} />
+            <AbilitiesSection {...section} />
+            <SkillsSection {...section} />
+          </div>
+        </fieldset>
+      </OverrideProvider>
 
       {/* Em conflito ou já excluída, excluir daqui não faz sentido. */}
       {!locked && (

@@ -60,6 +60,20 @@ describe("migrateSheetDocument", () => {
     }
   });
 
+  it("leva uma ficha do formato 1 ao atual, mantendo a identificação", () => {
+    const identity = {
+      name: "Thorin",
+      species: "Anão",
+      class: "Bárbaro",
+      level: 5,
+      background: "Soldado",
+    };
+    expect(migrateSheetDocument({ schemaVersion: 1, identity })).toEqual({
+      ...createSheetDocument("Thorin"),
+      identity,
+    });
+  });
+
   it("recusa documento que não valida depois de migrado", () => {
     expect(() =>
       migrateSheetDocument({ schemaVersion: 1, identity: { name: "" } }),

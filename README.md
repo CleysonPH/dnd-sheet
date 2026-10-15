@@ -67,8 +67,10 @@ Para parar o banco: `docker compose down`. Os dados ficam no volume `db-data`; `
 src/
   app/          rotas do Next (UI e route handlers)
   components/   componentes React reutilizáveis
+    sheet/      a ficha na tela: seções, campos numéricos, override e autosave
   engine/       motor de cálculo da ficha: TypeScript puro
     sheet/      formato do documento da ficha (schema, versão, migrações)
+    stats/      regras do 5.5e e cálculo dos valores derivados (com override)
   server/       código só de servidor
     auth/       configuração do Better Auth, guards e troca de senha
     accounts/   administração de contas e seed do primeiro admin
@@ -82,7 +84,7 @@ scripts/        comandos de operação (seed, config da CLI do Better Auth)
 
 Rotas principais: `/` (Minhas fichas), `/fichas/[id]` (ficha com salvamento automático), `/conta`, `/admin/contas` (só admins), `/login` e `/trocar-senha`.
 
-A ficha é um documento JSON versionado (`schemaVersion`). Ao mudar o formato em `src/engine/sheet/document.ts`, incremente `SHEET_SCHEMA_VERSION` e acrescente a migração correspondente em `src/engine/sheet/migrate.ts`, com teste.
+A ficha é um documento JSON versionado (`schemaVersion`, hoje no formato 2). O documento guarda só entradas: atributos, proficiências, dado de vida, dano sofrido, deslocamento e valores manuais (`overrides`). Modificadores, perícias, PV máximo e os demais valores derivados são recalculados no navegador por `deriveStats` (`src/engine/stats/derive.ts`) e nunca são gravados. Ao mudar o formato em `src/engine/sheet/document.ts`, incremente `SHEET_SCHEMA_VERSION` e acrescente a migração correspondente em `src/engine/sheet/migrate.ts`, com teste.
 
 O `src/engine/` não pode importar React, Next, APIs do Node, `src/server/`, `src/app/` nem `src/components/`. O ESLint barra esses imports.
 

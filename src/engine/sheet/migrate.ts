@@ -12,8 +12,51 @@ export type SheetMigration = (
   document: Record<string, unknown>,
 ) => Record<string, unknown>;
 
-/** Migrações reais do formato. Vazia enquanto só existir o formato 1. */
-export const SHEET_MIGRATIONS: readonly SheetMigration[] = [];
+/**
+ * Formato 1 -> 2: acrescenta os números da ficha (spec sheet-core-stats) com os
+ * valores iniciais. Os valores ficam escritos aqui, e não vêm de
+ * createSheetDocument, para que esta migração continue gerando o formato 2
+ * mesmo quando a ficha nova mudar em formatos futuros (design S5).
+ */
+export const migrateV1ToV2: SheetMigration = (document) => ({
+  ...document,
+  abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+  savingThrows: {
+    str: false,
+    dex: false,
+    con: false,
+    int: false,
+    wis: false,
+    cha: false,
+  },
+  skills: {
+    acrobatics: "none",
+    animalHandling: "none",
+    arcana: "none",
+    athletics: "none",
+    performance: "none",
+    deception: "none",
+    stealth: "none",
+    history: "none",
+    intimidation: "none",
+    insight: "none",
+    investigation: "none",
+    medicine: "none",
+    nature: "none",
+    perception: "none",
+    persuasion: "none",
+    sleightOfHand: "none",
+    religion: "none",
+    survival: "none",
+  },
+  hitPoints: { hitDie: 8, damage: 0, temp: 0, hitDiceSpent: 0 },
+  deathSaves: { successes: 0, failures: 0 },
+  speed: 9,
+  overrides: {},
+});
+
+/** Migrações reais do formato. */
+export const SHEET_MIGRATIONS: readonly SheetMigration[] = [migrateV1ToV2];
 
 export class SheetFormatError extends Error {
   constructor(message: string) {
