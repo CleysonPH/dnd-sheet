@@ -15,7 +15,7 @@ Esta change é um registro de decisões. As tarefas abaixo não implementam cód
 ## 3. Ficha: automação
 
 - [x] 3.1 Abrir a change da capacidade `sheet-sources` (fontes feat/item/magia/traço com descrição e ativação sempre/equipado, conforme D4); verificar que `openspec validate` passa
-- [ ] 3.2 Abrir a change da capacidade `sheet-effects` (operações somar/base alternativa/definir/proficiência, alvos, gramática das expressões, condições de armadura/escudo, ordem de cálculo e ciclos, CA, conforme D4 e D5); verificar que `openspec validate` passa e que há cenários para Defesa sem Armadura do Bárbaro e do Monge, armadura equipada e dependência circular
+- [x] 3.2 Abrir a change da capacidade `sheet-effects` (operações somar/base alternativa/definir/proficiência, alvos, gramática das expressões, condições de armadura/escudo, ordem de cálculo e ciclos, CA, conforme D4 e D5); verificar que `openspec validate` passa e que há cenários para Defesa sem Armadura do Bárbaro e do Monge, armadura equipada e dependência circular
 - [ ] 3.3 Abrir a change da capacidade `sheet-resources` (trackers com máximo por expressão, espaços de magia, descanso curto/longo, conforme D7); verificar que `openspec validate` passa e que há cenários para Inspiração de Bardo e para o que cada descanso recupera
 
 ## 4. Operação

@@ -161,7 +161,7 @@ A ficha SHALL ter os testes contra a morte, com até 3 sucessos e até 3 falhas 
 - **THEN** a ficha mostra 10 de 65 PV e os testes contra a morte são zerados
 
 ### Requirement: Override manual de valores derivados
-O jogador SHALL poder substituir por um valor inteiro digitado qualquer valor calculado: modificadores, bônus de proficiência, salvaguardas, perícias, iniciativa, percepção passiva, PV máximo e total de dados de vida. O valor manual SHALL ficar salvo na ficha e sinalizado na tela, mostrar o valor calculado e poder ser removido para voltar ao cálculo.
+O jogador SHALL poder substituir por um valor inteiro digitado qualquer valor calculado: modificadores, bônus de proficiência, salvaguardas, perícias, iniciativa, percepção passiva, PV máximo, total de dados de vida, CA e deslocamento. O valor manual SHALL substituir o resultado final, já com os efeitos das fontes. Ele SHALL ficar salvo na ficha e sinalizado na tela, mostrar o valor calculado e poder ser removido para voltar ao cálculo.
 
 #### Scenario: PV máximo por regra da casa
 - **WHEN** Thorin tem PV máximo calculado 55 e Lyra define o valor manual 61
@@ -178,6 +178,10 @@ O jogador SHALL poder substituir por um valor inteiro digitado qualquer valor ca
 #### Scenario: Valor manual inválido
 - **WHEN** Lyra digita "abc" ou 2,5 como valor manual
 - **THEN** o campo indica que o valor deve ser inteiro e nada é salvo
+
+#### Scenario: Valor manual sobre efeitos
+- **WHEN** a CA calculada de Thorin, com efeitos, é 18 e Lyra define o valor manual 20
+- **THEN** a CA mostrada é 20, indicando que o calculado é 18
 
 ### Requirement: Valores dependentes usam o valor manual
 Quando um valor derivado tiver valor manual, os valores calculados a partir dele SHALL usar o valor manual no lugar do calculado.
@@ -206,7 +210,7 @@ Uma ficha nova, e uma ficha gravada antes de existirem estes campos, SHALL come�
 - **THEN** a ficha mantém a identificação, mostra atributos 10, PV 28 de 28 (d8 no nível 5) e dados de vida 5/5 d8
 
 ### Requirement: Organização da ficha na tela
-A ficha SHALL ter, no topo, a faixa com CA, iniciativa, deslocamento, percepção passiva, bônus de proficiência, o bloco de PV com dano e cura, e os dados de vida. Até existir o cálculo de CA, ela SHALL aparecer como "—". Cada atributo SHALL ser mostrado num bloco com valor, modificador, salvaguarda e as perícias daquele atributo. A ficha SHALL ser utilizável sem rolagem horizontal a partir de 360 px. A partir de 1024 px, os blocos de atributo SHALL ficar em 3 colunas.
+A ficha SHALL ter, no topo, a faixa com CA, iniciativa, deslocamento, percepção passiva, bônus de proficiência, o bloco de PV com dano e cura, e os dados de vida. Cada atributo SHALL ser mostrado num bloco com valor, modificador, salvaguarda e as perícias daquele atributo. A ficha SHALL ser utilizável sem rolagem horizontal a partir de 360 px. A partir de 1024 px, os blocos de atributo SHALL ficar em 3 colunas.
 
 #### Scenario: Celular
 - **WHEN** Lyra abre a ficha num celular com tela de 375 px de largura
@@ -221,8 +225,8 @@ A ficha SHALL ter, no topo, a faixa com CA, iniciativa, deslocamento, percepçã
 - **THEN** o bloco de Destreza mostra o valor 14, o modificador +2, a salvaguarda de Destreza +2 e as perícias Acrobacia +2, Furtividade +2 e Prestidigitação +2
 
 #### Scenario: CA reservada
-- **WHEN** Lyra abre qualquer ficha
-- **THEN** a faixa de topo mostra a CA como "—"
+- **WHEN** Lyra abre uma ficha com DES 14, sem armadura nem efeitos de CA
+- **THEN** o lugar da CA na faixa de topo mostra o valor calculado, 12, e não mais "—"
 
 ### Requirement: Modos Jogar e Editar
 A ficha SHALL ter dois modos, alternados por uma chave sempre visível. Em Jogar, os valores SHALL aparecer só para leitura, e apenas dano, cura, PV temporário, dados de vida, testes contra a morte e as ações de mesa sobre as fontes SHALL ser alteráveis. Em Editar, todos os campos, os valores manuais e as fontes SHALL ser alteráveis. A ficha SHALL abrir em Jogar se algum atributo for diferente de 10, e em Editar caso contrário. Trocar de modo SHALL não alterar a ficha.
