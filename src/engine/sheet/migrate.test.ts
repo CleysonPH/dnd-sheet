@@ -25,6 +25,13 @@ const synthetic = {
   parse: (doc: unknown) => doc,
 };
 
+/** A magia sem o campo `prepared`, que o formato 6 trocou (design M3). */
+function withoutPrepared(spell: Record<string, unknown>) {
+  const copy = { ...spell };
+  delete copy.prepared;
+  return copy;
+}
+
 describe("migrateSheetDocument", () => {
   it("as migrações reais cobrem todas as versões anteriores à atual", () => {
     expect(SHEET_MIGRATIONS).toHaveLength(SHEET_SCHEMA_VERSION - 1);
@@ -148,7 +155,13 @@ describe("migrateSheetDocument", () => {
         armorBase: 10,
         shieldBonus: 2,
       },
-      { ...spell, effects: [], trackers: [], active: false },
+      {
+        ...withoutPrepared(spell),
+        effects: [],
+        trackers: [],
+        active: false,
+        preparation: "prepared",
+      },
       { ...trait, effects: [], trackers: [] },
     ]);
   });
@@ -171,6 +184,37 @@ describe("migrateSheetDocument", () => {
     expect(migrated.sources[0]?.trackers).toEqual([]);
     expect(migrated.spellSlots).toEqual(current.spellSlots);
     expect(migrated.pactSlots).toEqual({ level: 1, max: 0, used: 0 });
+  });
+
+  it("leva o formato 5 ao 6 trocando prepared por preparation", () => {
+    const current = createSheetDocument("Elara");
+    const spell = (name: string, level: number, prepared: boolean) => {
+      const source: Record<string, unknown> = {
+        ...createSource("spell", name, name),
+        level,
+        prepared,
+      };
+      delete source.preparation;
+      return source;
+    };
+    const feat = createSource("feat", "Robusto", "f1");
+
+    const migrated = migrateSheetDocument({
+      ...current,
+      schemaVersion: 5,
+      sources: [
+        spell("Sono", 1, true),
+        spell("Enfeitiçar Pessoa", 1, false),
+        spell("Mãos Mágicas", 0, false),
+        feat,
+      ],
+    });
+
+    expect(
+      migrated.sources.map((s) => (s.kind === "spell" ? s.preparation : null)),
+    ).toEqual(["prepared", "none", "none", null]);
+    expect(migrated.sources.some((s) => "prepared" in s)).toBe(false);
+    expect(migrated.sources[3]).toEqual(feat);
   });
 
   it("recusa documento que não valida depois de migrado", () => {

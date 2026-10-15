@@ -7,6 +7,7 @@ import {
   ATTUNEMENT_LIMIT,
   attunedCount,
   createSource,
+  alwaysPreparedCount,
   preparedCount,
   spellsByLevel,
   totalWeight,
@@ -210,6 +211,8 @@ export function SourcesPanel({ document, stats, update }: SheetPartProps) {
       <p className="mb-3 text-sm text-muted">
         Preparadas:{" "}
         <strong className="text-text">{preparedCount(sources)}</strong>
+        {" · "}Sempre preparadas:{" "}
+        <strong className="text-text">{alwaysPreparedCount(sources)}</strong>
       </p>
     );
   }

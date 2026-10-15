@@ -4,6 +4,7 @@ import {
   attunedCount,
   createSource,
   isItemActive,
+  alwaysPreparedCount,
   preparedCount,
   spellsByLevel,
   totalWeight,
@@ -82,7 +83,7 @@ describe("attunedCount", () => {
 
 describe("magias", () => {
   const mageHand = spell("Mãos Mágicas", { level: 0 });
-  const sleep = spell("Sono", { level: 1, prepared: true });
+  const sleep = spell("Sono", { level: 1, preparation: "prepared" });
   const charm = spell("Enfeitiçar Pessoa", { level: 1 });
 
   it("agrupa por círculo e ordena por nome", () => {
@@ -100,6 +101,17 @@ describe("magias", () => {
   it("conta só as preparadas de 1º círculo ou acima", () => {
     expect(preparedCount([mageHand, sleep, charm])).toBe(1);
   });
+
+  it("conta as sempre preparadas à parte", () => {
+    const mistyStep = spell("Passo Nebuloso", {
+      level: 2,
+      preparation: "always",
+    });
+    const bless = spell("Bênção", { level: 1, preparation: "always" });
+    const elara = [mageHand, sleep, charm, mistyStep, bless];
+    expect(preparedCount(elara)).toBe(1);
+    expect(alwaysPreparedCount(elara)).toBe(2);
+  });
 });
 
 describe("createSource", () => {
@@ -109,5 +121,9 @@ describe("createSource", () => {
     );
     expect(sourcesSchema.safeParse(sources).success).toBe(true);
     expect(sources[0]!.name).toBe("Nova feat");
+  });
+
+  it("magia nova não está preparada", () => {
+    expect(createSource("spell", "Sono", "s1").preparation).toBe("none");
   });
 });

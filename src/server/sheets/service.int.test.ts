@@ -249,7 +249,11 @@ describe("fichas", () => {
           requiresAttunement: true,
           attuned: true,
         },
-        { ...createSource("spell", "Sono", "s1"), level: 1, prepared: true },
+        {
+          ...createSource("spell", "Sono", "s1"),
+          level: 1,
+          preparation: "prepared",
+        },
       ];
       const document = { ...edited("Thorin"), sources };
 
@@ -258,6 +262,34 @@ describe("fichas", () => {
         version: 2,
       });
       expect((await getSheet(lyra, id))?.document.sources).toEqual(sources);
+    });
+
+    it("grava uma magia sempre preparada e recusa truque sempre preparado", async () => {
+      const { lyra } = await setup();
+      const id = await newSheet(lyra, "Elara");
+      const mistyStep = {
+        ...createSource("spell", "Passo Nebuloso", "s1"),
+        level: 2,
+        spellClass: "Tocado pelas Fadas",
+        preparation: "always" as const,
+      };
+
+      const saved = await saveSheet(lyra, id, {
+        baseVersion: 1,
+        document: { ...edited("Elara"), sources: [mistyStep] },
+      });
+      expect(saved).toEqual({ status: "saved", version: 2 });
+      expect((await getSheet(lyra, id))?.document.sources).toEqual([mistyStep]);
+
+      expect(
+        await saveSheet(lyra, id, {
+          baseVersion: 2,
+          document: {
+            ...edited("Elara"),
+            sources: [{ ...mistyStep, level: 0 }],
+          },
+        }),
+      ).toEqual({ status: "invalid", reason: "schema" });
     });
 
     it("grava fontes com efeitos", async () => {

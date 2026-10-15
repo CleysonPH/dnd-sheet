@@ -50,10 +50,23 @@ export function spellsByLevel(sources: readonly Source[]): SpellGroup[] {
   return groups;
 }
 
-/** Magias de 1º círculo ou acima marcadas como preparadas. */
+function countPreparation(
+  sources: readonly Source[],
+  preparation: Spell["preparation"],
+): number {
+  return spells(sources).filter(
+    (spell) => spell.level > 0 && spell.preparation === preparation,
+  ).length;
+}
+
+/** Magias de 1º círculo ou acima preparadas: as que contam no limite (M4). */
 export function preparedCount(sources: readonly Source[]): number {
-  return spells(sources).filter((spell) => spell.level > 0 && spell.prepared)
-    .length;
+  return countPreparation(sources, "prepared");
+}
+
+/** Magias de 1º círculo ou acima sempre preparadas (M4). */
+export function alwaysPreparedCount(sources: readonly Source[]): number {
+  return countPreparation(sources, "always");
 }
 
 type SourceOf<K extends SourceKind> = Extract<Source, { kind: K }>;
@@ -108,7 +121,7 @@ export function createSource<K extends SourceKind>(
       materialText: "",
       concentration: false,
       ritual: false,
-      prepared: false,
+      preparation: "none",
       active: false,
     } satisfies Spell,
   };

@@ -8,6 +8,7 @@ import {
   FEAT_CATEGORIES,
   ITEM_CATEGORIES,
   MAX_SOURCES,
+  SPELL_PREPARATIONS,
   SPELL_SCHOOLS,
   TRAIT_ORIGINS,
 } from "./kinds";
@@ -94,6 +95,7 @@ export const spellSchema = z.strictObject({
   kind: z.literal("spell"),
   level: spellLevelSchema,
   school: z.enum(SPELL_SCHOOLS),
+  /** Origem: a classe, o talento ou o item que dá a magia (design M5). */
   spellClass: sourceShortTextSchema,
   castingTime: sourceShortTextSchema,
   range: sourceShortTextSchema,
@@ -104,7 +106,7 @@ export const spellSchema = z.strictObject({
   materialText: sourceShortTextSchema,
   concentration: z.boolean(),
   ritual: z.boolean(),
-  prepared: z.boolean(),
+  preparation: z.enum(SPELL_PREPARATIONS),
   /** "Em efeito": os efeitos da magia só valem enquanto marcada. */
   active: z.boolean(),
 });
@@ -141,11 +143,15 @@ export const sourcesSchema = z
           path: [index, "attuned"],
         });
       }
-      if (source.kind === "spell" && source.level === 0 && source.prepared) {
+      if (
+        source.kind === "spell" &&
+        source.level === 0 &&
+        source.preparation !== "none"
+      ) {
         ctx.addIssue({
           code: "custom",
           message: "Truques não são preparados",
-          path: [index, "prepared"],
+          path: [index, "preparation"],
         });
       }
     });

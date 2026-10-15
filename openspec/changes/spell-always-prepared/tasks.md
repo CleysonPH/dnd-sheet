@@ -2,13 +2,13 @@
 
 ## 1. Formato e regras
 
-- [ ] 1.1 Trocar `prepared` por `preparation` no `spellSchema` com `SPELL_PREPARATIONS`, ajustar a regra de truque, o `createSource` e o `preparedCount`, e criar o `alwaysPreparedCount` (M1, M2, M4). Testes unitários:
+- [x] 1.1 Trocar `prepared` por `preparation` no `spellSchema` com `SPELL_PREPARATIONS`, ajustar a regra de truque, o `createSource` e o `preparedCount`, e criar o `alwaysPreparedCount` (M1, M2, M4). Testes unitários:
   - truque com `"always"` recusado;
   - contagem de Elara com 1 preparada e 2 sempre preparadas;
   - magia nova com `"none"`.
 
   Verificar que `npm test` passa
-- [ ] 1.2 Subir `SHEET_SCHEMA_VERSION` para 6 e criar a `migrateV5ToV6` (M3). Testes:
+- [x] 1.2 Subir `SHEET_SCHEMA_VERSION` para 6 e criar a `migrateV5ToV6` (M3). Testes:
   - preparada vira `"prepared"`;
   - não preparada vira `"none"`;
   - o campo `prepared` some;
@@ -19,7 +19,7 @@
 
 ## 2. Ficha na tela
 
-- [ ] 2.1 Trocar no formulário de magia a caixa "Preparada" pelo seletor "Preparação" e o rótulo "Classe" por "Origem". No cartão, mostrar a etiqueta "Sempre preparada" no lugar da caixa e as linhas "Origem" e "Preparação" nos detalhes. Na aba Magias, mostrar as duas contagens (M5). Verificar no navegador:
+- [x] 2.1 Trocar no formulário de magia a caixa "Preparada" pelo seletor "Preparação" e o rótulo "Classe" por "Origem". No cartão, mostrar a etiqueta "Sempre preparada" no lugar da caixa e as linhas "Origem" e "Preparação" nos detalhes. Na aba Magias, mostrar as duas contagens (M5). Verificar no navegador:
   - "Passo Nebuloso", 2º círculo, origem "Tocado pelas Fadas", sempre preparada, mostra a etiqueta sem a caixa em Jogar;
   - "Sono" continua alternando entre preparada e não preparada;
   - a aba mostra "Preparadas: 1 · Sempre preparadas: 1";
@@ -27,4 +27,4 @@
   - uma ficha antiga com magia preparada abre como "Preparada".
 
   Conferir a 375 px e nos dois temas
-- [ ] 2.2 Rodar `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:int`, `npm run build` e `npm run format:check` e verificar que todos passam
+- [x] 2.2 Rodar `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:int`, `npm run build` e `npm run format:check` e verificar que todos passam

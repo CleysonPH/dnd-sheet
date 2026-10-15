@@ -15,6 +15,7 @@ import {
   ARMOR_TYPE_LABEL,
   FEAT_CATEGORY_LABEL,
   ITEM_CATEGORY_LABEL,
+  SPELL_PREPARATION_LABEL,
   SPELL_SCHOOL_LABEL,
   TRAIT_ORIGIN_LABEL,
   formatWeight,
@@ -114,12 +115,20 @@ function SpellActions({
           <Badge>R</Badge>
         </span>
       )}
-      {spell.level > 0 && (
+      {/* Sempre preparada não pode ser despreparada na mesa (design M5). */}
+      {spell.level > 0 && spell.preparation === "always" && (
+        <Badge tone="accent">{SPELL_PREPARATION_LABEL.always}</Badge>
+      )}
+      {spell.level > 0 && spell.preparation !== "always" && (
         <label className="flex items-center gap-1.5 text-xs text-muted">
           <input
             type="checkbox"
-            checked={spell.prepared}
-            onChange={(event) => onChange({ prepared: event.target.checked })}
+            checked={spell.preparation === "prepared"}
+            onChange={(event) =>
+              onChange({
+                preparation: event.target.checked ? "prepared" : "none",
+              })
+            }
             className="size-4 accent-accent"
           />
           Preparada
@@ -172,7 +181,12 @@ function Details({ source }: { source: Source }) {
         return [
           ["Círculo", spellLevelLabel(source.level)],
           ["Escola", SPELL_SCHOOL_LABEL[source.school]],
-          ["Classe", source.spellClass || "—"],
+          ["Origem", source.spellClass || "—"],
+          ...(source.level > 0
+            ? ([
+                ["Preparação", SPELL_PREPARATION_LABEL[source.preparation]],
+              ] as [string, ReactNode][])
+            : []),
           ["Tempo de conjuração", source.castingTime || "—"],
           ["Alcance", source.range || "—"],
           ["Duração", source.duration || "—"],

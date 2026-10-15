@@ -113,8 +113,9 @@ describe("sheetDocumentSchema", () => {
   });
 
   it("recusa outra versão de formato", () => {
-    expect(firstError({ ...valid, schemaVersion: 4 })).not.toBeNull();
-    expect(firstError({ ...valid, schemaVersion: 6 })).not.toBeNull();
+    const version = SHEET_SCHEMA_VERSION;
+    expect(firstError({ ...valid, schemaVersion: version - 1 })).not.toBeNull();
+    expect(firstError({ ...valid, schemaVersion: version + 1 })).not.toBeNull();
   });
 
   it("exige atributos inteiros de 1 a 30", () => {
@@ -254,7 +255,7 @@ describe("sources", () => {
     materialText: "um punhado de areia",
     concentration: true,
     ritual: false,
-    prepared: true,
+    preparation: "prepared",
     active: false,
     effects: [],
     trackers: [],
@@ -313,7 +314,9 @@ describe("sources", () => {
   });
 
   it("limita o círculo das magias de 0 a 9", () => {
-    expect(withSources([{ ...spell, level: 0, prepared: false }])).toBeNull();
+    expect(
+      withSources([{ ...spell, level: 0, preparation: "none" }]),
+    ).toBeNull();
     expect(withSources([{ ...spell, level: 9 }])).toBeNull();
     expect(withSources([{ ...spell, level: 10 }])).not.toBeNull();
   });
@@ -334,10 +337,16 @@ describe("sources", () => {
     ).toBeNull();
   });
 
-  it("não aceita truque preparado", () => {
-    expect(withSources([{ ...spell, level: 0, prepared: true }])?.message).toBe(
-      "Truques não são preparados",
-    );
+  it("não aceita truque preparado nem sempre preparado", () => {
+    for (const preparation of ["prepared", "always"] as const) {
+      expect(withSources([{ ...spell, level: 0, preparation }])?.message).toBe(
+        "Truques não são preparados",
+      );
+    }
+  });
+
+  it("aceita magia sempre preparada", () => {
+    expect(withSources([{ ...spell, preparation: "always" }])).toBeNull();
   });
 
   it("aceita até 300 fontes", () => {

@@ -41,6 +41,9 @@ export const SPELL_SCHOOLS = [
   "transmutation",
 ] as const;
 
+/** Preparação de uma magia (design M1). Truques ficam sempre em "none". */
+export const SPELL_PREPARATIONS = ["none", "prepared", "always"] as const;
+
 export const ARMOR_TYPES = ["light", "medium", "heavy"] as const;
 
 /** Quantas fontes uma ficha pode ter. */

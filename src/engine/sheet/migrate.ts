@@ -91,12 +91,26 @@ export const migrateV4ToV5: SheetMigration = (document) => ({
   pactSlots: { level: 1, max: 0, used: 0 },
 });
 
+/**
+ * Formato 5 -> 6: `prepared` das magias vira `preparation` (design M3). O
+ * campo antigo sai, porque o schema da magia é estrito.
+ */
+export const migrateV5ToV6: SheetMigration = (document) => ({
+  ...document,
+  sources: (document.sources as Record<string, unknown>[]).map((source) => {
+    if (source.kind !== "spell") return source;
+    const { prepared, ...rest } = source;
+    return { ...rest, preparation: prepared === true ? "prepared" : "none" };
+  }),
+});
+
 /** Migrações reais do formato. */
 export const SHEET_MIGRATIONS: readonly SheetMigration[] = [
   migrateV1ToV2,
   migrateV2ToV3,
   migrateV3ToV4,
   migrateV4ToV5,
+  migrateV5ToV6,
 ];
 
 export class SheetFormatError extends Error {

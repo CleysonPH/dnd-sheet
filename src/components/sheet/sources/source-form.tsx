@@ -4,6 +4,7 @@ import {
   ARMOR_TYPES,
   FEAT_CATEGORIES,
   ITEM_CATEGORIES,
+  SPELL_PREPARATIONS,
   SPELL_SCHOOLS,
   TRAIT_ORIGINS,
 } from "@/engine/sources/kinds";
@@ -29,6 +30,7 @@ import {
   ARMOR_TYPE_LABEL,
   FEAT_CATEGORY_LABEL,
   ITEM_CATEGORY_LABEL,
+  SPELL_PREPARATION_LABEL,
   SPELL_SCHOOL_LABEL,
   TRAIT_ORIGIN_LABEL,
   spellLevelLabel,
@@ -345,9 +347,9 @@ function SpellFields({
           name={field("level")}
           value={spell.level}
           options={LEVELS}
-          // Truques não são preparados (design F1).
+          // Truques não são preparados (design M2).
           onChange={(level) =>
-            onChange(level === 0 ? { level, prepared: false } : { level })
+            onChange(level === 0 ? { level, preparation: "none" } : { level })
           }
         />
         <SelectField
@@ -357,10 +359,19 @@ function SpellFields({
           options={entries(SPELL_SCHOOL_LABEL, SPELL_SCHOOLS)}
           onChange={(school) => onChange({ school })}
         />
-        {text("spellClass", "Classe", "ex.: Mago")}
+        {text("spellClass", "Origem", "ex.: Mago ou Tocado pelas Fadas")}
         {text("castingTime", "Tempo de conjuração", "ex.: 1 ação")}
         {text("range", "Alcance", "ex.: 36 m")}
         {text("duration", "Duração", "ex.: instantânea")}
+        {spell.level > 0 && (
+          <SelectField
+            label="Preparação"
+            name={field("preparation")}
+            value={spell.preparation}
+            options={entries(SPELL_PREPARATION_LABEL, SPELL_PREPARATIONS)}
+            onChange={(preparation) => onChange({ preparation })}
+          />
+        )}
       </div>
       <div className="flex flex-wrap gap-x-5 gap-y-2">
         <Check
@@ -388,13 +399,6 @@ function SpellFields({
           checked={spell.ritual}
           onChange={(ritual) => onChange({ ritual })}
         />
-        {spell.level > 0 && (
-          <Check
-            label="Preparada"
-            checked={spell.prepared}
-            onChange={(prepared) => onChange({ prepared })}
-          />
-        )}
       </div>
       {spell.material && (
         <SchemaTextField

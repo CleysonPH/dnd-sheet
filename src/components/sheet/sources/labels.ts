@@ -2,6 +2,7 @@ import type {
   ARMOR_TYPES,
   FEAT_CATEGORIES,
   ITEM_CATEGORIES,
+  SPELL_PREPARATIONS,
   SPELL_SCHOOLS,
   TRAIT_ORIGINS,
 } from "@/engine/sources/kinds";
@@ -62,6 +63,15 @@ export const SPELL_SCHOOL_LABEL: Record<
   illusion: "Ilusão",
   necromancy: "Necromancia",
   transmutation: "Transmutação",
+};
+
+export const SPELL_PREPARATION_LABEL: Record<
+  (typeof SPELL_PREPARATIONS)[number],
+  string
+> = {
+  none: "Não preparada",
+  prepared: "Preparada",
+  always: "Sempre preparada",
 };
 
 export function spellLevelLabel(level: number): string {
