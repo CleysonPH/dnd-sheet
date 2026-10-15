@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { admin } from "better-auth/plugins";
+import { waitUntil } from "@vercel/functions";
 import { eq } from "drizzle-orm";
 
 import type { Database } from "@/server/db";
@@ -65,18 +66,21 @@ export function createAuth(options: {
       revokeSessionsOnPasswordReset: true,
       // Sem await (design P3): a resposta leva o mesmo tempo exista a conta ou
       // não, e uma falha de SMTP só vai para o log. Conta desativada não
-      // recebe o link (design P4).
+      // recebe o link (design P4). Na Vercel, waitUntil mantém a função viva
+      // até o envio terminar; fora dela, a promessa segue sozinha (design Y2).
       sendResetPassword: async ({ user: target, token }) => {
         if ((target as { banned?: boolean | null }).banned) return;
-        void options
-          .sendPasswordResetMail({
-            to: target.email,
-            name: target.name,
-            url: passwordResetUrl(options.baseURL, token),
-          })
-          .catch((error: unknown) => {
-            console.error("Falha ao enviar o e-mail de redefinição:", error);
-          });
+        waitUntil(
+          options
+            .sendPasswordResetMail({
+              to: target.email,
+              name: target.name,
+              url: passwordResetUrl(options.baseURL, token),
+            })
+            .catch((error: unknown) => {
+              console.error("Falha ao enviar o e-mail de redefinição:", error);
+            }),
+        );
       },
       // A pessoa acabou de escolher a própria senha (design P5).
       onPasswordReset: async ({ user: target }) => {
@@ -105,12 +109,18 @@ export function createAuth(options: {
     },
     rateLimit: {
       enabled: true,
+      // No banco, para valer entre instâncias serverless (design Y2).
+      storage: "database",
       customRules: {
         "/sign-in/email": { window: 60, max: 5 },
         "/request-password-reset": { window: 60, max: 3 },
       },
     },
     disabledPaths: DISABLED_PATHS,
+    advanced: {
+      // A Vercel sobrescreve x-forwarded-for com o IP real do cliente.
+      ipAddress: { ipAddressHeaders: ["x-forwarded-for"] },
+    },
     plugins: [
       admin({ bannedUserMessage: DEACTIVATED_ACCOUNT_MESSAGE }),
       // Deve ser o último plugin.

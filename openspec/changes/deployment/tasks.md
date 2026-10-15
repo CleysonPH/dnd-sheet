@@ -2,10 +2,10 @@
 
 ## 1. Código para serverless
 
-- [ ] 1.1 Instalar `@vercel/functions`, enviar o e-mail de redefinição com `waitUntil` e chamar `attachDatabasePool` no `getPool` (Y2). Verificar que `npm run test:int` passa, inclusive o envio para o Mailpit
-- [ ] 1.2 Passar o rate limit para `storage: "database"` com `ipAddressHeaders: ["x-forwarded-for"]`, gerar a tabela com `npm run auth:generate` e a migração 0003 com `npm run db:generate`, e limpar a tabela em `resetDatabase` (Y2). Escrever um teste de integração com duas instâncias de `createAuth` sobre o mesmo banco, em que o 4º pedido de redefinição em 1 minuto é recusado mesmo alternando as instâncias. Verificar que `npm run db:migrate` aplica a migração no banco de dev e que `npm run test:int` passa
-- [ ] 1.3 Criar `src/lib/time.ts` com `APP_TIME_ZONE` e usá-lo nos formatadores de `src/app/(app)/page.tsx` e de `src/app/(app)/admin/contas/page.tsx` (Y2). Escrever um teste unitário em que 01:10 UTC aparece como 22:10 do dia anterior. Verificar que `npm test` passa
-- [ ] 1.4 Criar `scripts/vercel-build.mjs` e o script `vercel-build` (migração só com `VERCEL_ENV=production`, com `DATABASE_URL_UNPOOLED`), o `vercel.json` com `gru1`, e fazer o `drizzle.config.ts` preferir `DATABASE_URL_UNPOOLED` (Y3). Remover o `Dockerfile`, o `.dockerignore`, o `output: "standalone"` e os serviços `migrate` e `app` do Compose (Y4). Verificar que:
+- [x] 1.1 Instalar `@vercel/functions`, enviar o e-mail de redefinição com `waitUntil` e chamar `attachDatabasePool` no `getPool` (Y2). Verificar que `npm run test:int` passa, inclusive o envio para o Mailpit
+- [x] 1.2 Passar o rate limit para `storage: "database"` com `ipAddressHeaders: ["x-forwarded-for"]`, gerar a tabela com `npm run auth:generate` e a migração 0003 com `npm run db:generate`, e limpar a tabela em `resetDatabase` (Y2). Escrever um teste de integração com duas instâncias de `createAuth` sobre o mesmo banco, em que o 4º pedido de redefinição em 1 minuto é recusado mesmo alternando as instâncias. Verificar que `npm run db:migrate` aplica a migração no banco de dev e que `npm run test:int` passa
+- [x] 1.3 Criar `src/lib/time.ts` com `APP_TIME_ZONE` e usá-lo nos formatadores de `src/app/(app)/page.tsx` e de `src/app/(app)/admin/contas/page.tsx` (Y2). Escrever um teste unitário em que 01:10 UTC aparece como 22:10 do dia anterior. Verificar que `npm test` passa
+- [x] 1.4 Criar `scripts/vercel-build.mjs` e o script `vercel-build` (migração só com `VERCEL_ENV=production`, com `DATABASE_URL_UNPOOLED`), o `vercel.json` com `gru1`, e fazer o `drizzle.config.ts` preferir `DATABASE_URL_UNPOOLED` (Y3). Remover o `Dockerfile`, o `.dockerignore`, o `output: "standalone"` e os serviços `migrate` e `app` do Compose (Y4). Verificar que:
   - `npm run build` passa;
   - `VERCEL_ENV=production npm run vercel-build` com o banco de dev aplica as migrações e constrói;
   - `docker compose --profile dev up -d` continua subindo o banco e o Mailpit

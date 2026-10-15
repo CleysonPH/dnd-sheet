@@ -10,7 +10,8 @@ As decisões de produto e de arquitetura estão em `openspec/changes/dnd-sheet-a
 - Postgres 18 com Drizzle ORM
 - Better Auth (login por e-mail e senha, sessões no banco)
 - Vitest, ESLint e Prettier
-- Docker (imagem `standalone` para produção)
+- Produção na Vercel (funções em `gru1`) com o banco no Neon (`aws-sa-east-1`)
+- Docker Compose só para o desenvolvimento (Postgres e Mailpit)
 
 ## Pré-requisitos
 
@@ -49,21 +50,22 @@ Quem esquece a senha usa **Esqueci a senha** no login: a aplicação envia um li
 | `SMTP_USER`, `SMTP_PASSWORD`                                 | Usuário e senha do SMTP, juntos; vazios para o Mailpit                                 |
 | `MAIL_FROM`                                                  | Remetente dos e-mails, ex.: `Ficha D&D <ficha@seudominio.com>`                         |
 
-| Comando                 | O que faz                                    |
-| ----------------------- | -------------------------------------------- |
-| `npm run dev`           | Servidor de desenvolvimento                  |
-| `npm run build`         | Build de produção                            |
-| `npm run lint`          | ESLint                                       |
-| `npm run typecheck`     | Gera os tipos do Next e roda `tsc`           |
-| `npm test`              | Testes unitários (Vitest)                    |
-| `npm run test:watch`    | Testes em modo watch                         |
-| `npm run test:int`      | Testes de integração (banco e Mailpit)       |
-| `npm run db:migrate`    | Aplica as migrações pendentes                |
-| `npm run db:generate`   | Gera uma migração a partir do schema         |
-| `npm run db:seed`       | Cria o primeiro admin (`SEED_ADMIN_*`)       |
-| `npm run auth:generate` | Regenera o schema das tabelas do Better Auth |
-| `npm run format`        | Formata o código com Prettier                |
-| `npm run format:check`  | Verifica a formatação sem alterar arquivo    |
+| Comando                 | O que faz                                     |
+| ----------------------- | --------------------------------------------- |
+| `npm run dev`           | Servidor de desenvolvimento                   |
+| `npm run build`         | Build de produção                             |
+| `npm run vercel-build`  | Build da Vercel: migra em produção e constrói |
+| `npm run lint`          | ESLint                                        |
+| `npm run typecheck`     | Gera os tipos do Next e roda `tsc`            |
+| `npm test`              | Testes unitários (Vitest)                     |
+| `npm run test:watch`    | Testes em modo watch                          |
+| `npm run test:int`      | Testes de integração (banco e Mailpit)        |
+| `npm run db:migrate`    | Aplica as migrações pendentes                 |
+| `npm run db:generate`   | Gera uma migração a partir do schema          |
+| `npm run db:seed`       | Cria o primeiro admin (`SEED_ADMIN_*`)        |
+| `npm run auth:generate` | Regenera o schema das tabelas do Better Auth  |
+| `npm run format`        | Formata o código com Prettier                 |
+| `npm run format:check`  | Verifica a formatação sem alterar arquivo     |
 
 Os testes de integração usam um banco separado, `dnd_sheet_test`, no mesmo Postgres. Ele é criado e migrado automaticamente. Eles também enviam e-mails de verdade para o Mailpit e os leem pela API dele, então precisam do `db` e do `mailpit` rodando (`docker compose --profile dev up -d`).
 
@@ -111,12 +113,60 @@ O tema é escuro por padrão, com uma chave para o claro guardada no `localStora
 
 O `src/engine/` não pode importar React, Next, APIs do Node, `src/server/`, `src/app/` nem `src/components/`. O ESLint barra esses imports.
 
-## Imagem de produção
+## Produção (Vercel + Neon)
 
-Para testar localmente a mesma imagem que vai para a VPS:
+A aplicação roda na Vercel, ligada a este repositório: cada push na `main` gera um deploy de produção. O banco é o projeto `dnd-sheet` do Neon, em São Paulo, e as funções da Vercel rodam em `gru1`, na mesma região. Não há deploys de preview com banco: as variáveis existem só no ambiente Production.
+
+### Como um deploy acontece
+
+1. A Vercel roda `npm run vercel-build` (definido em `vercel.json`).
+2. Com `VERCEL_ENV=production`, o script `scripts/vercel-build.mjs` aplica as migrações (`drizzle-kit migrate`) pela URL direta do Neon e só depois roda `next build`.
+3. Se a migração ou o build falharem, o deploy falha e a versão anterior continua no ar.
+
+Para voltar a um deploy anterior, use **Promote** no painel da Vercel. Se o banco também precisar voltar, veja [Recuperação de dados](#recuperação-de-dados).
+
+### Variáveis de produção
+
+| Variável                                | Valor                                                                 |
+| --------------------------------------- | --------------------------------------------------------------------- |
+| `DATABASE_URL`                          | URL do Neon **com** pooler (`-pooler` no host), usada pela aplicação  |
+| `DATABASE_URL_UNPOOLED`                 | URL direta do Neon, usada só pelas migrações                          |
+| `BETTER_AUTH_SECRET`                    | Segredo próprio de produção (`openssl rand -base64 32`)               |
+| `BETTER_AUTH_URL`                       | Endereço público de produção, com `https://`                          |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE` | Servidor do provedor de e-mail                                        |
+| `SMTP_USER`, `SMTP_PASSWORD`            | Credenciais do provedor; a senha é gravada direto no painel da Vercel |
+| `MAIL_FROM`                             | Remetente, ex.: `Ficha D&D <ficha@seudominio.com>`                    |
+
+Nenhum desses valores fica no repositório.
+
+### Primeiro admin em produção
+
+O seed roda uma vez, da sua máquina, contra o Neon. Passe a URL direta só no ambiente do comando, sem gravá-la no `.env`:
 
 ```bash
-docker compose --profile prod up --build   # http://localhost:3000
+DATABASE_URL='<URL direta do Neon>' BETTER_AUTH_SECRET='<segredo de produção>' \
+BETTER_AUTH_URL='https://<endereço de produção>' \
+SEED_ADMIN_NAME='Mestre' SEED_ADMIN_EMAIL='<seu e-mail>' SEED_ADMIN_PASSWORD='<senha provisória>' \
+npm run db:seed
 ```
 
-Os serviços `migrate` e `app` só sobem com o profile `prod`. O `migrate` aplica as migrações e, se `SEED_ADMIN_EMAIL` estiver definida, roda o seed; o `app` só inicia depois que ele termina com sucesso.
+Depois, entre em produção, troque a senha provisória e confira o e-mail em **Contas › Alterar e-mail**.
+
+### Recuperação de dados
+
+O Neon guarda o histórico das últimas **6 horas** (plano free). Dentro dessa janela, dá para voltar o banco a qualquer instante. Não há backup agendado fora do Neon, e um problema percebido depois de 6 horas não tem como ser desfeito.
+
+1. No console do Neon, abra o projeto `dnd-sheet` › **Branches** › **Create branch**, escolha **Past data** e o horário de antes do problema.
+2. Confira os dados no branch novo (SQL Editor ou `psql` com a URL dele).
+3. Depois, faça uma destas:
+   - **Restore** do branch `main` para aquele horário (desfaz tudo o que veio depois); ou
+   - copie só o que falta do branch para o `main`.
+4. Exclua o branch de conferência.
+
+Para ter uma cópia fora do Neon quando quiser (por exemplo, antes de uma migração arriscada):
+
+```bash
+pg_dump --format=custom --no-owner '<URL direta do Neon>' > dnd-sheet-$(date +%F).dump
+```
+
+Guarde esse arquivo fora do repositório: ele contém e-mails e hashes de senha.

@@ -9,10 +9,14 @@ import { getPageSession } from "@/server/auth/page";
 import { AccountRowActions } from "./account-row-actions";
 import { EditEmail } from "./edit-email";
 import { CreateAccountForm } from "./create-account-form";
+import { APP_TIME_ZONE } from "@/lib/time";
 
 export const metadata: Metadata = { title: "Contas · Ficha D&D" };
 
-const dateFormat = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" });
+const dateFormat = new Intl.DateTimeFormat("pt-BR", {
+  dateStyle: "short",
+  timeZone: APP_TIME_ZONE,
+});
 
 async function Accounts() {
   // Não-admin recebe "não encontrado" (spec account-management).

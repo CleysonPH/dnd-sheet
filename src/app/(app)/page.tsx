@@ -9,12 +9,14 @@ import { getPageSession } from "@/server/auth/page";
 import { listSheets, type SheetSummary } from "@/server/sheets/service";
 
 import { CreateSheetForm } from "./create-sheet-form";
+import { APP_TIME_ZONE } from "@/lib/time";
 
 export const metadata: Metadata = { title: "Minhas fichas · Ficha D&D" };
 
 const updatedFormat = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
   timeStyle: "short",
+  timeZone: APP_TIME_ZONE,
 });
 
 function describe(sheet: SheetSummary): string {
