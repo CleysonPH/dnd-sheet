@@ -9,7 +9,7 @@ Esta change é um registro de decisões. As tarefas abaixo não implementam cód
 
 ## 2. Ficha: persistência e núcleo
 
-- [ ] 2.1 Abrir a change da capacidade `character-sheets` (lista, criar, abrir, excluir, isolamento por dono, documento JSON com `schemaVersion`, autosave e conflito de versão, conforme D2 e D9); verificar que `openspec validate` passa e que há cenários para acesso a ficha de outro usuário e para conflito de versão
+- [x] 2.1 Abrir a change da capacidade `character-sheets` (lista, criar, abrir, excluir, isolamento por dono, documento JSON com `schemaVersion`, autosave e conflito de versão, conforme D2 e D9); verificar que `openspec validate` passa e que há cenários para acesso a ficha de outro usuário e para conflito de versão
 - [ ] 2.2 Abrir a change da capacidade `sheet-core-stats` (atributos, modificadores, PB, perícias com proficiência/expertise, salvaguardas, PV, dados de vida, override manual, conforme D3 e D6), definindo o layout da ficha; verificar que `openspec validate` passa e que os cenários incluem exemplos numéricos de personagens reais
 
 ## 3. Ficha: automação
