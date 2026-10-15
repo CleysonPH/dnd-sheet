@@ -22,7 +22,7 @@ import { sourcesSchema } from "@/engine/sources/schema";
  * Toda mudança no schema abaixo precisa incrementar esta constante e
  * acrescentar em migrate.ts uma migração da versão anterior, com teste.
  */
-export const SHEET_SCHEMA_VERSION = 6;
+export const SHEET_SCHEMA_VERSION = 7;
 
 /** Tamanho máximo do documento serializado, em bytes. */
 export const SHEET_MAX_BYTES = 256 * 1024;
@@ -101,6 +101,8 @@ export const sheetDocumentSchema = z.strictObject({
   skills: byKey(SKILLS, z.enum(PROFICIENCY_LEVELS)),
   hitPoints: hitPointsSchema,
   deathSaves: deathSavesSchema,
+  /** Inspiração heroica: o jogador liga e desliga (design I1). */
+  heroicInspiration: z.boolean(),
   speed: speedSchema,
   overrides: z.partialRecord(z.enum(DERIVED_KEYS), overrideValueSchema),
   sources: sourcesSchema,
@@ -124,6 +126,7 @@ export function createSheetDocument(name: string): SheetDocument {
     skills: fill<Skill, "none">(SKILLS, "none"),
     hitPoints: { hitDie: 8, damage: 0, temp: 0, hitDiceSpent: 0 },
     deathSaves: { successes: 0, failures: 0 },
+    heroicInspiration: false,
     speed: 9,
     overrides: {},
     sources: [],

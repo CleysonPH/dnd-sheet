@@ -60,7 +60,7 @@ Funções puras:
 ### I5. Interface do cartão de PV
 
 - **Botão "Inspiração heroica"**: com `aria-pressed`, no estilo dos botões de alternar da ficha. Funciona em Jogar e em Editar.
-- **Linha de concentração**: aparece só quando há concentração. Mostra "Concentrando em <magia>" e o botão "Encerrar", que chama `update(endConcentration)`.
+- **Indicador de concentração**: aparece no cabeçalho do cartão, ao lado da inspiração, só quando há concentração. É um destaque preenchido na cor de acento, com um ponto pulsante, "Concentrando em <magia>" e o botão "Encerrar", que chama `update(endConcentration)`. *(Ajustado a pedido do usuário depois da primeira implementação: antes era uma linha no rodapé do cartão, discreta demais para a mesa.)*
 
 ### I6. Uma concentração por vez no `patchSource`
 

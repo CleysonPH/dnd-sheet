@@ -5,6 +5,9 @@ import {
   type SheetDocument,
 } from "@/engine/sheet/document";
 
+import { createSource } from "@/engine/sources/rules";
+
+import { concentratingSpell } from "./concentration";
 import { deriveStats } from "./derive";
 import { applyDamage, applyHealing, normalizeDeathSaves } from "./hit-points";
 
@@ -44,6 +47,31 @@ function hp(document: SheetDocument) {
 }
 
 describe("applyDamage", () => {
+  /** Com "Escudo da Fé", de concentração, em efeito. */
+  const concentrating = (damage: number): SheetDocument => ({
+    ...thorin({ damage }),
+    sources: [
+      {
+        ...createSource("spell", "Escudo da Fé", "s1"),
+        level: 1,
+        concentration: true,
+        active: true,
+      },
+    ],
+  });
+
+  it("cair a 0 PV encerra a concentração", () => {
+    const document = applyDamage(concentrating(43), 20);
+    expect(hp(document).current).toBe(0);
+    expect(concentratingSpell(document.sources)).toBeNull();
+  });
+
+  it("acima de 0 PV, a concentração continua", () => {
+    const document = applyDamage(concentrating(25), 20);
+    expect(hp(document).current).toBe(10);
+    expect(concentratingSpell(document.sources)?.name).toBe("Escudo da Fé");
+  });
+
   it("o PV temporário absorve primeiro: 40/55 temp 5, 7 de dano -> 38/55 temp 0", () => {
     const document = applyDamage(thorin({ damage: 15, temp: 5 }), 7);
     expect(hp(document)).toEqual({ current: 38, max: 55, temp: 0 });

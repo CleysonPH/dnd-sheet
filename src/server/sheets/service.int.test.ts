@@ -264,6 +264,18 @@ describe("fichas", () => {
       expect((await getSheet(lyra, id))?.document.sources).toEqual(sources);
     });
 
+    it("grava a inspiração heroica", async () => {
+      const { lyra } = await setup();
+      const id = await newSheet(lyra, "Thorin");
+      const document = { ...edited("Thorin"), heroicInspiration: true };
+
+      expect(await saveSheet(lyra, id, { baseVersion: 1, document })).toEqual({
+        status: "saved",
+        version: 2,
+      });
+      expect((await getSheet(lyra, id))?.document.heroicInspiration).toBe(true);
+    });
+
     it("grava uma magia sempre preparada e recusa truque sempre preparado", async () => {
       const { lyra } = await setup();
       const id = await newSheet(lyra, "Elara");

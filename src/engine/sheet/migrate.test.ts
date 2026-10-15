@@ -217,6 +217,16 @@ describe("migrateSheetDocument", () => {
     expect(migrated.sources[3]).toEqual(feat);
   });
 
+  it("leva o formato 6 ao 7 sem inspiração heroica", () => {
+    const formatSix: Record<string, unknown> = {
+      ...createSheetDocument("Thorin"),
+      schemaVersion: 6,
+    };
+    delete formatSix.heroicInspiration;
+
+    expect(migrateSheetDocument(formatSix).heroicInspiration).toBe(false);
+  });
+
   it("recusa documento que não valida depois de migrado", () => {
     expect(() =>
       migrateSheetDocument({ schemaVersion: 1, identity: { name: "" } }),

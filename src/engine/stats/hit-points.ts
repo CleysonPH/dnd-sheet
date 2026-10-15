@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import type { SheetDocument } from "@/engine/sheet/document";
 
+import { endConcentration } from "./concentration";
 import { deriveStats } from "./derive";
 
 /*
@@ -24,7 +25,8 @@ function hitPointsMax(document: SheetDocument): number {
 
 /**
  * O PV temporário absorve o dano primeiro; o resto vira dano sofrido, que
- * não passa do PV máximo (o PV atual não fica abaixo de 0).
+ * não passa do PV máximo (o PV atual não fica abaixo de 0). Chegar a 0 PV
+ * encerra a concentração (design I3).
  */
 export function applyDamage(
   document: SheetDocument,
@@ -33,7 +35,7 @@ export function applyDamage(
   const { temp, damage } = document.hitPoints;
   const absorbed = Math.min(temp, amount);
   const max = hitPointsMax(document);
-  return {
+  const damaged = {
     ...document,
     hitPoints: {
       ...document.hitPoints,
@@ -41,6 +43,9 @@ export function applyDamage(
       damage: Math.min(max, damage + amount - absorbed),
     },
   };
+  return deriveStats(damaged).hitPointsCurrent === 0
+    ? endConcentration(damaged)
+    : damaged;
 }
 
 /**

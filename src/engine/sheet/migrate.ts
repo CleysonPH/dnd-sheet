@@ -104,6 +104,12 @@ export const migrateV5ToV6: SheetMigration = (document) => ({
   }),
 });
 
+/** Formato 6 -> 7: a ficha ganha a inspiração heroica, desligada (I1). */
+export const migrateV6ToV7: SheetMigration = (document) => ({
+  ...document,
+  heroicInspiration: false,
+});
+
 /** Migrações reais do formato. */
 export const SHEET_MIGRATIONS: readonly SheetMigration[] = [
   migrateV1ToV2,
@@ -111,6 +117,7 @@ export const SHEET_MIGRATIONS: readonly SheetMigration[] = [
   migrateV3ToV4,
   migrateV4ToV5,
   migrateV5ToV6,
+  migrateV6ToV7,
 ];
 
 export class SheetFormatError extends Error {

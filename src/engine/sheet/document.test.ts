@@ -43,6 +43,7 @@ describe("createSheetDocument", () => {
       background: "",
     });
     expect(Object.values(document.abilities)).toEqual([10, 10, 10, 10, 10, 10]);
+    expect(document.heroicInspiration).toBe(false);
     expect(Object.values(document.savingThrows).every((p) => !p)).toBe(true);
     expect(Object.keys(document.skills)).toHaveLength(18);
     expect(Object.values(document.skills).every((p) => p === "none")).toBe(

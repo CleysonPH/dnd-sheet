@@ -2,8 +2,8 @@
 
 ## 1. Formato e regras
 
-- [ ] 1.1 Acrescentar `heroicInspiration` ao documento, no formato 7, com `migrateV6ToV7` (I1). Testes: ficha nova sem inspiração, migração do formato 6 com `false` e um documento do formato 1 chegando ao 7 válido. Atualizar o README (formato 7). Verificar que `npm test` passa
-- [ ] 1.2 Criar `src/engine/stats/concentration.ts` com `concentratingSpell`, `endConcentration`, `concentrationSaveDc` e `enforceSingleConcentration` (I2). Testes:
+- [x] 1.1 Acrescentar `heroicInspiration` ao documento, no formato 7, com `migrateV6ToV7` (I1). Testes: ficha nova sem inspiração, migração do formato 6 com `false` e um documento do formato 1 chegando ao 7 válido. Atualizar o README (formato 7). Verificar que `npm test` passa
+- [x] 1.2 Criar `src/engine/stats/concentration.ts` com `concentratingSpell`, `endConcentration`, `concentrationSaveDc` e `enforceSingleConcentration` (I2). Testes:
   - Escudo da Fé em efeito;
   - magia sem concentração ignorada;
   - duas concentrações na ordem da ficha;
@@ -13,7 +13,7 @@
   - "Armadura Arcana" sem efeito na regra.
 
   Verificar que `npm test` passa
-- [ ] 1.3 Fazer `applyDamage` encerrar a concentração quando o PV atual chega a 0 (I3). Testes:
+- [x] 1.3 Fazer `applyDamage` encerrar a concentração quando o PV atual chega a 0 (I3). Testes:
   - Elara com 12 PV sofre 20 e a magia sai de efeito;
   - com 30 PV sofre 20 e a magia continua.
 
@@ -21,13 +21,13 @@
 
 ## 2. Ficha na tela
 
-- [ ] 2.1 Acrescentar ao cartão de PV o botão "Inspiração heroica" e a linha "Concentrando em …" com "Encerrar" (I5). Aplicar `enforceSingleConcentration` no `patchSource` (I6). Verificar no navegador:
+- [x] 2.1 Acrescentar ao cartão de PV o botão "Inspiração heroica" e a linha "Concentrando em …" com "Encerrar" (I5). Aplicar `enforceSingleConcentration` no `patchSource` (I6). Verificar no navegador:
   - a inspiração liga e desliga, em Jogar e em Editar, e continua depois de um descanso longo;
   - "Escudo da Fé" em efeito mostra a concentração e +2 na CA;
   - "Encerrar" tira a magia de efeito e a CA volta;
   - pôr "Bênção" em efeito encerra "Escudo da Fé";
   - "Armadura Arcana" não interfere
-- [ ] 2.2 Acrescentar ao cartão de PV o aviso do teste depois do dano, com "Manteve" e "Perdeu", e o aviso de concentração encerrada a 0 PV (I4). Verificar no navegador:
+- [x] 2.2 Acrescentar ao cartão de PV o aviso do teste depois do dano, com "Manteve" e "Perdeu", e o aviso de concentração encerrada a 0 PV (I4). Verificar no navegador:
   - 14 de dano mostra "CD 10 (+2)";
   - 46 de dano mostra CD 23;
   - 8 de dano absorvidos pelo PV temporário ainda mostram o teste;
@@ -36,4 +36,8 @@
   - sem concentração, nenhum aviso.
 
   Conferir a 375 px e nos dois temas
-- [ ] 2.3 Rodar `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:int`, `npm run build` e `npm run format:check` e verificar que todos passam
+- [x] 2.3 Rodar `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:int`, `npm run build` e `npm run format:check` e verificar que todos passam
+
+## 3. Indicador de concentração
+
+- [x] 3.1 Trocar a linha de concentração do rodapé do cartão de PV por um indicador destacado no cabeçalho, ao lado da inspiração heroica, com o nome da magia e "Encerrar" (I5). Verificar no navegador que o indicador aparece só com concentração e que "Encerrar" tira a magia de efeito. Conferir a 375 px e nos dois temas, e rodar `npm run lint`, `npm run typecheck`, `npm test` e `npm run format:check`

@@ -13,6 +13,7 @@ import {
   totalWeight,
 } from "@/engine/sources/rules";
 import { sourceNameSchema, type Source } from "@/engine/sources/schema";
+import { enforceSingleConcentration } from "@/engine/stats/concentration";
 
 import type { SheetPartProps } from "../props";
 import { useSheetMode } from "../sheet-mode";
@@ -131,8 +132,12 @@ export function SourcesPanel({ document, stats, update }: SheetPartProps) {
   function patchSource(id: string, patch: SourcePatch) {
     update((current) => ({
       ...current,
-      sources: current.sources.map((source) =>
-        source.id === id ? ({ ...source, ...patch } as Source) : source,
+      // Uma concentração por vez (design I6).
+      sources: enforceSingleConcentration(
+        current.sources.map((source) =>
+          source.id === id ? ({ ...source, ...patch } as Source) : source,
+        ),
+        id,
       ),
     }));
   }
