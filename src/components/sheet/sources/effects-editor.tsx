@@ -1,19 +1,8 @@
 "use client";
 
-import { useState } from "react";
-
-import { Button, TextField } from "@/components/form";
-import {
-  EvaluationError,
-  evaluate,
-  parseExpression,
-  type ExpressionVariables,
-} from "@/engine/effects/expression";
-import {
-  createEffect,
-  effectExpressionSchema,
-  type Effect,
-} from "@/engine/effects/schema";
+import { Button } from "@/components/form";
+import type { ExpressionVariables } from "@/engine/effects/expression";
+import { createEffect, type Effect } from "@/engine/effects/schema";
 import {
   EFFECT_PROFICIENCIES,
   MAX_EFFECTS_PER_SOURCE,
@@ -29,78 +18,9 @@ import {
   TARGET_GROUPS,
   targetOptionLabel,
 } from "./effect-labels";
+import { ExpressionField } from "./expression-field";
 
 const SELECT = "rounded-md border border-line bg-bg px-2 py-2 text-sm";
-
-/** Resultado da expressão com as variáveis atuais, ou o erro. */
-function preview(text: string, variables: ExpressionVariables) {
-  const parsed = parseExpression(text);
-  if (!parsed.ok) return { ok: false as const, message: parsed.error };
-  try {
-    return { ok: true as const, value: evaluate(parsed.expression, variables) };
-  } catch (error) {
-    if (error instanceof EvaluationError) {
-      return { ok: false as const, message: error.message };
-    }
-    throw error;
-  }
-}
-
-/**
- * Campo da expressão: guarda o texto digitado, mostra "= 15" ou o erro e só
- * grava expressões válidas (design E7).
- */
-function ExpressionField({
-  name,
-  value,
-  variables,
-  onCommit,
-}: {
-  name: string;
-  value: string;
-  variables: ExpressionVariables;
-  onCommit: (expression: string) => void;
-}) {
-  const [raw, setRaw] = useState(value);
-  const result = preview(raw, variables);
-  const tooLong = effectExpressionSchema.safeParse(raw);
-  const error = !tooLong.success
-    ? tooLong.error.issues[0]?.message
-    : result.ok
-      ? undefined
-      : `Expressão inválida: ${result.message}`;
-
-  return (
-    <div className="flex min-w-0 flex-1 flex-col gap-1">
-      <TextField
-        label="Valor"
-        name={name}
-        value={raw}
-        error={error}
-        autoComplete="off"
-        spellCheck={false}
-        placeholder="ex.: 10 + des.mod + con.mod"
-        onChange={(event) => {
-          const text = event.target.value;
-          setRaw(text);
-          const parsed = parseExpression(text);
-          if (
-            parsed.ok &&
-            effectExpressionSchema.safeParse(text).success &&
-            text !== value
-          ) {
-            onCommit(text);
-          }
-        }}
-      />
-      {result.ok && (
-        <p className="text-xs text-muted" aria-live="polite">
-          = {result.value}
-        </p>
-      )}
-    </div>
-  );
-}
 
 function EffectRow({
   effect,
@@ -174,6 +94,8 @@ function EffectRow({
         </div>
         {usesExpression(effect.op) ? (
           <ExpressionField
+            label="Valor"
+            placeholder="ex.: 10 + des.mod + con.mod"
             name={field("expression")}
             value={effect.expression}
             variables={variables}

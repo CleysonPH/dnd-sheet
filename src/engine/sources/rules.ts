@@ -64,7 +64,13 @@ export function createSource<K extends SourceKind>(
   name: string,
   id: string,
 ): SourceOf<K> {
-  const base = { id, name: name.trim(), description: "", effects: [] };
+  const base = {
+    id,
+    name: name.trim(),
+    description: "",
+    effects: [],
+    trackers: [],
+  };
   const byKind: { [T in SourceKind]: SourceOf<T> } = {
     feat: { ...base, kind: "feat", category: "general" } satisfies Feat,
     trait: {

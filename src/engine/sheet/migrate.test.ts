@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { createSource } from "@/engine/sources/rules";
+
 import { SHEET_SCHEMA_VERSION, createSheetDocument } from "./document";
 import {
   SHEET_MIGRATIONS,
@@ -141,13 +143,34 @@ describe("migrateSheetDocument", () => {
       {
         ...item,
         effects: [],
+        trackers: [],
         armorType: "light",
         armorBase: 10,
         shieldBonus: 2,
       },
-      { ...spell, effects: [], active: false },
-      { ...trait, effects: [] },
+      { ...spell, effects: [], trackers: [], active: false },
+      { ...trait, effects: [], trackers: [] },
     ]);
+  });
+
+  it("leva o formato 4 ao atual com trackers vazios e espaços zerados", () => {
+    const current = createSheetDocument("Thorin");
+    const source: Record<string, unknown> = {
+      ...createSource("feat", "Robusto", "f1"),
+    };
+    delete source.trackers;
+    const formatFour: Record<string, unknown> = {
+      ...current,
+      schemaVersion: 4,
+      sources: [source],
+    };
+    delete formatFour.spellSlots;
+    delete formatFour.pactSlots;
+
+    const migrated = migrateSheetDocument(formatFour);
+    expect(migrated.sources[0]?.trackers).toEqual([]);
+    expect(migrated.spellSlots).toEqual(current.spellSlots);
+    expect(migrated.pactSlots).toEqual({ level: 1, max: 0, used: 0 });
   });
 
   it("recusa documento que não valida depois de migrado", () => {

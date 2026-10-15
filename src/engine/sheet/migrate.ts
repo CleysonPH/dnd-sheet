@@ -77,11 +77,26 @@ export const migrateV3ToV4: SheetMigration = (document) => ({
   })),
 });
 
+/**
+ * Formato 4 -> 5: trackers vazios nas fontes e espaços de magia zerados,
+ * escritos aqui (design R1).
+ */
+export const migrateV4ToV5: SheetMigration = (document) => ({
+  ...document,
+  sources: (document.sources as Record<string, unknown>[]).map((source) => ({
+    ...source,
+    trackers: [],
+  })),
+  spellSlots: Array.from({ length: 9 }, () => ({ max: 0, used: 0 })),
+  pactSlots: { level: 1, max: 0, used: 0 },
+});
+
 /** Migrações reais do formato. */
 export const SHEET_MIGRATIONS: readonly SheetMigration[] = [
   migrateV1ToV2,
   migrateV2ToV3,
   migrateV3ToV4,
+  migrateV4ToV5,
 ];
 
 export class SheetFormatError extends Error {

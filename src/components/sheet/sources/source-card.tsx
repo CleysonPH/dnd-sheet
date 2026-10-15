@@ -5,6 +5,7 @@ import { useState, type ReactNode } from "react";
 import { Badge, Button } from "@/components/form";
 import { Markdown } from "@/components/markdown";
 import type { ExpressionVariables } from "@/engine/effects/expression";
+import { currentOf, trackerMax } from "@/engine/resources/trackers";
 import { isItemActive } from "@/engine/sources/rules";
 import type { Item, Source, Spell } from "@/engine/sources/schema";
 import type { EffectIssue } from "@/engine/stats/derive";
@@ -266,6 +267,23 @@ export function SourceCard({
         </div>
       </div>
 
+      {source.trackers.length > 0 && (
+        <ul
+          aria-label={`Trackers de ${source.name}`}
+          className="flex flex-wrap gap-1.5 px-3 pb-2"
+        >
+          {source.trackers.map((tracker) => {
+            const { max, error } = trackerMax(tracker, variables);
+            return (
+              <li key={tracker.id} title={error}>
+                <Badge tone={error ? "danger" : "neutral"}>
+                  {tracker.name} {currentOf(max, tracker.used)}/{max}
+                </Badge>
+              </li>
+            );
+          })}
+        </ul>
+      )}
       {source.effects.length > 0 && (
         <ul
           aria-label={`Efeitos de ${source.name}`}

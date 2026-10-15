@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { effectsSchema } from "@/engine/effects/schema";
+import { trackersSchema } from "@/engine/resources/schema";
 
 import {
   ARMOR_TYPES,
@@ -56,6 +57,7 @@ const base = {
   name: sourceNameSchema,
   description: sourceDescriptionSchema,
   effects: effectsSchema,
+  trackers: trackersSchema,
 };
 
 export const featSchema = z.strictObject({

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { createSheetDocument } from "@/engine/sheet/document";
 import { createEffect } from "@/engine/effects/schema";
+import { createTracker } from "@/engine/resources/schema";
 import { createSource } from "@/engine/sources/rules";
 import { getDb } from "@/server/db";
 import { sheet } from "@/server/db/schema";
@@ -308,6 +309,58 @@ describe("fichas", () => {
           document: withEffect({ expression: "2 * nivel +" }),
         }),
       ).toEqual(invalid);
+      expect((await stored(id))?.version).toBe(1);
+    });
+
+    it("grava trackers e espaços de magia", async () => {
+      const { lyra } = await setup();
+      const id = await newSheet(lyra, "Ária");
+      const base = edited("Ária");
+      const document = {
+        ...base,
+        sources: [
+          {
+            ...createSource("trait", "Inspiração de Bardo", "t1"),
+            trackers: [
+              {
+                ...createTracker("k1"),
+                name: "Inspiração",
+                max: "max(1, car.mod)",
+                used: 1,
+              },
+            ],
+          },
+        ],
+        spellSlots: base.spellSlots.map((slot, i) =>
+          i === 0 ? { max: 4, used: 1 } : slot,
+        ),
+        pactSlots: { level: 2, max: 2, used: 0 },
+      };
+
+      expect(await saveSheet(lyra, id, { baseVersion: 1, document })).toEqual({
+        status: "saved",
+        version: 2,
+      });
+      expect((await getSheet(lyra, id))?.document).toEqual(document);
+    });
+
+    it("recusa tracker com máximo inválido", async () => {
+      const { lyra } = await setup();
+      const id = await newSheet(lyra, "Ária");
+      const document = {
+        ...edited("Ária"),
+        sources: [
+          {
+            ...createSource("trait", "Inspiração de Bardo", "t1"),
+            trackers: [{ ...createTracker("k1"), max: "max(1, carisma)" }],
+          },
+        ],
+      };
+
+      expect(await saveSheet(lyra, id, { baseVersion: 1, document })).toEqual({
+        status: "invalid",
+        reason: "schema",
+      });
       expect((await stored(id))?.version).toBe(1);
     });
 

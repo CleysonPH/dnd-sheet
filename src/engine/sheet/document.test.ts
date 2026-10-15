@@ -113,8 +113,8 @@ describe("sheetDocumentSchema", () => {
   });
 
   it("recusa outra versão de formato", () => {
-    expect(firstError({ ...valid, schemaVersion: 3 })).not.toBeNull();
-    expect(firstError({ ...valid, schemaVersion: 5 })).not.toBeNull();
+    expect(firstError({ ...valid, schemaVersion: 4 })).not.toBeNull();
+    expect(firstError({ ...valid, schemaVersion: 6 })).not.toBeNull();
   });
 
   it("exige atributos inteiros de 1 a 30", () => {
@@ -206,6 +206,7 @@ describe("sources", () => {
     name: "Sentinela",
     description: "",
     effects: [],
+    trackers: [],
     category: "general",
   };
   const trait = {
@@ -214,6 +215,7 @@ describe("sources", () => {
     name: "Fúria",
     description: "Enquanto em **Fúria**",
     effects: [],
+    trackers: [],
     origin: "class",
     from: "Bárbaro",
   };
@@ -233,6 +235,7 @@ describe("sources", () => {
     armorBase: 10,
     shieldBonus: 2,
     effects: [],
+    trackers: [],
   };
   const spell = {
     id: "s1",
@@ -254,6 +257,7 @@ describe("sources", () => {
     prepared: true,
     active: false,
     effects: [],
+    trackers: [],
   };
 
   function withSources(sources: unknown[]) {

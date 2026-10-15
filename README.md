@@ -73,6 +73,7 @@ src/
     stats/      regras do 5.5e, valores derivados (com override), dano e cura
     sources/    fontes da ficha: talentos, traços, itens e magias (schema e regras)
     effects/    efeitos das fontes: alvos, operações, expressões e efeitos ativos
+    resources/  trackers, espaços de magia e descansos curto e longo
   server/       código só de servidor
     auth/       configuração do Better Auth, guards e troca de senha
     accounts/   administração de contas e seed do primeiro admin
@@ -86,11 +87,13 @@ scripts/        comandos de operação (seed, config da CLI do Better Auth)
 
 Rotas principais: `/` (Minhas fichas), `/fichas/[id]` (ficha com salvamento automático), `/conta`, `/admin/contas` (só admins), `/login` e `/trocar-senha`.
 
-A ficha é um documento JSON versionado (`schemaVersion`, hoje no formato 4). O documento guarda só entradas: atributos, proficiências, dado de vida, dano sofrido, deslocamento, valores manuais (`overrides`) e as fontes (`sources`: talentos, traços, itens e magias, cada uma com id próprio e seus efeitos). Modificadores, perícias, PV máximo e os demais valores derivados são recalculados no navegador por `deriveStats` (`src/engine/stats/derive.ts`) e nunca são gravados. Ao mudar o formato em `src/engine/sheet/document.ts`, incremente `SHEET_SCHEMA_VERSION` e acrescente a migração correspondente em `src/engine/sheet/migrate.ts`, com teste.
+A ficha é um documento JSON versionado (`schemaVersion`, hoje no formato 5). O documento guarda só entradas: atributos, proficiências, dado de vida, dano sofrido, deslocamento, valores manuais (`overrides`) e as fontes (`sources`: talentos, traços, itens e magias, cada uma com id próprio, seus efeitos e trackers) e os espaços de magia e de pacto. Modificadores, perícias, PV máximo e os demais valores derivados são recalculados no navegador por `deriveStats` (`src/engine/stats/derive.ts`) e nunca são gravados. Ao mudar o formato em `src/engine/sheet/document.ts`, incremente `SHEET_SCHEMA_VERSION` e acrescente a migração correspondente em `src/engine/sheet/migrate.ts`, com teste.
 
 A ficha tem dois modos. Jogar mostra os números para leitura e só deixa mexer no que muda na mesa (dano e cura, PV temporário, dados de vida e testes contra a morte). Editar mostra todos os campos e os valores manuais. Dano, cura e a regra que zera os testes contra a morte ao sair de 0 PV ficam em `src/engine/stats/hit-points.ts`.
 
 Cada fonte pode ter efeitos (`src/engine/effects/`): um alvo da lista fechada, uma operação (somar, base alternativa de CA, definir, proficiência), um valor e as condições "só sem armadura" e "só sem escudo". Os efeitos valem enquanto a fonte está ativa: talentos e traços sempre, itens quando ativos e magias quando marcadas como em efeito. O valor é uma expressão com inteiros, `+ - * /` (divisão para baixo), parênteses, `min(...)`, `max(...)` e as variáveis `for`…`car`, `for.mod`…`car.mod`, `nivel` e `pb`, interpretada por um parser próprio em `src/engine/effects/expression.ts`. `deriveStats` aplica os efeitos antes do valor manual, calcula a CA (maior base válida + escudo + bônus), ignora e sinaliza efeitos de atributos em ciclo e devolve as contribuições de cada valor, mostradas no painel de origem.
+
+Os recursos (`src/engine/resources/`) guardam o "usado", como o PV guarda o dano: o atual é o máximo menos o usado. O máximo de cada tracker é uma expressão com a mesma gramática dos efeitos. Cada tracker tem uma regra para o descanso curto e outra para o longo: não recupera, recupera tudo ou recupera uma quantidade (expressão), como a Inspiração de Bardo, que recupera 1 no curto e tudo no longo. O cartão Recursos, abaixo da faixa de topo, gasta e recupera trackers e espaços de magia e faz os descansos: o curto aplica a regra de descanso curto de cada tracker e recupera a Magia de Pacto; o longo aplica a regra de descanso longo, recupera todos os espaços, leva o PV ao máximo, zera o PV temporário, recupera os dados de vida e zera os testes contra a morte.
 
 As descrições das fontes aceitam um Markdown básico (parágrafos, quebras de linha, `**negrito**`, `*itálico*` e listas com `- ` ou `1. `), interpretado por `src/lib/markdown.ts` e exibido por `src/components/markdown.tsx` como elementos React, sem HTML.
 

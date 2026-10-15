@@ -35,6 +35,7 @@ import {
 } from "./labels";
 import { EffectsEditor } from "./effects-editor";
 import { SchemaTextField } from "./schema-text-field";
+import { TrackersEditor } from "./trackers-editor";
 
 /** Campos alteráveis de uma fonte, de qualquer tipo (Omit distribuído na união). */
 export type SourcePatch = Source extends infer S
@@ -178,6 +179,13 @@ export function SourceForm({
       {source.kind === "spell" && (
         <SpellFields spell={source} onChange={onChange} field={field} />
       )}
+
+      <TrackersEditor
+        sourceId={source.id}
+        trackers={source.trackers}
+        variables={variables}
+        onChange={(trackers) => onChange({ trackers })}
+      />
 
       <EffectsEditor
         sourceId={source.id}

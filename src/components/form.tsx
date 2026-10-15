@@ -24,7 +24,7 @@ export function Card({
       {...props}
     >
       {(title || actions) && (
-        <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           {title && (
             <h2 className="text-xs font-semibold tracking-wider text-muted uppercase">
               {title}
