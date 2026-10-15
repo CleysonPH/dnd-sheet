@@ -14,11 +14,16 @@ import {
 } from "@/engine/sources/rules";
 import { sourceNameSchema, type Source } from "@/engine/sources/schema";
 import { enforceSingleConcentration } from "@/engine/stats/concentration";
+import { spellcastingFor } from "@/engine/stats/derive";
+import { SPELLCASTING_ABILITIES } from "@/engine/stats/keys";
 
+import { ABILITY_LABEL } from "../labels";
+import { formatSigned } from "../parse";
 import type { SheetPartProps } from "../props";
 import { useSheetMode } from "../sheet-mode";
 import { formatWeight, spellLevelLabel } from "./labels";
 import { SourceCard } from "./source-card";
+import { SelectField } from "./source-form";
 import type { SourcePatch } from "./source-form";
 
 type Tab = "features" | "inventory" | "spells";
@@ -181,8 +186,18 @@ export function SourcesPanel({ document, stats, update }: SheetPartProps) {
       onDelete={() => deleteSource(source.id)}
       variables={stats.variables}
       issues={stats.issues.filter((issue) => issue.sourceId === source.id)}
+      castingLabel={castingLabel(source)}
     />
   );
+
+  /** "INT · CD 12 · +4" para magia com atributo próprio (design K5). */
+  function castingLabel(source: Source): string | undefined {
+    if (source.kind !== "spell" || source.castingAbility === "sheet") {
+      return undefined;
+    }
+    const { saveDc, attack } = spellcastingFor(stats, source.castingAbility);
+    return `${ABILITY_LABEL[source.castingAbility].short} · CD ${saveDc} · ${formatSigned(attack)}`;
+  }
 
   const visible = sources.filter((source) => inTab(tab, source));
   const current = TABS.find((entry) => entry.tab === tab)!;
@@ -212,13 +227,48 @@ export function SourcesPanel({ document, stats, update }: SheetPartProps) {
       </div>
     );
   } else if (tab === "spells") {
+    const casting = document.spellcastingAbility;
     summary = (
-      <p className="mb-3 text-sm text-muted">
-        Preparadas:{" "}
-        <strong className="text-text">{preparedCount(sources)}</strong>
-        {" · "}Sempre preparadas:{" "}
-        <strong className="text-text">{alwaysPreparedCount(sources)}</strong>
-      </p>
+      <div className="mb-3 flex flex-col gap-2 text-sm text-muted">
+        {mode === "edit" && (
+          <div className="max-w-56">
+            <SelectField
+              label="Atributo de conjuração"
+              name="spellcasting-ability"
+              value={casting}
+              options={SPELLCASTING_ABILITIES.map((ability) => [
+                ability,
+                ability === "none" ? "Nenhum" : ABILITY_LABEL[ability].name,
+              ])}
+              onChange={(spellcastingAbility) =>
+                update({ spellcastingAbility })
+              }
+            />
+          </div>
+        )}
+        {casting !== "none" && (
+          <p>
+            Conjuração:{" "}
+            <strong className="text-text">
+              {ABILITY_LABEL[casting].short}
+            </strong>
+            {" · "}CD{" "}
+            <strong className="text-text">
+              {stats.values.spellSaveDc.value}
+            </strong>
+            {" · "}Ataque{" "}
+            <strong className="text-text">
+              {formatSigned(stats.values.spellAttack.value)}
+            </strong>
+          </p>
+        )}
+        <p>
+          Preparadas:{" "}
+          <strong className="text-text">{preparedCount(sources)}</strong>
+          {" · "}Sempre preparadas:{" "}
+          <strong className="text-text">{alwaysPreparedCount(sources)}</strong>
+        </p>
+      </div>
     );
   }
 

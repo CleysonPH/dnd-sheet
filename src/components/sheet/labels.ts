@@ -56,6 +56,8 @@ const OTHER_LABEL: Record<OtherKey, string> = {
   hitDiceMax: "Total de dados de vida",
   armorClass: "CA",
   speed: "Deslocamento",
+  spellSaveDc: "CD de magia",
+  spellAttack: "Ataque mágico",
 };
 
 /** Nome de um valor derivado, para títulos e leitores de tela. */

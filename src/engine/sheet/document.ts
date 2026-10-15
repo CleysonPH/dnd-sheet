@@ -6,6 +6,7 @@ import {
   HIT_DICE,
   PROFICIENCY_LEVELS,
   SKILLS,
+  SPELLCASTING_ABILITIES,
   type Ability,
   type Skill,
 } from "@/engine/stats/keys";
@@ -22,7 +23,7 @@ import { sourcesSchema } from "@/engine/sources/schema";
  * Toda mudança no schema abaixo precisa incrementar esta constante e
  * acrescentar em migrate.ts uma migração da versão anterior, com teste.
  */
-export const SHEET_SCHEMA_VERSION = 7;
+export const SHEET_SCHEMA_VERSION = 8;
 
 /** Tamanho máximo do documento serializado, em bytes. */
 export const SHEET_MAX_BYTES = 256 * 1024;
@@ -103,6 +104,8 @@ export const sheetDocumentSchema = z.strictObject({
   deathSaves: deathSavesSchema,
   /** Inspiração heroica: o jogador liga e desliga (design I1). */
   heroicInspiration: z.boolean(),
+  /** Atributo de conjuração da ficha (design K1). */
+  spellcastingAbility: z.enum(SPELLCASTING_ABILITIES),
   speed: speedSchema,
   overrides: z.partialRecord(z.enum(DERIVED_KEYS), overrideValueSchema),
   sources: sourcesSchema,
@@ -127,6 +130,7 @@ export function createSheetDocument(name: string): SheetDocument {
     hitPoints: { hitDie: 8, damage: 0, temp: 0, hitDiceSpent: 0 },
     deathSaves: { successes: 0, failures: 0 },
     heroicInspiration: false,
+    spellcastingAbility: "none",
     speed: 9,
     overrides: {},
     sources: [],

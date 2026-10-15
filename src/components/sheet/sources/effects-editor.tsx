@@ -167,7 +167,7 @@ function EffectRow({
 }
 
 const VARIABLES_HINT =
-  "Variáveis: for, des, con, int, sab, car (valores), for.mod … car.mod (modificadores), nivel e pb. Operações: + - * / (divisão para baixo), parênteses, min(…) e max(…).";
+  "Variáveis: for, des, con, int, sab, car (valores), for.mod … car.mod (modificadores), nivel, pb e conj.mod (modificador de conjuração). Operações: + - * / (divisão para baixo), parênteses, min(…) e max(…).";
 
 /** Lista de efeitos de uma fonte, com até 20 (design E7). */
 export function EffectsEditor({

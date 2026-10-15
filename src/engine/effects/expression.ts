@@ -25,7 +25,9 @@ export type Variable =
   | { kind: "score"; ability: Ability }
   | { kind: "mod"; ability: Ability }
   | { kind: "level" }
-  | { kind: "pb" };
+  | { kind: "pb" }
+  /** `conj.mod`: modificador do atributo de conjuração (design K4). */
+  | { kind: "spellcasting" };
 
 export type Expression =
   | { type: "number"; value: number }
@@ -80,6 +82,7 @@ function tokenize(text: string): Token[] {
 function variableFor(name: string): Variable {
   if (name === "nivel" || name === "nível") return { kind: "level" };
   if (name === "pb") return { kind: "pb" };
+  if (name === "conj.mod") return { kind: "spellcasting" };
   const [base, suffix, extra] = name.split(".");
   const ability = ABILITY_VARIABLES[base!];
   if (ability && extra === undefined) {
@@ -193,6 +196,8 @@ export type ExpressionVariables = {
   mods: Record<Ability, number>;
   level: number;
   pb: number;
+  /** Atributo de conjuração da ficha; null sem atributo (`conj.mod` = 0). */
+  spellcastingAbility: Ability | null;
 };
 
 export class EvaluationError extends Error {}
@@ -209,6 +214,10 @@ export function evaluate(
       const { variable } = expression;
       if (variable.kind === "score") return variables.scores[variable.ability];
       if (variable.kind === "mod") return variables.mods[variable.ability];
+      if (variable.kind === "spellcasting") {
+        const ability = variables.spellcastingAbility;
+        return ability ? variables.mods[ability] : 0;
+      }
       return variable.kind === "level" ? variables.level : variables.pb;
     }
     case "negate":
@@ -237,14 +246,25 @@ export function evaluate(
   }
 }
 
-/** Atributos lidos pela expressão (valor ou modificador), para os ciclos. */
-export function referencedAbilities(expression: Expression): Set<Ability> {
+/**
+ * Atributos lidos pela expressão (valor ou modificador), para os ciclos.
+ * `conj.mod` lê o atributo de conjuração da ficha (design K4).
+ */
+export function referencedAbilities(
+  expression: Expression,
+  spellcastingAbility: Ability | null = null,
+): Set<Ability> {
   const found = new Set<Ability>();
   const visit = (node: Expression) => {
     switch (node.type) {
       case "variable":
         if (node.variable.kind === "score" || node.variable.kind === "mod") {
           found.add(node.variable.ability);
+        } else if (
+          node.variable.kind === "spellcasting" &&
+          spellcastingAbility
+        ) {
+          found.add(spellcastingAbility);
         }
         return;
       case "negate":

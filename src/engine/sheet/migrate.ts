@@ -110,6 +110,18 @@ export const migrateV6ToV7: SheetMigration = (document) => ({
   heroicInspiration: false,
 });
 
+/**
+ * Formato 7 -> 8: a ficha fica sem atributo de conjuração e as magias usam o
+ * da ficha (design K1).
+ */
+export const migrateV7ToV8: SheetMigration = (document) => ({
+  ...document,
+  spellcastingAbility: "none",
+  sources: (document.sources as Record<string, unknown>[]).map((source) =>
+    source.kind === "spell" ? { ...source, castingAbility: "sheet" } : source,
+  ),
+});
+
 /** Migrações reais do formato. */
 export const SHEET_MIGRATIONS: readonly SheetMigration[] = [
   migrateV1ToV2,
@@ -118,6 +130,7 @@ export const SHEET_MIGRATIONS: readonly SheetMigration[] = [
   migrateV4ToV5,
   migrateV5ToV6,
   migrateV6ToV7,
+  migrateV7ToV8,
 ];
 
 export class SheetFormatError extends Error {

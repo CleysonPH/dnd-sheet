@@ -264,6 +264,29 @@ describe("fichas", () => {
       expect((await getSheet(lyra, id))?.document.sources).toEqual(sources);
     });
 
+    it("grava o atributo de conjuração e o de uma magia", async () => {
+      const { lyra } = await setup();
+      const id = await newSheet(lyra, "Ária");
+      const mistyStep = {
+        ...createSource("spell", "Passo Nebuloso", "s1"),
+        level: 2,
+        castingAbility: "int" as const,
+      };
+      const document = {
+        ...edited("Ária"),
+        spellcastingAbility: "cha" as const,
+        sources: [mistyStep],
+      };
+
+      expect(await saveSheet(lyra, id, { baseVersion: 1, document })).toEqual({
+        status: "saved",
+        version: 2,
+      });
+      const saved = (await getSheet(lyra, id))?.document;
+      expect(saved?.spellcastingAbility).toBe("cha");
+      expect(saved?.sources).toEqual([mistyStep]);
+    });
+
     it("grava a inspiração heroica", async () => {
       const { lyra } = await setup();
       const id = await newSheet(lyra, "Thorin");

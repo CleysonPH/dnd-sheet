@@ -43,8 +43,8 @@ describe("proficiencyBonusForLevel", () => {
 });
 
 describe("DERIVED_KEYS", () => {
-  it("lista 37 valores derivados sem repetição", () => {
-    expect(DERIVED_KEYS).toHaveLength(37);
-    expect(new Set(DERIVED_KEYS).size).toBe(37);
+  it("lista 39 valores derivados sem repetição", () => {
+    expect(DERIVED_KEYS).toHaveLength(39);
+    expect(new Set(DERIVED_KEYS).size).toBe(39);
   });
 });

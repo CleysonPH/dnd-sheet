@@ -161,6 +161,7 @@ describe("migrateSheetDocument", () => {
         trackers: [],
         active: false,
         preparation: "prepared",
+        castingAbility: "sheet",
       },
       { ...trait, effects: [], trackers: [] },
     ]);
@@ -225,6 +226,24 @@ describe("migrateSheetDocument", () => {
     delete formatSix.heroicInspiration;
 
     expect(migrateSheetDocument(formatSix).heroicInspiration).toBe(false);
+  });
+
+  it("leva o formato 7 ao 8 sem atributo de conjuração", () => {
+    const spell: Record<string, unknown> = {
+      ...createSource("spell", "Sono", "s1"),
+    };
+    delete spell.castingAbility;
+    const formatSeven: Record<string, unknown> = {
+      ...createSheetDocument("Ária"),
+      schemaVersion: 7,
+      sources: [spell, createSource("feat", "Robusto", "f1")],
+    };
+    delete formatSeven.spellcastingAbility;
+
+    const migrated = migrateSheetDocument(formatSeven);
+    expect(migrated.spellcastingAbility).toBe("none");
+    expect(migrated.sources[0]).toMatchObject({ castingAbility: "sheet" });
+    expect(migrated.sources[1]).toEqual(createSource("feat", "Robusto", "f1"));
   });
 
   it("recusa documento que não valida depois de migrado", () => {

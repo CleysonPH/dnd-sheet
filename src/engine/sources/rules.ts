@@ -122,6 +122,7 @@ export function createSource<K extends SourceKind>(
       concentration: false,
       ritual: false,
       preparation: "none",
+      castingAbility: "sheet",
       active: false,
     } satisfies Spell,
   };

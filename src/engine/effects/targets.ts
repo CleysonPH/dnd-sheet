@@ -39,7 +39,9 @@ export type EffectTarget =
   | "speed"
   | "initiative"
   | "hitPointsMax"
-  | "passivePerception";
+  | "passivePerception"
+  | "spellSaveDc"
+  | "spellAttack";
 
 export const EFFECT_TARGETS = [
   ...ABILITIES.map((ability) => `ability.${ability}` as const),
@@ -52,6 +54,8 @@ export const EFFECT_TARGETS = [
   "initiative",
   "hitPointsMax",
   "passivePerception",
+  "spellSaveDc",
+  "spellAttack",
 ] as const satisfies readonly EffectTarget[];
 
 /** Operações aceitas por alvo. */

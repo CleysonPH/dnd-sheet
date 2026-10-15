@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { effectsSchema } from "@/engine/effects/schema";
 import { trackersSchema } from "@/engine/resources/schema";
+import { CASTING_ABILITIES } from "@/engine/stats/keys";
 
 import {
   ARMOR_TYPES,
@@ -107,6 +108,8 @@ export const spellSchema = z.strictObject({
   concentration: z.boolean(),
   ritual: z.boolean(),
   preparation: z.enum(SPELL_PREPARATIONS),
+  /** Atributo de conjuração: o da ficha ou um próprio (design K1). */
+  castingAbility: z.enum(CASTING_ABILITIES),
   /** "Em efeito": os efeitos da magia só valem enquanto marcada. */
   active: z.boolean(),
 });

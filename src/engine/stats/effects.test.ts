@@ -184,6 +184,19 @@ describe("efeitos em atributos", () => {
     ]);
   });
 
+  it("conj.mod com conjuração INT num efeito em INT é ciclo", () => {
+    const loop = trait("Laço", [effect("ability.int", "add", "conj.mod")]);
+    const doc = {
+      ...thorin({ sources: [loop] }),
+      spellcastingAbility: "int" as const,
+    };
+    const stats = deriveStats(doc);
+    expect(stats.abilityScores.int.value).toBe(doc.abilities.int);
+    expect(stats.issues).toEqual([
+      expect.objectContaining({ sourceId: loop.id, reason: "cycle" }),
+    ]);
+  });
+
   it("divisão por zero ignora o efeito e registra o erro", () => {
     const bad = trait("Erro", [
       effect("hitPointsMax", "add", "10 / (des.mod - 2)"),

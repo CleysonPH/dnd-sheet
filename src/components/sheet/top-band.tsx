@@ -103,6 +103,25 @@ export function CombatStats({ document, stats, update }: SheetPartProps) {
             align="right"
           />
         </Tile>
+        {/* Só com atributo de conjuração (design K5). */}
+        {document.spellcastingAbility !== "none" && (
+          <>
+            <Tile label="CD de magia">
+              <DerivedValue
+                valueKey="spellSaveDc"
+                derived={stats.values.spellSaveDc}
+              />
+            </Tile>
+            <Tile label="Ataque mágico">
+              <DerivedValue
+                valueKey="spellAttack"
+                derived={stats.values.spellAttack}
+                signed
+                align="right"
+              />
+            </Tile>
+          </>
+        )}
       </div>
     </Card>
   );

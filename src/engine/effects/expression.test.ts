@@ -14,6 +14,7 @@ const thorin: ExpressionVariables = {
   mods: { str: 3, dex: 2, con: 3, int: -1, wis: 1, cha: 0 },
   level: 5,
   pb: 3,
+  spellcastingAbility: null,
 };
 
 function run(text: string, variables = thorin): number {
@@ -101,5 +102,34 @@ describe("referencedAbilities", () => {
     expect(
       parsed.ok && [...referencedAbilities(parsed.expression)].sort(),
     ).toEqual(["con", "dex"]);
+  });
+});
+
+describe("conj.mod", () => {
+  /** Ária: CAR 16, conjuração Carisma. */
+  const aria: ExpressionVariables = {
+    ...thorin,
+    scores: { ...thorin.scores, cha: 16 },
+    mods: { ...thorin.mods, cha: 3 },
+    spellcastingAbility: "cha",
+  };
+
+  it("vale o modificador do atributo de conjuração", () => {
+    expect(run("max(1, conj.mod)", aria)).toBe(3);
+  });
+
+  it("vale 0 sem atributo de conjuração", () => {
+    expect(run("conj.mod", thorin)).toBe(0);
+    expect(run("max(1, conj.mod)", thorin)).toBe(1);
+  });
+
+  it("conta como leitura do atributo de conjuração para os ciclos", () => {
+    const parsed = parseExpression("conj.mod + 1");
+    expect(
+      parsed.ok && [...referencedAbilities(parsed.expression, "int")],
+    ).toEqual(["int"]);
+    expect(parsed.ok && [...referencedAbilities(parsed.expression)]).toEqual(
+      [],
+    );
   });
 });

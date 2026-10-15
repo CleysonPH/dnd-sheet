@@ -31,6 +31,14 @@ export const SKILL_ABILITY = {
 export type Skill = keyof typeof SKILL_ABILITY;
 export const SKILLS = Object.keys(SKILL_ABILITY) as Skill[];
 
+/** Atributo de conjuração da ficha: nenhum, INT, SAB ou CAR (design K1). */
+export const SPELLCASTING_ABILITIES = ["none", "int", "wis", "cha"] as const;
+export type SpellcastingAbility = (typeof SPELLCASTING_ABILITIES)[number];
+
+/** Atributo de uma magia: o da ficha ou um próprio (design K1). */
+export const CASTING_ABILITIES = ["sheet", "int", "wis", "cha"] as const;
+export type CastingAbility = (typeof CASTING_ABILITIES)[number];
+
 export const PROFICIENCY_LEVELS = ["none", "proficient", "expertise"] as const;
 export type ProficiencyLevel = (typeof PROFICIENCY_LEVELS)[number];
 
@@ -61,6 +69,8 @@ export const DERIVED_KEYS = [
   "hitDiceMax",
   "armorClass",
   "speed",
+  "spellSaveDc",
+  "spellAttack",
 ] as const;
 
 export type DerivedKey =
@@ -73,4 +83,6 @@ export type DerivedKey =
   | "hitPointsMax"
   | "hitDiceMax"
   | "armorClass"
-  | "speed";
+  | "speed"
+  | "spellSaveDc"
+  | "spellAttack";

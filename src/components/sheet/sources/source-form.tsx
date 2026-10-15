@@ -23,7 +23,9 @@ import {
 } from "@/engine/sources/schema";
 
 import type { ExpressionVariables } from "@/engine/effects/expression";
+import { CASTING_ABILITIES } from "@/engine/stats/keys";
 
+import { ABILITY_LABEL } from "../labels";
 import { NumberField } from "../number-field";
 import { formatDecimal, parseDecimal, parseInteger } from "../parse";
 import {
@@ -49,7 +51,7 @@ export type SourcePatch = Source extends infer S
 const MARKDOWN_HINT =
   "Aceita **negrito**, *itálico*, listas com “- ” ou “1. ” e parágrafos separados por uma linha em branco.";
 
-function SelectField<V extends string | number>({
+export function SelectField<V extends string | number>({
   label,
   name,
   value,
@@ -363,6 +365,16 @@ function SpellFields({
         {text("castingTime", "Tempo de conjuração", "ex.: 1 ação")}
         {text("range", "Alcance", "ex.: 36 m")}
         {text("duration", "Duração", "ex.: instantânea")}
+        <SelectField
+          label="Atributo"
+          name={field("castingAbility")}
+          value={spell.castingAbility}
+          options={CASTING_ABILITIES.map((ability) => [
+            ability,
+            ability === "sheet" ? "Da ficha" : ABILITY_LABEL[ability].name,
+          ])}
+          onChange={(castingAbility) => onChange({ castingAbility })}
+        />
         {spell.level > 0 && (
           <SelectField
             label="Preparação"

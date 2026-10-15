@@ -124,6 +124,9 @@ describe("createSource", () => {
   });
 
   it("magia nova não está preparada", () => {
-    expect(createSource("spell", "Sono", "s1").preparation).toBe("none");
+    expect(createSource("spell", "Sono", "s1")).toMatchObject({
+      preparation: "none",
+      castingAbility: "sheet",
+    });
   });
 });

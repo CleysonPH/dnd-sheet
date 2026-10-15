@@ -67,6 +67,11 @@ export type DerivedStats = {
   hitPointsCurrent: number;
   /** Total de dados de vida menos os gastos, sem passar de 0. */
   hitDiceAvailable: number;
+  /**
+   * Soma dos efeitos de CD de magia e de ataque mágico, para as magias com
+   * atributo próprio (design K3).
+   */
+  spellEffects: { saveDc: number; attack: number };
 };
 
 /** PV máximo pela média fixa do 5.5e, com mínimo de 1 PV por nível. */
@@ -209,9 +214,15 @@ export function deriveStats(document: SheetDocument): DerivedStats {
       ),
     ]),
   );
+  const spellcastingAbility: Ability | null =
+    document.spellcastingAbility === "none"
+      ? null
+      : document.spellcastingAbility;
   const reads = (active: ActiveEffect): Set<Ability> => {
     const parsed = parseExpressionCached(active.effect.expression);
-    return parsed.ok ? referencedAbilities(parsed.expression) : new Set();
+    return parsed.ok
+      ? referencedAbilities(parsed.expression, spellcastingAbility)
+      : new Set();
   };
   const edges = new Map<Ability, Set<Ability>>();
   for (const [target, list] of abilityEffects) {
@@ -263,7 +274,13 @@ export function deriveStats(document: SheetDocument): DerivedStats {
     ABILITIES.map((ability) => [ability, abilityModifier(scores[ability])]),
   ) as Record<Ability, number>;
   const abilityScores = {} as Record<Ability, AbilityScore>;
-  const variables: ExpressionVariables = { scores, mods, level, pb };
+  const variables: ExpressionVariables = {
+    scores,
+    mods,
+    level,
+    pb,
+    spellcastingAbility,
+  };
 
   for (const ability of order) {
     const base = document.abilities[ability];
@@ -340,6 +357,34 @@ export function deriveStats(document: SheetDocument): DerivedStats {
       [`skill.${skill}`, "skill.all"],
     );
   }
+
+  // CD de magia e ataque mágico: atributo de conjuração + PB + somar (K2).
+  const spellMod = spellcastingAbility ? mods[spellcastingAbility] : 0;
+  const spellModPart: Contribution = {
+    label: spellcastingAbility
+      ? `Modificador de ${ABILITY_SHORT[spellcastingAbility]}`
+      : "Sem atributo de conjuração",
+    amount: spellMod,
+    kind: "base",
+  };
+  const proficiencyPart: Contribution = {
+    label: "Proficiência",
+    amount: pb,
+    kind: "proficiency",
+  };
+  const spellAttackAdds = adds(targeting("spellAttack"), variables);
+  resolve("spellAttack", spellMod + pb + spellAttackAdds.total, [
+    spellModPart,
+    proficiencyPart,
+    ...spellAttackAdds.parts,
+  ]);
+  const spellSaveDcAdds = adds(targeting("spellSaveDc"), variables);
+  resolve("spellSaveDc", 8 + spellMod + pb + spellSaveDcAdds.total, [
+    { label: "Base", amount: 8, kind: "base" },
+    spellModPart,
+    proficiencyPart,
+    ...spellSaveDcAdds.parts,
+  ]);
 
   /** Base + somar, para os valores sem outras operações. */
   function withAdds(
@@ -444,6 +489,27 @@ export function deriveStats(document: SheetDocument): DerivedStats {
     variables,
     hitPointsCurrent: Math.max(0, hitPointsMax - damage),
     hitDiceAvailable: Math.max(0, hitDiceMax - hitDiceSpent),
+    spellEffects: {
+      saveDc: spellSaveDcAdds.total,
+      attack: spellAttackAdds.total,
+    },
+  };
+}
+
+/**
+ * CD de magia e ataque mágico de uma magia com atributo próprio (design K3):
+ * o modificador do atributo (já com valor manual), o PB e os efeitos da ficha,
+ * sem o valor manual da CD e do ataque da ficha.
+ */
+export function spellcastingFor(
+  stats: DerivedStats,
+  ability: Ability,
+): { saveDc: number; attack: number } {
+  const mod = stats.values[`mod.${ability}`].value;
+  const pb = stats.values.proficiencyBonus.value;
+  return {
+    saveDc: 8 + mod + pb + stats.spellEffects.saveDc,
+    attack: mod + pb + stats.spellEffects.attack,
   };
 }
 

@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+
+import { operationsFor } from "./targets";
 import type { z } from "zod";
 
 import { createEffect, effectSchema, effectsSchema } from "./schema";
@@ -68,4 +70,13 @@ describe("effectsSchema", () => {
       "Use no máximo 20 efeitos",
     );
   });
+});
+
+describe("alvos de magia", () => {
+  it.each(["spellSaveDc", "spellAttack"] as const)(
+    "%s só aceita somar",
+    (target) => {
+      expect(operationsFor(target)).toEqual(["add"]);
+    },
+  );
 });

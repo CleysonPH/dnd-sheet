@@ -90,13 +90,16 @@ function ItemActions({
 
 function SpellActions({
   spell,
+  castingLabel,
   onChange,
 }: {
   spell: Spell;
+  castingLabel?: string;
   onChange: (patch: SourcePatch) => void;
 }) {
   return (
     <>
+      {castingLabel && <Badge>{castingLabel}</Badge>}
       <button
         type="button"
         aria-pressed={spell.active}
@@ -226,9 +229,12 @@ export function SourceCard({
   onDelete,
   variables,
   issues,
+  castingLabel,
 }: {
   source: Source;
   variables: ExpressionVariables;
+  /** CD e ataque de magia com atributo próprio, já formatados. */
+  castingLabel?: string;
   /** Efeitos desta fonte ignorados no cálculo (ciclo ou erro). */
   issues: EffectIssue[];
   mode: SheetMode;
@@ -271,7 +277,11 @@ export function SourceCard({
             <ItemActions item={source} onChange={onChange} />
           )}
           {source.kind === "spell" && (
-            <SpellActions spell={source} onChange={onChange} />
+            <SpellActions
+              spell={source}
+              castingLabel={castingLabel}
+              onChange={onChange}
+            />
           )}
           {mode === "edit" && !editing && (
             <Button type="button" variant="secondary" onClick={onEdit}>

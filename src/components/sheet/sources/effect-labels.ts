@@ -34,6 +34,8 @@ const COMBAT_LABEL = {
   speed: "Deslocamento",
   hitPointsMax: "PV máximo",
   passivePerception: "Percepção passiva",
+  spellSaveDc: "CD de magia",
+  spellAttack: "Ataque mágico",
 } as const;
 
 /** Nome do alvo, curto o bastante para o resumo ("FOR", "Furtividade"). */
@@ -80,6 +82,7 @@ export const TARGET_GROUPS: { label: string; targets: EffectTarget[] }[] = [
       "passivePerception",
     ],
   },
+  { label: "Magia", targets: ["spellSaveDc", "spellAttack"] },
 ];
 
 /** Opção do <select> de alvo: o nome completo, com inicial maiúscula. */
