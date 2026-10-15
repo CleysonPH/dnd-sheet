@@ -19,6 +19,7 @@ import { IdentitySection } from "./identity-section";
 import { initialSheetMode, type SheetMode } from "./mode";
 import type { SheetChange } from "./props";
 import { ModeSwitch, SheetModeProvider } from "./sheet-mode";
+import { SourcesPanel } from "./sources/sources-panel";
 import { CombatStats } from "./top-band";
 import { useSheetAutosave, type SaveOutcome } from "./use-sheet-autosave";
 
@@ -140,6 +141,7 @@ export function SheetEditor({
                 <AbilityBlock key={ability} ability={ability} {...part} />
               ))}
             </div>
+            <SourcesPanel {...part} />
           </fieldset>
         </OverrideProvider>
 

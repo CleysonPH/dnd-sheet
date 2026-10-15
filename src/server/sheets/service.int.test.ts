@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { createSheetDocument } from "@/engine/sheet/document";
+import { createSource } from "@/engine/sources/rules";
 import { getDb } from "@/server/db";
 import { sheet } from "@/server/db/schema";
 import { createTestUser, resetDatabase, signIn } from "@/server/test/helpers";
@@ -232,6 +233,46 @@ describe("fichas", () => {
         version: 2,
       });
       expect((await getSheet(lyra, id))?.document).toEqual(document);
+    });
+
+    it("grava uma fonte de cada tipo", async () => {
+      const { lyra } = await setup();
+      const id = await newSheet(lyra, "Thorin");
+      const sources = [
+        createSource("feat", "Sentinela", "f1"),
+        { ...createSource("trait", "Fúria", "t1"), from: "Bárbaro" },
+        {
+          ...createSource("item", "Anel de Proteção", "i1"),
+          equipped: true,
+          requiresAttunement: true,
+          attuned: true,
+        },
+        { ...createSource("spell", "Sono", "s1"), level: 1, prepared: true },
+      ];
+      const document = { ...edited("Thorin"), sources };
+
+      expect(await saveSheet(lyra, id, { baseVersion: 1, document })).toEqual({
+        status: "saved",
+        version: 2,
+      });
+      expect((await getSheet(lyra, id))?.document.sources).toEqual(sources);
+    });
+
+    it("recusa item sintonizado que não requer sintonização", async () => {
+      const { lyra } = await setup();
+      const id = await newSheet(lyra, "Thorin");
+      const ring = {
+        ...createSource("item", "Anel", "i1"),
+        attuned: true,
+      };
+
+      const result = await saveSheet(lyra, id, {
+        baseVersion: 1,
+        document: { ...edited("Thorin"), sources: [ring] },
+      });
+
+      expect(result).toEqual({ status: "invalid", reason: "schema" });
+      expect((await stored(id))?.version).toBe(1);
     });
 
     it("recusa valor manual de um valor que não existe", async () => {

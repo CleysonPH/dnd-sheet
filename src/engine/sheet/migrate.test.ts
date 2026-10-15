@@ -74,6 +74,21 @@ describe("migrateSheetDocument", () => {
     });
   });
 
+  it("leva uma ficha do formato 2 ao atual com a lista de fontes vazia", () => {
+    const { sources, ...formatTwo } = createSheetDocument("Thorin");
+    expect(sources).toEqual([]);
+    expect(
+      migrateSheetDocument({
+        ...formatTwo,
+        schemaVersion: 2,
+        abilities: { ...formatTwo.abilities, str: 16 },
+      }),
+    ).toEqual({
+      ...createSheetDocument("Thorin"),
+      abilities: { ...formatTwo.abilities, str: 16 },
+    });
+  });
+
   it("recusa documento que não valida depois de migrado", () => {
     expect(() =>
       migrateSheetDocument({ schemaVersion: 1, identity: { name: "" } }),

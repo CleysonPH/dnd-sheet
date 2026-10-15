@@ -57,6 +57,7 @@ describe("createSheetDocument", () => {
     expect(document.deathSaves).toEqual({ successes: 0, failures: 0 });
     expect(document.speed).toBe(9);
     expect(document.overrides).toEqual({});
+    expect(document.sources).toEqual([]);
   });
 
   it("tira os espaços das pontas do nome", () => {
@@ -112,8 +113,8 @@ describe("sheetDocumentSchema", () => {
   });
 
   it("recusa outra versão de formato", () => {
-    expect(firstError({ ...valid, schemaVersion: 1 })).not.toBeNull();
-    expect(firstError({ ...valid, schemaVersion: 3 })).not.toBeNull();
+    expect(firstError({ ...valid, schemaVersion: 2 })).not.toBeNull();
+    expect(firstError({ ...valid, schemaVersion: 4 })).not.toBeNull();
   });
 
   it("exige atributos inteiros de 1 a 30", () => {
@@ -195,5 +196,133 @@ describe("sheetDocumentSchema", () => {
 describe("sheetDocumentBytes", () => {
   it("conta bytes UTF-8, não caracteres", () => {
     expect(sheetDocumentBytes("ã")).toBe(4); // aspas + 2 bytes
+  });
+});
+
+describe("sources", () => {
+  const feat = {
+    id: "f1",
+    kind: "feat",
+    name: "Sentinela",
+    description: "",
+    category: "general",
+  };
+  const trait = {
+    id: "t1",
+    kind: "trait",
+    name: "Fúria",
+    description: "Enquanto em **Fúria**",
+    origin: "class",
+    from: "Bárbaro",
+  };
+  const item = {
+    id: "i1",
+    kind: "item",
+    name: "Anel de Proteção",
+    description: "",
+    category: "other",
+    quantity: 1,
+    weight: 0,
+    price: "",
+    equipped: true,
+    requiresAttunement: true,
+    attuned: true,
+  };
+  const spell = {
+    id: "s1",
+    kind: "spell",
+    name: "Sono",
+    description: "",
+    level: 1,
+    school: "enchantment",
+    spellClass: "Mago",
+    castingTime: "1 ação",
+    range: "27 m",
+    duration: "1 minuto",
+    verbal: true,
+    somatic: true,
+    material: true,
+    materialText: "um punhado de areia",
+    concentration: true,
+    ritual: false,
+    prepared: true,
+  };
+
+  function withSources(sources: unknown[]) {
+    return firstError({ ...valid, sources });
+  }
+
+  it("aceita uma fonte de cada tipo", () => {
+    expect(withSources([feat, trait, item, spell])).toBeNull();
+  });
+
+  it("recusa tipo desconhecido e campos fora do tipo", () => {
+    expect(withSources([{ ...feat, kind: "potion" }])).not.toBeNull();
+    expect(withSources([{ ...feat, origin: "class" }])?.code).toBe(
+      "unrecognized_keys",
+    );
+  });
+
+  it("exige nome de 1 a 100 caracteres e descrição até 5000", () => {
+    expect(withSources([{ ...feat, name: "  " }])?.message).toBe(
+      "O nome é obrigatório",
+    );
+    expect(withSources([{ ...feat, name: "x".repeat(101) }])).not.toBeNull();
+    expect(
+      withSources([{ ...feat, description: "x".repeat(5000) }]),
+    ).toBeNull();
+    expect(
+      withSources([{ ...feat, description: "x".repeat(5001) }])?.message,
+    ).toBe("Use no máximo 5000 caracteres");
+  });
+
+  it("limita quantidade, peso e preço dos itens", () => {
+    for (const quantity of [-1, 10000, 1.5]) {
+      expect(withSources([{ ...item, quantity }])).not.toBeNull();
+    }
+    for (const weight of [0, 0.25, 3.5, 9999]) {
+      expect(withSources([{ ...item, weight }])).toBeNull();
+    }
+    for (const weight of [-1, 0.125, 10000]) {
+      expect(withSources([{ ...item, weight }])?.message).toBe(
+        "Use um número de 0 a 9999, com até duas casas decimais",
+      );
+    }
+    expect(withSources([{ ...item, price: "x".repeat(51) }])).not.toBeNull();
+  });
+
+  it("limita o círculo das magias de 0 a 9", () => {
+    expect(withSources([{ ...spell, level: 0, prepared: false }])).toBeNull();
+    expect(withSources([{ ...spell, level: 9 }])).toBeNull();
+    expect(withSources([{ ...spell, level: 10 }])).not.toBeNull();
+  });
+
+  it("recusa ids repetidos", () => {
+    expect(withSources([feat, { ...trait, id: "f1" }])?.message).toBe(
+      "Id de fonte repetido",
+    );
+  });
+
+  it("só sintoniza itens que requerem sintonização", () => {
+    expect(
+      withSources([{ ...item, requiresAttunement: false, attuned: true }])
+        ?.message,
+    ).toBe("Só itens que requerem sintonização podem ser sintonizados");
+    expect(
+      withSources([{ ...item, requiresAttunement: false, attuned: false }]),
+    ).toBeNull();
+  });
+
+  it("não aceita truque preparado", () => {
+    expect(withSources([{ ...spell, level: 0, prepared: true }])?.message).toBe(
+      "Truques não são preparados",
+    );
+  });
+
+  it("aceita até 300 fontes", () => {
+    const many = (n: number) =>
+      Array.from({ length: n }, (_, i) => ({ ...feat, id: `f${i}` }));
+    expect(withSources(many(300))).toBeNull();
+    expect(withSources(many(301))?.message).toBe("Use no máximo 300 fontes");
   });
 });

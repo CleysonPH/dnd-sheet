@@ -9,6 +9,7 @@ import {
   type Ability,
   type Skill,
 } from "@/engine/stats/keys";
+import { sourcesSchema } from "@/engine/sources/schema";
 
 /**
  * Versão atual do formato da ficha (design C2/C3).
@@ -16,7 +17,7 @@ import {
  * Toda mudança no schema abaixo precisa incrementar esta constante e
  * acrescentar em migrate.ts uma migração da versão anterior, com teste.
  */
-export const SHEET_SCHEMA_VERSION = 2;
+export const SHEET_SCHEMA_VERSION = 3;
 
 /** Tamanho máximo do documento serializado, em bytes. */
 export const SHEET_MAX_BYTES = 256 * 1024;
@@ -97,6 +98,7 @@ export const sheetDocumentSchema = z.strictObject({
   deathSaves: deathSavesSchema,
   speed: speedSchema,
   overrides: z.partialRecord(z.enum(DERIVED_KEYS), overrideValueSchema),
+  sources: sourcesSchema,
 });
 
 export type SheetIdentity = z.infer<typeof identitySchema>;
@@ -104,7 +106,7 @@ export type SheetDocument = z.infer<typeof sheetDocumentSchema>;
 
 /**
  * Ficha nova: nível 1, demais campos de identificação vazios e os valores
- * iniciais da spec sheet-core-stats.
+ * iniciais das specs sheet-core-stats e sheet-sources.
  */
 export function createSheetDocument(name: string): SheetDocument {
   return sheetDocumentSchema.parse({
@@ -117,6 +119,7 @@ export function createSheetDocument(name: string): SheetDocument {
     deathSaves: { successes: 0, failures: 0 },
     speed: 9,
     overrides: {},
+    sources: [],
   });
 }
 

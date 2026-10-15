@@ -71,6 +71,7 @@ src/
   engine/       motor de cálculo da ficha: TypeScript puro
     sheet/      formato do documento da ficha (schema, versão, migrações)
     stats/      regras do 5.5e, valores derivados (com override), dano e cura
+    sources/    fontes da ficha: talentos, traços, itens e magias (schema e regras)
   server/       código só de servidor
     auth/       configuração do Better Auth, guards e troca de senha
     accounts/   administração de contas e seed do primeiro admin
@@ -84,9 +85,11 @@ scripts/        comandos de operação (seed, config da CLI do Better Auth)
 
 Rotas principais: `/` (Minhas fichas), `/fichas/[id]` (ficha com salvamento automático), `/conta`, `/admin/contas` (só admins), `/login` e `/trocar-senha`.
 
-A ficha é um documento JSON versionado (`schemaVersion`, hoje no formato 2). O documento guarda só entradas: atributos, proficiências, dado de vida, dano sofrido, deslocamento e valores manuais (`overrides`). Modificadores, perícias, PV máximo e os demais valores derivados são recalculados no navegador por `deriveStats` (`src/engine/stats/derive.ts`) e nunca são gravados. Ao mudar o formato em `src/engine/sheet/document.ts`, incremente `SHEET_SCHEMA_VERSION` e acrescente a migração correspondente em `src/engine/sheet/migrate.ts`, com teste.
+A ficha é um documento JSON versionado (`schemaVersion`, hoje no formato 3). O documento guarda só entradas: atributos, proficiências, dado de vida, dano sofrido, deslocamento, valores manuais (`overrides`) e as fontes (`sources`: talentos, traços, itens e magias, cada uma com id próprio). Modificadores, perícias, PV máximo e os demais valores derivados são recalculados no navegador por `deriveStats` (`src/engine/stats/derive.ts`) e nunca são gravados. Ao mudar o formato em `src/engine/sheet/document.ts`, incremente `SHEET_SCHEMA_VERSION` e acrescente a migração correspondente em `src/engine/sheet/migrate.ts`, com teste.
 
 A ficha tem dois modos. Jogar mostra os números para leitura e só deixa mexer no que muda na mesa (dano e cura, PV temporário, dados de vida e testes contra a morte). Editar mostra todos os campos e os valores manuais. Dano, cura e a regra que zera os testes contra a morte ao sair de 0 PV ficam em `src/engine/stats/hit-points.ts`.
+
+As descrições das fontes aceitam um Markdown básico (parágrafos, quebras de linha, `**negrito**`, `*itálico*` e listas com `- ` ou `1. `), interpretado por `src/lib/markdown.ts` e exibido por `src/components/markdown.tsx` como elementos React, sem HTML.
 
 O tema é escuro por padrão, com uma chave para o claro guardada no `localStorage` (`dnd-sheet:theme`) e aplicada por um script no `<head>` antes da primeira pintura. As cores são tokens em `src/app/globals.css` (`bg-surface`, `border-line`, `text-muted`, `bg-accent`...); não use cores avulsas nem `dark:`. Em dev, o loader do Tailwind não relê o `globals.css` editado: reinicie o `npm run dev` depois de mexer nele.
 

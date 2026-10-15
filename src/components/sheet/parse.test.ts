@@ -5,6 +5,7 @@ import {
   overrideValueSchema,
   speedSchema,
 } from "@/engine/sheet/document";
+import { itemWeightSchema } from "@/engine/sources/schema";
 
 import {
   formatDecimal,
@@ -69,6 +70,17 @@ describe("parseDecimal", () => {
         error: "Use um número de 0 a 999, com até uma casa decimal",
       });
     }
+  });
+});
+
+describe("parseDecimal com duas casas", () => {
+  it("aceita até duas casas quando pedido", () => {
+    expect(parseDecimal("0,25", itemWeightSchema, 2)).toEqual({
+      ok: true,
+      value: 0.25,
+    });
+    expect(parseDecimal("0,125", itemWeightSchema, 2).ok).toBe(false);
+    expect(parseDecimal("0,25", speedSchema).ok).toBe(false);
   });
 });
 

@@ -22,10 +22,18 @@ export function parseInteger(raw: string, schema: z.ZodType<number>) {
   return check(/^[+-]?\d+$/.test(text) ? Number(text) : NaN, schema);
 }
 
-/** Decimal sem sinal com até uma casa, aceitando vírgula ou ponto: "7,5", "9". */
-export function parseDecimal(raw: string, schema: z.ZodType<number>) {
+/**
+ * Decimal sem sinal com até `places` casas, aceitando vírgula ou ponto:
+ * "7,5", "9", "0,25".
+ */
+export function parseDecimal(
+  raw: string,
+  schema: z.ZodType<number>,
+  places = 1,
+) {
   const text = raw.trim().replace(",", ".");
-  return check(/^\d+(\.\d)?$/.test(text) ? Number(text) : NaN, schema);
+  const pattern = new RegExp(`^\\d+(\\.\\d{1,${places}})?$`);
+  return check(pattern.test(text) ? Number(text) : NaN, schema);
 }
 
 /** Modificadores e bônus: "+3", "-1", "+0". */

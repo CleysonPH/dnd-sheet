@@ -55,8 +55,17 @@ export const migrateV1ToV2: SheetMigration = (document) => ({
   overrides: {},
 });
 
+/** Formato 2 -> 3: a ficha ganha a lista de fontes, vazia (design F2). */
+export const migrateV2ToV3: SheetMigration = (document) => ({
+  ...document,
+  sources: [],
+});
+
 /** Migrações reais do formato. */
-export const SHEET_MIGRATIONS: readonly SheetMigration[] = [migrateV1ToV2];
+export const SHEET_MIGRATIONS: readonly SheetMigration[] = [
+  migrateV1ToV2,
+  migrateV2ToV3,
+];
 
 export class SheetFormatError extends Error {
   constructor(message: string) {
