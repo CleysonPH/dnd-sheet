@@ -44,10 +44,10 @@ O sistema SHALL recusar o login de uma conta desativada, mesmo com a senha corre
 - **THEN** o login é recusado com a mensagem "Conta desativada. Fale com o administrador."
 
 ### Requirement: Páginas protegidas exigem sessão
-Todas as páginas e operações da aplicação, exceto a página de login e as páginas de pedido e de redefinição de senha, SHALL exigir uma sessão válida.
+Todas as páginas e operações da aplicação, exceto a página de login, as páginas de pedido e de redefinição de senha e a página de ficha compartilhada, SHALL exigir uma sessão válida.
 
 #### Scenario: Visitante sem sessão
-- **WHEN** alguém sem sessão abre qualquer página que não seja a de login, a de pedido ou a de redefinição de senha
+- **WHEN** alguém sem sessão abre qualquer página que não seja a de login, a de pedido ou a de redefinição de senha, nem a de ficha compartilhada
 - **THEN** é redirecionado para a página de login
 
 #### Scenario: Operação sem sessão
@@ -61,6 +61,14 @@ Todas as páginas e operações da aplicação, exceto a página de login e as p
 #### Scenario: Visitante abre a recuperação de senha
 - **WHEN** alguém sem sessão segue o link "Esqueci a senha" da página de login
 - **THEN** a página de pedido de redefinição abre sem pedir login
+
+#### Scenario: Ficha compartilhada sem sessão
+- **WHEN** alguém sem sessão abre um link de ficha compartilhada ativo
+- **THEN** a ficha abre sem pedir login
+
+#### Scenario: Usuário logado abre uma ficha compartilhada
+- **WHEN** um usuário com sessão válida abre um link de ficha compartilhada
+- **THEN** vê a ficha compartilhada, sem ser redirecionado para a página inicial
 
 ### Requirement: Logout
 O usuário SHALL poder encerrar a própria sessão. Depois do logout, a sessão SHALL deixar de ser válida.
