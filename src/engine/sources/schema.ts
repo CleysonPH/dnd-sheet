@@ -1,6 +1,9 @@
 import { z } from "zod";
 
+import { effectsSchema } from "@/engine/effects/schema";
+
 import {
+  ARMOR_TYPES,
   FEAT_CATEGORIES,
   ITEM_CATEGORIES,
   MAX_SOURCES,
@@ -34,6 +37,8 @@ export const sourceShortTextSchema = text(100);
 export const itemPriceSchema = text(50);
 export const itemQuantitySchema = intRange(0, 9999);
 export const spellLevelSchema = intRange(0, 9);
+export const armorBaseSchema = intRange(0, 30);
+export const shieldBonusSchema = intRange(0, 10);
 
 const WEIGHT_MESSAGE = "Use um número de 0 a 9999, com até duas casas decimais";
 /** Peso de uma unidade, em kg. */
@@ -50,6 +55,7 @@ const base = {
   id: z.string().min(1).max(64),
   name: sourceNameSchema,
   description: sourceDescriptionSchema,
+  effects: effectsSchema,
 };
 
 export const featSchema = z.strictObject({
@@ -75,6 +81,10 @@ export const itemSchema = z.strictObject({
   equipped: z.boolean(),
   requiresAttunement: z.boolean(),
   attuned: z.boolean(),
+  /** Usados quando a categoria é armadura ou escudo (design E1). */
+  armorType: z.enum(ARMOR_TYPES),
+  armorBase: armorBaseSchema,
+  shieldBonus: shieldBonusSchema,
 });
 
 export const spellSchema = z.strictObject({
@@ -93,6 +103,8 @@ export const spellSchema = z.strictObject({
   concentration: z.boolean(),
   ritual: z.boolean(),
   prepared: z.boolean(),
+  /** "Em efeito": os efeitos da magia só valem enquanto marcada. */
+  active: z.boolean(),
 });
 
 export const sourceSchema = z.discriminatedUnion("kind", [

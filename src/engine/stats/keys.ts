@@ -59,6 +59,8 @@ export const DERIVED_KEYS = [
   "passivePerception",
   "hitPointsMax",
   "hitDiceMax",
+  "armorClass",
+  "speed",
 ] as const;
 
 export type DerivedKey =
@@ -69,4 +71,6 @@ export type DerivedKey =
   | "initiative"
   | "passivePerception"
   | "hitPointsMax"
-  | "hitDiceMax";
+  | "hitDiceMax"
+  | "armorClass"
+  | "speed";

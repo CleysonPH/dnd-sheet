@@ -116,7 +116,7 @@ function AddSource({
 }
 
 /** Abas Características | Inventário | Magias (spec sheet-sources). */
-export function SourcesPanel({ document, update }: SheetPartProps) {
+export function SourcesPanel({ document, stats, update }: SheetPartProps) {
   const mode = useSheetMode();
   const [tab, setTab] = useState<Tab>("features");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -173,6 +173,8 @@ export function SourcesPanel({ document, update }: SheetPartProps) {
       onDone={() => setEditingId(null)}
       onChange={(patch) => patchSource(source.id, patch)}
       onDelete={() => deleteSource(source.id)}
+      variables={stats.variables}
+      issues={stats.issues.filter((issue) => issue.sourceId === source.id)}
     />
   );
 

@@ -54,6 +54,8 @@ const OTHER_LABEL: Record<OtherKey, string> = {
   passivePerception: "Percepção passiva",
   hitPointsMax: "PV máximo",
   hitDiceMax: "Total de dados de vida",
+  armorClass: "CA",
+  speed: "Deslocamento",
 };
 
 /** Nome de um valor derivado, para títulos e leitores de tela. */

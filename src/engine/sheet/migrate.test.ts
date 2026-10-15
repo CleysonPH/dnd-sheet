@@ -89,6 +89,67 @@ describe("migrateSheetDocument", () => {
     });
   });
 
+  it("leva fontes do formato 3 ao atual, sem efeitos", () => {
+    const current = createSheetDocument("Thorin");
+    const item = {
+      id: "i1",
+      kind: "item",
+      name: "Cota de Malha",
+      description: "",
+      category: "armor",
+      quantity: 1,
+      weight: 25,
+      price: "",
+      equipped: true,
+      requiresAttunement: false,
+      attuned: false,
+    };
+    const spell = {
+      id: "s1",
+      kind: "spell",
+      name: "Sono",
+      description: "",
+      level: 1,
+      school: "enchantment",
+      spellClass: "",
+      castingTime: "",
+      range: "",
+      duration: "",
+      verbal: true,
+      somatic: true,
+      material: false,
+      materialText: "",
+      concentration: true,
+      ritual: false,
+      prepared: true,
+    };
+    const trait = {
+      id: "t1",
+      kind: "trait",
+      name: "Fúria",
+      description: "",
+      origin: "class",
+      from: "Bárbaro",
+    };
+    expect(
+      migrateSheetDocument({
+        ...current,
+        schemaVersion: 3,
+        sources: [item, spell, trait],
+      }).sources,
+    ).toEqual([
+      {
+        ...item,
+        effects: [],
+        armorType: "light",
+        armorBase: 10,
+        shieldBonus: 2,
+      },
+      { ...spell, effects: [], active: false },
+      { ...trait, effects: [] },
+    ]);
+  });
+
   it("recusa documento que não valida depois de migrado", () => {
     expect(() =>
       migrateSheetDocument({ schemaVersion: 1, identity: { name: "" } }),

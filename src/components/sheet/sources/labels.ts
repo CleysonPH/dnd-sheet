@@ -1,4 +1,5 @@
 import type {
+  ARMOR_TYPES,
   FEAT_CATEGORIES,
   ITEM_CATEGORIES,
   SPELL_SCHOOLS,
@@ -43,6 +44,12 @@ export const ITEM_CATEGORY_LABEL: Record<
   other: "Outro",
 };
 
+export const ARMOR_TYPE_LABEL: Record<(typeof ARMOR_TYPES)[number], string> = {
+  light: "leve",
+  medium: "média",
+  heavy: "pesada",
+};
+
 export const SPELL_SCHOOL_LABEL: Record<
   (typeof SPELL_SCHOOLS)[number],
   string
@@ -83,10 +90,15 @@ export function sourceSummary(source: Source): string {
       return ["Traço", TRAIT_ORIGIN_LABEL[source.origin], source.from]
         .filter(Boolean)
         .join(" · ");
-    case "item":
-      return [ITEM_CATEGORY_LABEL[source.category], formatWeight(source.weight)]
-        .filter(Boolean)
-        .join(" · ");
+    case "item": {
+      const kind =
+        source.category === "armor"
+          ? `Armadura ${ARMOR_TYPE_LABEL[source.armorType]} · CA ${source.armorBase}`
+          : source.category === "shield"
+            ? `Escudo +${source.shieldBonus}`
+            : ITEM_CATEGORY_LABEL[source.category];
+      return [kind, formatWeight(source.weight)].join(" · ");
+    }
     case "spell":
       return [
         SPELL_SCHOOL_LABEL[source.school],

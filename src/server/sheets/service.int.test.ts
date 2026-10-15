@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { createSheetDocument } from "@/engine/sheet/document";
+import { createEffect } from "@/engine/effects/schema";
 import { createSource } from "@/engine/sources/rules";
 import { getDb } from "@/server/db";
 import { sheet } from "@/server/db/schema";
@@ -258,6 +259,58 @@ describe("fichas", () => {
       expect((await getSheet(lyra, id))?.document.sources).toEqual(sources);
     });
 
+    it("grava fontes com efeitos", async () => {
+      const { lyra } = await setup();
+      const id = await newSheet(lyra, "Thorin");
+      const defense = {
+        ...createSource("trait", "Defesa sem Armadura", "t1"),
+        effects: [
+          {
+            ...createEffect("e1"),
+            op: "altBase" as const,
+            expression: "10 + des.mod + con.mod",
+            noArmor: true,
+          },
+        ],
+      };
+      const document = { ...edited("Thorin"), sources: [defense] };
+
+      expect(await saveSheet(lyra, id, { baseVersion: 1, document })).toEqual({
+        status: "saved",
+        version: 2,
+      });
+      expect((await getSheet(lyra, id))?.document.sources).toEqual([defense]);
+    });
+
+    it("recusa efeito com operação incompatível ou expressão inválida", async () => {
+      const { lyra } = await setup();
+      const id = await newSheet(lyra, "Thorin");
+      const withEffect = (effect: Record<string, unknown>) => ({
+        ...edited("Thorin"),
+        sources: [
+          {
+            ...createSource("feat", "Robusto", "f1"),
+            effects: [{ ...createEffect("e1"), ...effect }],
+          },
+        ],
+      });
+      const invalid = { status: "invalid", reason: "schema" };
+
+      expect(
+        await saveSheet(lyra, id, {
+          baseVersion: 1,
+          document: withEffect({ target: "hitPointsMax", op: "set" }),
+        }),
+      ).toEqual(invalid);
+      expect(
+        await saveSheet(lyra, id, {
+          baseVersion: 1,
+          document: withEffect({ expression: "2 * nivel +" }),
+        }),
+      ).toEqual(invalid);
+      expect((await stored(id))?.version).toBe(1);
+    });
+
     it("recusa item sintonizado que não requer sintonização", async () => {
       const { lyra } = await setup();
       const id = await newSheet(lyra, "Thorin");
@@ -281,7 +334,7 @@ describe("fichas", () => {
 
       const result = await saveSheet(lyra, id, {
         baseVersion: 1,
-        document: { ...edited("Thorin"), overrides: { armorClass: 18 } },
+        document: { ...edited("Thorin"), overrides: { attackBonus: 18 } },
       });
 
       expect(result).toEqual({ status: "invalid", reason: "schema" });

@@ -45,6 +45,8 @@ export function AbilityBlock({
   const { name } = ABILITY_LABEL[ability];
   const skills = SKILLS.filter((skill) => SKILL_ABILITY[skill] === ability);
   const saveProficient = document.savingThrows[ability];
+  // Valor final, já com os efeitos das fontes (design E6).
+  const score = stats.abilityScores[ability];
 
   return (
     <article
@@ -66,9 +68,19 @@ export function AbilityBlock({
             }
           />
         ) : (
-          <span className="text-sm text-muted tabular-nums">
-            {document.abilities[ability]}
+          <span
+            className="text-sm text-muted tabular-nums"
+            title={
+              score.value !== score.base
+                ? `Valor na ficha ${score.base}; com efeitos ${score.value}`
+                : undefined
+            }
+          >
+            {score.value}
           </span>
+        )}
+        {mode === "edit" && score.value !== score.base && (
+          <span className="text-xs text-muted">efetivo {score.value}</span>
         )}
         <DerivedValue
           valueKey={`mod.${ability}`}

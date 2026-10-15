@@ -61,10 +61,27 @@ export const migrateV2ToV3: SheetMigration = (document) => ({
   sources: [],
 });
 
+/**
+ * Formato 3 -> 4: efeitos nas fontes, armadura e escudo nos itens e "em
+ * efeito" nas magias, com os valores iniciais escritos aqui (design E1).
+ */
+export const migrateV3ToV4: SheetMigration = (document) => ({
+  ...document,
+  sources: (document.sources as Record<string, unknown>[]).map((source) => ({
+    ...source,
+    effects: [],
+    ...(source.kind === "item"
+      ? { armorType: "light", armorBase: 10, shieldBonus: 2 }
+      : {}),
+    ...(source.kind === "spell" ? { active: false } : {}),
+  })),
+});
+
 /** Migrações reais do formato. */
 export const SHEET_MIGRATIONS: readonly SheetMigration[] = [
   migrateV1ToV2,
   migrateV2ToV3,
+  migrateV3ToV4,
 ];
 
 export class SheetFormatError extends Error {

@@ -1,32 +1,39 @@
 "use client";
 
 import {
+  ARMOR_TYPES,
   FEAT_CATEGORIES,
   ITEM_CATEGORIES,
   SPELL_SCHOOLS,
   TRAIT_ORIGINS,
 } from "@/engine/sources/kinds";
 import {
+  armorBaseSchema,
   itemPriceSchema,
   itemQuantitySchema,
   itemWeightSchema,
   sourceDescriptionSchema,
   sourceNameSchema,
   sourceShortTextSchema,
+  shieldBonusSchema,
   type Item,
   type Source,
   type Spell,
 } from "@/engine/sources/schema";
 
+import type { ExpressionVariables } from "@/engine/effects/expression";
+
 import { NumberField } from "../number-field";
 import { formatDecimal, parseDecimal, parseInteger } from "../parse";
 import {
+  ARMOR_TYPE_LABEL,
   FEAT_CATEGORY_LABEL,
   ITEM_CATEGORY_LABEL,
   SPELL_SCHOOL_LABEL,
   TRAIT_ORIGIN_LABEL,
   spellLevelLabel,
 } from "./labels";
+import { EffectsEditor } from "./effects-editor";
 import { SchemaTextField } from "./schema-text-field";
 
 /** Campos alteráveis de uma fonte, de qualquer tipo (Omit distribuído na união). */
@@ -116,9 +123,11 @@ const LEVELS = Array.from(
 /** Campos de uma fonte, gravados a cada alteração válida (design F5). */
 export function SourceForm({
   source,
+  variables,
   onChange,
 }: {
   source: Source;
+  variables: ExpressionVariables;
   onChange: (patch: SourcePatch) => void;
 }) {
   const field = (name: string) => `source-${source.id}-${name}`;
@@ -169,6 +178,13 @@ export function SourceForm({
       {source.kind === "spell" && (
         <SpellFields spell={source} onChange={onChange} field={field} />
       )}
+
+      <EffectsEditor
+        sourceId={source.id}
+        effects={source.effects}
+        variables={variables}
+        onChange={(effects) => onChange({ effects })}
+      />
 
       <SchemaTextField
         label="Descrição"
@@ -228,6 +244,37 @@ function ItemFields({
           onCommit={(price) => onChange({ price })}
         />
       </div>
+      {item.category === "armor" && (
+        <div className="grid gap-3 sm:grid-cols-4">
+          <SelectField
+            label="Tipo de armadura"
+            name={field("armorType")}
+            value={item.armorType}
+            options={entries(ARMOR_TYPE_LABEL, ARMOR_TYPES)}
+            onChange={(armorType) => onChange({ armorType })}
+          />
+          <NumberField
+            label="CA base"
+            name={field("armorBase")}
+            inputMode="numeric"
+            value={item.armorBase}
+            parse={(text) => parseInteger(text, armorBaseSchema)}
+            onCommit={(armorBase) => onChange({ armorBase })}
+          />
+        </div>
+      )}
+      {item.category === "shield" && (
+        <div className="grid gap-3 sm:grid-cols-4">
+          <NumberField
+            label="Bônus de CA"
+            name={field("shieldBonus")}
+            inputMode="numeric"
+            value={item.shieldBonus}
+            parse={(text) => parseInteger(text, shieldBonusSchema)}
+            onCommit={(shieldBonus) => onChange({ shieldBonus })}
+          />
+        </div>
+      )}
       <div className="flex flex-wrap gap-x-5 gap-y-2">
         <Check
           label="Equipado"

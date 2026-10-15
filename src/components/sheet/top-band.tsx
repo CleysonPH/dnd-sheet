@@ -35,20 +35,19 @@ function Tile({
   );
 }
 
-/** CA, iniciativa, deslocamento, percepção passiva e PB (design V5). */
+const formatMeters = (meters: number) => `${formatDecimal(meters)} m`;
+
+/** CA, iniciativa, deslocamento, percepção passiva e PB (design V5/E6). */
 export function CombatStats({ document, stats, update }: SheetPartProps) {
   const mode = useSheetMode();
   return (
     <Card title="Combate" style={{ gridArea: "stats" }}>
       <div className="grid grid-cols-3 gap-2">
-        {/* A CA chega com sheet-effects; até lá o lugar fica reservado. */}
         <Tile label="CA" icon={<ShieldIcon className="size-3.5" />}>
-          <span
-            className="font-semibold text-muted"
-            title="Ainda não calculada"
-          >
-            —
-          </span>
+          <DerivedValue
+            valueKey="armorClass"
+            derived={stats.values.armorClass}
+          />
         </Tile>
         <Tile label="Iniciativa" icon={<BoltIcon className="size-3.5" />}>
           <DerivedValue
@@ -62,12 +61,14 @@ export function CombatStats({ document, stats, update }: SheetPartProps) {
           icon={<BootIcon className="size-3.5" />}
         >
           {mode === "play" ? (
-            <span className="font-semibold tabular-nums">
-              {formatDecimal(document.speed)}
-              <span className="ml-0.5 text-sm text-muted">m</span>
-            </span>
+            <DerivedValue
+              valueKey="speed"
+              derived={stats.values.speed}
+              format={formatMeters}
+            />
           ) : (
-            <span className="block text-base">
+            // Em Editar, o campo é a base; o efetivo (com efeitos) vai abaixo.
+            <span className="flex flex-col items-center gap-1 text-base">
               <NumberField
                 label="Deslocamento (m)"
                 name="speed"
@@ -77,6 +78,14 @@ export function CombatStats({ document, stats, update }: SheetPartProps) {
                 parse={(text) => parseDecimal(text, speedSchema)}
                 onCommit={(speed) => update({ speed })}
               />
+              <span className="text-xs text-muted">
+                efetivo{" "}
+                <DerivedValue
+                  valueKey="speed"
+                  derived={stats.values.speed}
+                  format={formatMeters}
+                />
+              </span>
             </span>
           )}
         </Tile>

@@ -72,6 +72,7 @@ src/
     sheet/      formato do documento da ficha (schema, versão, migrações)
     stats/      regras do 5.5e, valores derivados (com override), dano e cura
     sources/    fontes da ficha: talentos, traços, itens e magias (schema e regras)
+    effects/    efeitos das fontes: alvos, operações, expressões e efeitos ativos
   server/       código só de servidor
     auth/       configuração do Better Auth, guards e troca de senha
     accounts/   administração de contas e seed do primeiro admin
@@ -85,9 +86,11 @@ scripts/        comandos de operação (seed, config da CLI do Better Auth)
 
 Rotas principais: `/` (Minhas fichas), `/fichas/[id]` (ficha com salvamento automático), `/conta`, `/admin/contas` (só admins), `/login` e `/trocar-senha`.
 
-A ficha é um documento JSON versionado (`schemaVersion`, hoje no formato 3). O documento guarda só entradas: atributos, proficiências, dado de vida, dano sofrido, deslocamento, valores manuais (`overrides`) e as fontes (`sources`: talentos, traços, itens e magias, cada uma com id próprio). Modificadores, perícias, PV máximo e os demais valores derivados são recalculados no navegador por `deriveStats` (`src/engine/stats/derive.ts`) e nunca são gravados. Ao mudar o formato em `src/engine/sheet/document.ts`, incremente `SHEET_SCHEMA_VERSION` e acrescente a migração correspondente em `src/engine/sheet/migrate.ts`, com teste.
+A ficha é um documento JSON versionado (`schemaVersion`, hoje no formato 4). O documento guarda só entradas: atributos, proficiências, dado de vida, dano sofrido, deslocamento, valores manuais (`overrides`) e as fontes (`sources`: talentos, traços, itens e magias, cada uma com id próprio e seus efeitos). Modificadores, perícias, PV máximo e os demais valores derivados são recalculados no navegador por `deriveStats` (`src/engine/stats/derive.ts`) e nunca são gravados. Ao mudar o formato em `src/engine/sheet/document.ts`, incremente `SHEET_SCHEMA_VERSION` e acrescente a migração correspondente em `src/engine/sheet/migrate.ts`, com teste.
 
 A ficha tem dois modos. Jogar mostra os números para leitura e só deixa mexer no que muda na mesa (dano e cura, PV temporário, dados de vida e testes contra a morte). Editar mostra todos os campos e os valores manuais. Dano, cura e a regra que zera os testes contra a morte ao sair de 0 PV ficam em `src/engine/stats/hit-points.ts`.
+
+Cada fonte pode ter efeitos (`src/engine/effects/`): um alvo da lista fechada, uma operação (somar, base alternativa de CA, definir, proficiência), um valor e as condições "só sem armadura" e "só sem escudo". Os efeitos valem enquanto a fonte está ativa: talentos e traços sempre, itens quando ativos e magias quando marcadas como em efeito. O valor é uma expressão com inteiros, `+ - * /` (divisão para baixo), parênteses, `min(...)`, `max(...)` e as variáveis `for`…`car`, `for.mod`…`car.mod`, `nivel` e `pb`, interpretada por um parser próprio em `src/engine/effects/expression.ts`. `deriveStats` aplica os efeitos antes do valor manual, calcula a CA (maior base válida + escudo + bônus), ignora e sinaliza efeitos de atributos em ciclo e devolve as contribuições de cada valor, mostradas no painel de origem.
 
 As descrições das fontes aceitam um Markdown básico (parágrafos, quebras de linha, `**negrito**`, `*itálico*` e listas com `- ` ou `1. `), interpretado por `src/lib/markdown.ts` e exibido por `src/components/markdown.tsx` como elementos React, sem HTML.
 

@@ -113,8 +113,8 @@ describe("sheetDocumentSchema", () => {
   });
 
   it("recusa outra versão de formato", () => {
-    expect(firstError({ ...valid, schemaVersion: 2 })).not.toBeNull();
-    expect(firstError({ ...valid, schemaVersion: 4 })).not.toBeNull();
+    expect(firstError({ ...valid, schemaVersion: 3 })).not.toBeNull();
+    expect(firstError({ ...valid, schemaVersion: 5 })).not.toBeNull();
   });
 
   it("exige atributos inteiros de 1 a 30", () => {
@@ -182,7 +182,7 @@ describe("sheetDocumentSchema", () => {
       }),
     ).toBeNull();
     expect(
-      firstError({ ...valid, overrides: { armorClass: 15 } }),
+      firstError({ ...valid, overrides: { attackBonus: 15 } }),
     ).not.toBeNull();
     expect(
       firstError({ ...valid, overrides: { hitPointsMax: 2.5 } })?.message,
@@ -205,6 +205,7 @@ describe("sources", () => {
     kind: "feat",
     name: "Sentinela",
     description: "",
+    effects: [],
     category: "general",
   };
   const trait = {
@@ -212,6 +213,7 @@ describe("sources", () => {
     kind: "trait",
     name: "Fúria",
     description: "Enquanto em **Fúria**",
+    effects: [],
     origin: "class",
     from: "Bárbaro",
   };
@@ -227,6 +229,10 @@ describe("sources", () => {
     equipped: true,
     requiresAttunement: true,
     attuned: true,
+    armorType: "light",
+    armorBase: 10,
+    shieldBonus: 2,
+    effects: [],
   };
   const spell = {
     id: "s1",
@@ -246,6 +252,8 @@ describe("sources", () => {
     concentration: true,
     ritual: false,
     prepared: true,
+    active: false,
+    effects: [],
   };
 
   function withSources(sources: unknown[]) {
@@ -289,6 +297,15 @@ describe("sources", () => {
       );
     }
     expect(withSources([{ ...item, price: "x".repeat(51) }])).not.toBeNull();
+  });
+
+  it("limita a CA base de armadura e o bônus de escudo", () => {
+    expect(
+      withSources([{ ...item, armorBase: 30, shieldBonus: 10 }]),
+    ).toBeNull();
+    expect(withSources([{ ...item, armorBase: 31 }])).not.toBeNull();
+    expect(withSources([{ ...item, shieldBonus: 11 }])).not.toBeNull();
+    expect(withSources([{ ...item, armorType: "mithral" }])).not.toBeNull();
   });
 
   it("limita o círculo das magias de 0 a 9", () => {

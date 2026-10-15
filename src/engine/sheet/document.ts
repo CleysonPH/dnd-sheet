@@ -17,7 +17,7 @@ import { sourcesSchema } from "@/engine/sources/schema";
  * Toda mudança no schema abaixo precisa incrementar esta constante e
  * acrescentar em migrate.ts uma migração da versão anterior, com teste.
  */
-export const SHEET_SCHEMA_VERSION = 3;
+export const SHEET_SCHEMA_VERSION = 4;
 
 /** Tamanho máximo do documento serializado, em bytes. */
 export const SHEET_MAX_BYTES = 256 * 1024;

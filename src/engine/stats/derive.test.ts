@@ -250,7 +250,7 @@ describe("deriveStats: pontos de vida e dados de vida", () => {
 describe("deriveStats: valores manuais", () => {
   it("o valor manual substitui o calculado e guarda o calculado", () => {
     const stats = deriveStats(thorin({ overrides: { hitPointsMax: 61 } }));
-    expect(stats.values.hitPointsMax).toEqual({
+    expect(stats.values.hitPointsMax).toMatchObject({
       value: 61,
       calculated: 55,
       overridden: true,

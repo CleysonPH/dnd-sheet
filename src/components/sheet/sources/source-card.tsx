@@ -4,11 +4,14 @@ import { useState, type ReactNode } from "react";
 
 import { Badge, Button } from "@/components/form";
 import { Markdown } from "@/components/markdown";
+import type { ExpressionVariables } from "@/engine/effects/expression";
 import { isItemActive } from "@/engine/sources/rules";
 import type { Item, Source, Spell } from "@/engine/sources/schema";
+import type { EffectIssue } from "@/engine/stats/derive";
 
 import type { SheetMode } from "../mode";
 import {
+  ARMOR_TYPE_LABEL,
   FEAT_CATEGORY_LABEL,
   ITEM_CATEGORY_LABEL,
   SPELL_SCHOOL_LABEL,
@@ -18,6 +21,7 @@ import {
   spellComponents,
   spellLevelLabel,
 } from "./labels";
+import { describeEffect } from "./effect-labels";
 import { SourceForm, type SourcePatch } from "./source-form";
 
 const TOGGLE =
@@ -91,6 +95,14 @@ function SpellActions({
 }) {
   return (
     <>
+      <button
+        type="button"
+        aria-pressed={spell.active}
+        onClick={() => onChange({ active: !spell.active })}
+        className={TOGGLE}
+      >
+        Em efeito
+      </button>
       {spell.concentration && (
         <span title="Concentração">
           <Badge tone="accent">C</Badge>
@@ -132,6 +144,20 @@ function Details({ source }: { source: Source }) {
           ["Quantidade", source.quantity],
           ["Peso", `${formatWeight(source.weight)} cada`],
           ["Preço", source.price || "—"],
+          ...(source.category === "armor"
+            ? ([
+                [
+                  "Armadura",
+                  `${ARMOR_TYPE_LABEL[source.armorType]}, CA ${source.armorBase}`,
+                ],
+              ] as [string, ReactNode][])
+            : []),
+          ...(source.category === "shield"
+            ? ([["Bônus de CA", `+${source.shieldBonus}`]] as [
+                string,
+                ReactNode,
+              ][])
+            : []),
           [
             "Sintonização",
             source.requiresAttunement
@@ -150,6 +176,7 @@ function Details({ source }: { source: Source }) {
           ["Alcance", source.range || "—"],
           ["Duração", source.duration || "—"],
           ["Componentes", spellComponents(source)],
+          ["Em efeito", source.active ? "sim" : "não"],
           [
             "Concentração / ritual",
             `${source.concentration ? "sim" : "não"} / ${source.ritual ? "sim" : "não"}`,
@@ -182,8 +209,13 @@ export function SourceCard({
   onDone,
   onChange,
   onDelete,
+  variables,
+  issues,
 }: {
   source: Source;
+  variables: ExpressionVariables;
+  /** Efeitos desta fonte ignorados no cálculo (ciclo ou erro). */
+  issues: EffectIssue[];
   mode: SheetMode;
   editing: boolean;
   onEdit: () => void;
@@ -234,11 +266,36 @@ export function SourceCard({
         </div>
       </div>
 
+      {source.effects.length > 0 && (
+        <ul
+          aria-label={`Efeitos de ${source.name}`}
+          className="flex flex-wrap gap-1.5 px-3 pb-3"
+        >
+          {source.effects.map((effect) => {
+            const problem = issues.find(
+              (issue) => issue.effectId === effect.id,
+            );
+            return (
+              <li key={effect.id} title={problem?.message}>
+                <Badge tone={problem ? "danger" : "accent"}>
+                  {describeEffect(effect)}
+                  {problem && ` · ${problem.message}`}
+                </Badge>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
       {open && (
         <div id={bodyId} className="border-t border-line p-3">
           {editing ? (
             <div className="flex flex-col gap-4">
-              <SourceForm source={source} onChange={onChange} />
+              <SourceForm
+                source={source}
+                variables={variables}
+                onChange={onChange}
+              />
               <div className="flex flex-wrap gap-2">
                 <Button type="button" onClick={onDone}>
                   Concluir
