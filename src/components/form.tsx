@@ -1,5 +1,80 @@
 import type { ComponentProps, ReactNode } from "react";
 
+import { D20Icon } from "./icons";
+import { ThemeToggle } from "./theme-toggle";
+
+/*
+ * Componentes base da app (design V6). Cores só pelos tokens de globals.css.
+ */
+
+/** Superfície padrão: cartão com borda, com título opcional em caixa alta. */
+export function Card({
+  title,
+  actions,
+  className = "",
+  children,
+  ...props
+}: Omit<ComponentProps<"section">, "title"> & {
+  title?: ReactNode;
+  actions?: ReactNode;
+}) {
+  return (
+    <section
+      className={`min-w-0 rounded-xl border border-line bg-surface p-4 sm:p-5 ${className}`}
+      {...props}
+    >
+      {(title || actions) && (
+        <div className="mb-3 flex items-center justify-between gap-3">
+          {title && (
+            <h2 className="text-xs font-semibold tracking-wider text-muted uppercase">
+              {title}
+            </h2>
+          )}
+          {actions}
+        </div>
+      )}
+      {children}
+    </section>
+  );
+}
+
+const BADGE_TONES = {
+  neutral: "bg-surface-2 text-muted",
+  accent: "bg-accent-soft text-accent-text",
+  danger: "bg-danger-soft text-danger",
+  success: "bg-success-soft text-success",
+  manual: "bg-manual-soft text-manual",
+} as const;
+
+/** Etiqueta curta: papel, estado, nível... */
+export function Badge({
+  tone = "neutral",
+  children,
+}: {
+  tone?: keyof typeof BADGE_TONES;
+  children: ReactNode;
+}) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${BADGE_TONES[tone]}`}
+    >
+      {children}
+    </span>
+  );
+}
+
+/** Marca da app: ícone de d20 e nome. `compact` esconde o nome no celular. */
+export function Brand({ compact = false }: { compact?: boolean }) {
+  return (
+    <span className="inline-flex items-center gap-2 font-semibold whitespace-nowrap">
+      <D20Icon className="size-6 text-accent" />
+      <span className={compact ? "max-sm:sr-only" : undefined}>
+        Ficha D&amp;D
+      </span>
+    </span>
+  );
+}
+
 /** Cartão centralizado das telas de acesso (login e troca de senha). */
 export function AuthCard({
   title,
@@ -11,13 +86,13 @@ export function AuthCard({
   children: ReactNode;
 }) {
   return (
-    <main className="flex flex-1 items-center justify-center p-4">
-      <div className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+    <main className="relative flex flex-1 flex-col items-center justify-center gap-6 p-4">
+      <ThemeToggle className="absolute top-4 right-4" />
+      <Brand />
+      <div className="w-full max-w-sm rounded-xl border border-line bg-surface p-6 shadow-lg shadow-black/10">
         <h1 className="text-xl font-semibold">{title}</h1>
         {description && (
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            {description}
-          </p>
+          <p className="mt-1 text-sm text-muted">{description}</p>
         )}
         <div className="mt-6">{children}</div>
       </div>
@@ -40,11 +115,11 @@ export function TextField({
         id={id}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${id}-error` : undefined}
-        className="w-full min-w-0 rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-zinc-900 aria-invalid:border-red-600 dark:border-zinc-700 dark:focus:border-zinc-100"
+        className="w-full min-w-0 rounded-md border border-line bg-bg px-3 py-2 text-sm outline-none placeholder:text-muted focus:border-accent aria-invalid:border-danger"
         {...input}
       />
       {error && (
-        <p id={`${id}-error`} className="text-sm text-red-600">
+        <p id={`${id}-error`} className="text-sm text-danger">
           {error}
         </p>
       )}
@@ -52,18 +127,21 @@ export function TextField({
   );
 }
 
+const BUTTON_VARIANTS = {
+  primary: "bg-accent text-on-accent hover:bg-accent-hover",
+  secondary: "border border-line hover:bg-surface-2",
+  danger: "bg-danger-solid text-white hover:opacity-90",
+  success: "bg-success-soft text-success hover:opacity-90",
+} as const;
+
 export function Button({
   variant = "primary",
   className = "",
   ...props
-}: ComponentProps<"button"> & { variant?: "primary" | "secondary" }) {
-  const styles =
-    variant === "primary"
-      ? "bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-      : "border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900";
+}: ComponentProps<"button"> & { variant?: keyof typeof BUTTON_VARIANTS }) {
   return (
     <button
-      className={`rounded-md px-3 py-2 text-sm font-medium disabled:opacity-50 ${styles} ${className}`}
+      className={`rounded-md px-3 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 ${BUTTON_VARIANTS[variant]} ${className}`}
       {...props}
     />
   );
@@ -78,8 +156,8 @@ export function FormMessage({
 }) {
   const styles =
     kind === "error"
-      ? "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200"
-      : "border-green-200 bg-green-50 text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-200";
+      ? "border-danger/40 bg-danger-soft text-danger"
+      : "border-success/40 bg-success-soft text-success";
   return (
     <p role="alert" className={`rounded-md border px-3 py-2 text-sm ${styles}`}>
       {children}

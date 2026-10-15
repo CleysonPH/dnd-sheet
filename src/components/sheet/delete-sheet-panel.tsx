@@ -28,7 +28,7 @@ export function DeleteSheetPanel({ id, name }: { id: string; name: string }) {
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-3 rounded-lg border border-red-300 p-4 dark:border-red-900"
+      className="flex flex-col gap-3 rounded-xl border border-danger/50 bg-danger-soft/40 p-4"
     >
       <p className="text-sm">
         A exclusão é definitiva. Para confirmar, digite o nome do personagem:{" "}
@@ -45,8 +45,8 @@ export function DeleteSheetPanel({ id, name }: { id: string; name: string }) {
       <div className="flex gap-2">
         <Button
           type="submit"
+          variant="danger"
           disabled={pending || typed !== name}
-          className="bg-red-700 text-white hover:bg-red-600 dark:bg-red-700 dark:text-white dark:hover:bg-red-600"
         >
           {pending ? "Excluindo..." : "Excluir definitivamente"}
         </Button>

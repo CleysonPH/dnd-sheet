@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 
-import { TextField } from "@/components/form";
+import { Card, TextField } from "@/components/form";
 import { identitySchema, type SheetIdentity } from "@/engine/sheet/document";
 
 import { NumberField } from "./number-field";
 import { parseInteger } from "./parse";
-import { Section, type SectionProps } from "./section";
+import type { SheetPartProps } from "./props";
 
 type TextFieldName = Exclude<keyof SheetIdentity, "level">;
 
@@ -18,8 +18,8 @@ const TEXT_FIELDS: { field: TextFieldName; label: string }[] = [
   { field: "background", label: "Antecedente" },
 ];
 
-/** Cabeçalho de identificação (spec character-sheets). */
-export function IdentitySection({ document, update }: SectionProps) {
+/** Cabeçalho de identificação, editável só no modo Editar (spec character-sheets). */
+export function IdentitySection({ document, update }: SheetPartProps) {
   const { identity } = document;
   const [raw, setRaw] = useState(() => ({
     name: identity.name,
@@ -52,7 +52,7 @@ export function IdentitySection({ document, update }: SectionProps) {
   }
 
   return (
-    <Section title="Personagem" area="identity">
+    <Card title="Personagem">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {TEXT_FIELDS.map(({ field, label }) => (
           <TextField
@@ -74,6 +74,6 @@ export function IdentitySection({ document, update }: SectionProps) {
           onCommit={(level) => setIdentity({ level })}
         />
       </div>
-    </Section>
+    </Card>
   );
 }

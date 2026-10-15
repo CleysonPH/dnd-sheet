@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { Suspense } from "react";
 
+import { Badge, Card } from "@/components/form";
 import { listAccounts } from "@/server/accounts/service";
 import { getPageSession } from "@/server/auth/page";
 
@@ -19,18 +20,14 @@ async function Accounts() {
 
   return (
     <>
-      <section className="mt-6">
-        <h2 className="text-lg font-semibold">Nova conta</h2>
-        <div className="mt-3">
-          <CreateAccountForm />
-        </div>
-      </section>
+      <Card title="Nova conta" className="mt-6">
+        <CreateAccountForm />
+      </Card>
 
-      <section className="mt-10">
-        <h2 className="text-lg font-semibold">Contas ({accounts.length})</h2>
-        <div className="mt-3 overflow-x-auto">
+      <Card title={`Contas (${accounts.length})`} className="mt-6">
+        <div className="-mx-4 overflow-x-auto px-4 sm:-mx-5 sm:px-5">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-zinc-200 text-zinc-500 dark:border-zinc-800">
+            <thead className="border-b border-line text-muted">
               <tr>
                 <th className="py-2 pr-4 font-medium">Nome</th>
                 <th className="py-2 pr-4 font-medium">E-mail</th>
@@ -44,18 +41,22 @@ async function Accounts() {
               {accounts.map((account) => (
                 <tr
                   key={account.id}
-                  className="border-b border-zinc-100 align-top dark:border-zinc-900"
+                  className="border-b border-line align-top last:border-0"
                 >
                   <td className="py-3 pr-4">{account.name}</td>
                   <td className="py-3 pr-4">{account.email}</td>
                   <td className="py-3 pr-4">
-                    {account.role === "admin" ? "Admin" : "Usuário"}
+                    {account.role === "admin" ? (
+                      <Badge tone="accent">Admin</Badge>
+                    ) : (
+                      <Badge>Usuário</Badge>
+                    )}
                   </td>
                   <td className="py-3 pr-4">
                     {account.active ? (
-                      "Ativa"
+                      <Badge tone="success">Ativa</Badge>
                     ) : (
-                      <span className="text-red-600">Desativada</span>
+                      <Badge tone="danger">Desativada</Badge>
                     )}
                   </td>
                   <td className="py-3 pr-4">
@@ -63,7 +64,7 @@ async function Accounts() {
                   </td>
                   <td className="py-3">
                     {account.id === me.id ? (
-                      <span className="text-xs text-zinc-500">Sua conta</span>
+                      <span className="text-xs text-muted">Sua conta</span>
                     ) : (
                       <AccountRowActions
                         userId={account.id}
@@ -78,7 +79,7 @@ async function Accounts() {
             </tbody>
           </table>
         </div>
-      </section>
+      </Card>
     </>
   );
 }

@@ -171,7 +171,7 @@ normalizeDeathSaves(document): SheetDocument
 - **[A refatoração toca quase todos os componentes visuais de uma vez]** → As tarefas seguem uma ordem: primeiro tokens e componentes base, com a app ainda funcionando; depois as páginas simples; por último a ficha. Cada grupo é conferido no navegador antes do próximo.
 - **[Mudança de comportamento dos testes contra a morte surpreende]** → É a regra do 5.5e e foi decisão do usuário. Os testes só ficam escondidos quando estão zerados, porque a normalização garante isso.
 - **[O modo Jogar esconde a edição de quem não acha a chave]** → A chave fica sempre visível no cabeçalho da ficha, e a ficha nova abre em Editar.
-- **[O watcher do Turbopack não percebeu, na change anterior, uma alteração do `globals.css` feita pelo shell]** → Editar o CSS só com a ferramenta de edição e conferir a regra nova no CSS servido antes de avaliar o visual.
+- **[Em dev, o loader `@tailwindcss/turbopack` não relê o `globals.css` editado]** → Ele atualiza as classes vindas dos `.tsx`, mas mantém o conteúdo antigo do próprio `globals.css`, seja qual for o jeito de editar o arquivo. *(Confirmado na implementação.)* Depois de mexer no `globals.css`, reiniciar o `npm run dev` e conferir a regra nova no CSS servido antes de avaliar o visual.
 
 ## Migration Plan
 

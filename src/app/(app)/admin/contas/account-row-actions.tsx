@@ -28,7 +28,7 @@ export function AccountRowActions({
       name="action"
       value={action}
       disabled={pending}
-      className="rounded-md border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
+      className="rounded-md border border-line px-2 py-1 text-xs hover:bg-surface-2 disabled:opacity-50"
     >
       {label}
     </button>
@@ -45,7 +45,7 @@ export function AccountRowActions({
           ? button("demote", "Tornar usuário")
           : button("promote", "Tornar admin")}
       </form>
-      {state.error && <p className="text-xs text-red-600">{state.error}</p>}
+      {state.error && <p className="text-xs text-danger">{state.error}</p>}
       {state.tempPassword && (
         <TempPasswordBox
           label={`Nova senha provisória de ${name}:`}

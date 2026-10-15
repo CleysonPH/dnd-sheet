@@ -9,6 +9,7 @@ import type { DerivedKey } from "@/engine/stats/keys";
 
 import { derivedLabel } from "./labels";
 import { formatSigned, parseInteger } from "./parse";
+import { useSheetMode } from "./sheet-mode";
 
 type OverrideControl = {
   openKey: DerivedKey | null;
@@ -59,10 +60,35 @@ export function DerivedValue({
   className?: string;
 }) {
   const { openKey, setOpenKey, setOverride } = useOverrideControl();
+  const mode = useSheetMode();
   const open = openKey === valueKey;
   const format = signed ? formatSigned : String;
   const label = derivedLabel(valueKey);
   const panelId = `override-${valueKey}`;
+  const style = `rounded px-1 font-semibold tabular-nums data-overridden:bg-manual-soft data-overridden:text-manual ${className}`;
+  const manualTag = derived.overridden && (
+    <span className="ml-1 align-middle text-[0.6rem] font-medium tracking-wide uppercase">
+      manual
+    </span>
+  );
+
+  // Em Jogar, só leitura: sem botão nem painel (design V4).
+  if (mode === "play") {
+    return (
+      <span
+        data-overridden={derived.overridden || undefined}
+        title={
+          derived.overridden
+            ? `Valor manual; calculado ${format(derived.calculated)}`
+            : undefined
+        }
+        className={style}
+      >
+        {format(derived.value)}
+        {manualTag}
+      </span>
+    );
+  }
 
   return (
     <span className="relative inline-block">
@@ -77,14 +103,10 @@ export function DerivedValue({
         }
         data-overridden={derived.overridden || undefined}
         onClick={() => setOpenKey(open ? null : valueKey)}
-        className={`rounded px-1 font-semibold tabular-nums hover:bg-zinc-100 data-overridden:bg-amber-100 data-overridden:text-amber-900 dark:hover:bg-zinc-800 dark:data-overridden:bg-amber-950 dark:data-overridden:text-amber-200 ${className}`}
+        className={`underline decoration-line decoration-dotted underline-offset-4 hover:bg-surface-2 ${style}`}
       >
         {format(derived.value)}
-        {derived.overridden && (
-          <span className="ml-1 align-middle text-[0.6rem] font-medium tracking-wide uppercase">
-            manual
-          </span>
-        )}
+        {manualTag}
       </button>
       {open && (
         <OverridePanel
@@ -142,12 +164,10 @@ function OverridePanel({
       onKeyDown={(event) => {
         if (event.key === "Escape") onClose();
       }}
-      className={`fixed inset-x-4 bottom-4 z-20 flex flex-col gap-3 rounded-lg border border-zinc-300 bg-white p-4 text-left text-sm font-normal shadow-lg sm:absolute sm:inset-x-auto sm:top-full sm:bottom-auto sm:mt-1 sm:w-64 dark:border-zinc-700 dark:bg-zinc-950 ${align === "right" ? "sm:right-0" : "sm:left-0"}`}
+      className={`fixed inset-x-4 bottom-4 z-20 flex flex-col gap-3 rounded-xl border border-line bg-surface p-4 text-left text-sm font-normal text-text shadow-xl shadow-black/30 sm:absolute sm:inset-x-auto sm:top-full sm:bottom-auto sm:mt-1 sm:w-64 ${align === "right" ? "sm:right-0" : "sm:left-0"}`}
     >
       <p className="font-medium">{label}</p>
-      <p className="text-zinc-600 dark:text-zinc-400">
-        Calculado: {format(derived.calculated)}
-      </p>
+      <p className="text-muted">Calculado: {format(derived.calculated)}</p>
       {/* Não é <form>: o painel pode estar dentro de outro formulário. */}
       <TextField
         label="Valor manual"

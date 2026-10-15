@@ -3,6 +3,8 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { Badge, Card } from "@/components/form";
+import { D20Icon } from "@/components/icons";
 import { getPageSession } from "@/server/auth/page";
 import { listSheets, type SheetSummary } from "@/server/sheets/service";
 
@@ -16,9 +18,7 @@ const updatedFormat = new Intl.DateTimeFormat("pt-BR", {
 });
 
 function describe(sheet: SheetSummary): string {
-  const parts = [sheet.species, sheet.class].filter(Boolean);
-  if (sheet.level !== null) parts.push(`nível ${sheet.level}`);
-  return parts.join(" · ");
+  return [sheet.species, sheet.class].filter(Boolean).join(" · ");
 }
 
 async function SheetList() {
@@ -27,25 +27,33 @@ async function SheetList() {
 
   if (sheets.length === 0) {
     return (
-      <p className="text-zinc-600 dark:text-zinc-400">
+      <Card className="text-center text-muted">
+        <D20Icon className="mx-auto mb-2 size-8 text-accent" />
         Você ainda não tem fichas. Crie a primeira acima.
-      </p>
+      </Card>
     );
   }
 
   return (
-    <ul className="divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+    <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {sheets.map((sheet) => (
         <li key={sheet.id}>
           <Link
             href={`/fichas/${sheet.id}`}
-            className="flex flex-col gap-0.5 px-4 py-3 hover:bg-zinc-50 sm:flex-row sm:items-baseline sm:gap-4 dark:hover:bg-zinc-900"
+            className="flex h-full flex-col gap-1 rounded-xl border border-line bg-surface p-4 transition-colors hover:border-accent"
           >
-            <span className="font-medium">{sheet.name}</span>
-            <span className="flex-1 text-sm text-zinc-600 dark:text-zinc-400">
+            <span className="flex items-start justify-between gap-2">
+              <span className="min-w-0 truncate text-lg font-semibold">
+                {sheet.name}
+              </span>
+              {sheet.level !== null && (
+                <Badge tone="accent">nível {sheet.level}</Badge>
+              )}
+            </span>
+            <span className="min-h-5 text-sm text-muted">
               {describe(sheet)}
             </span>
-            <span className="text-xs text-zinc-500">
+            <span className="mt-auto pt-2 text-xs text-muted">
               alterada em {updatedFormat.format(sheet.updatedAt)}
             </span>
           </Link>
@@ -57,17 +65,16 @@ async function SheetList() {
 
 export default function HomePage() {
   return (
-    // Páginas de texto ficam estreitas; o layout é largo por causa da ficha.
-    <div className="mx-auto max-w-4xl">
+    <>
       <h1 className="text-2xl font-semibold">Minhas fichas</h1>
-      <div className="mt-6">
+      <Card title="Nova ficha" className="mt-6 max-w-xl">
         <CreateSheetForm />
-      </div>
+      </Card>
       <div className="mt-8">
         <Suspense>
           <SheetList />
         </Suspense>
       </div>
-    </div>
+    </>
   );
 }

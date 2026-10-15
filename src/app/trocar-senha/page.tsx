@@ -15,7 +15,7 @@ async function RequiredChange() {
     <>
       <ChangePasswordForm mode="required" />
       <div className="mt-4 text-center">
-        <SignOutButton className="text-zinc-600 dark:text-zinc-400" />
+        <SignOutButton className="text-muted hover:underline" />
       </div>
     </>
   );

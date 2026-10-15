@@ -23,17 +23,17 @@ export function TempPasswordBox({
   return (
     <div
       role="status"
-      className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100"
+      className="rounded-md border border-manual/40 bg-manual-soft p-3 text-sm text-text"
     >
       <p>{label}</p>
       <div className="mt-2 flex items-center gap-2">
-        <code className="rounded bg-white px-2 py-1 font-mono text-base tracking-wide dark:bg-black">
+        <code className="rounded bg-bg px-2 py-1 font-mono text-base tracking-wide">
           {password}
         </code>
         <button
           type="button"
           onClick={copy}
-          className="rounded-md border border-amber-400 px-2 py-1 hover:bg-amber-100 dark:hover:bg-amber-900"
+          className="rounded-md border border-manual/60 px-2 py-1 hover:bg-surface-2"
         >
           {copied ? "Copiada" : "Copiar"}
         </button>

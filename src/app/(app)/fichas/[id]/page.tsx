@@ -34,7 +34,10 @@ async function Sheet({ params }: { params: Promise<{ id: string }> }) {
 export default function SheetPage({ params }: PageProps<"/fichas/[id]">) {
   return (
     <>
-      <Link href="/" className="text-sm text-zinc-500 hover:underline">
+      <Link
+        href="/"
+        className="text-sm text-muted hover:text-text hover:underline"
+      >
         ← Minhas fichas
       </Link>
       <div className="mt-4">

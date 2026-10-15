@@ -14,6 +14,9 @@ export function SignOutButton({ className = "" }: { className?: string }) {
     await authClient.signOut();
     router.replace("/login");
     router.refresh();
+    // O Next preserva o estado do layout entre navegações: sem isto, o botão
+    // volta desativado no próximo login feito na mesma aba.
+    setPending(false);
   }
 
   return (
@@ -21,7 +24,7 @@ export function SignOutButton({ className = "" }: { className?: string }) {
       type="button"
       onClick={signOut}
       disabled={pending}
-      className={`text-sm hover:underline disabled:opacity-50 ${className}`}
+      className={`text-sm disabled:opacity-50 ${className}`}
     >
       Sair
     </button>

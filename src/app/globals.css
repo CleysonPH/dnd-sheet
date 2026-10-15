@@ -1,44 +1,113 @@
 @import "tailwindcss";
 
+/*
+ * Tokens de cor (design V1). O escuro é o padrão; o claro só redefine os
+ * mesmos tokens. Os componentes usam os utilitários gerados (bg-surface,
+ * border-line, text-muted, bg-accent...), nunca cores avulsas nem `dark:`.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+  --bg: #0f0d16;
+  --surface: #17151f;
+  --surface-2: #211e2b;
+  --line: #2e2a3b;
+  --text: #ecebf1;
+  --muted: #a19cb2;
+  --accent: #8b5cf6;
+  --accent-hover: #7c3aed;
+  --accent-text: #b9a3fb;
+  --accent-soft: #2a2140;
+  --on-accent: #ffffff;
+  --danger: #f87171;
+  --danger-solid: #b91c1c;
+  --danger-soft: #3a1a1f;
+  --success: #4ade80;
+  --success-soft: #16301f;
+  --manual: #fbbf24;
+  --manual-soft: #3a2c10;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f5f4f9;
+  --surface: #ffffff;
+  --surface-2: #efedf5;
+  --line: #dcd8e6;
+  --text: #1b1923;
+  --muted: #5d586d;
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
+  --accent-text: #6d28d9;
+  --accent-soft: #ede7fd;
+  --on-accent: #ffffff;
+  --danger: #b91c1c;
+  --danger-solid: #b91c1c;
+  --danger-soft: #fdecec;
+  --success: #15803d;
+  --success-soft: #e7f6ec;
+  --manual: #92400e;
+  --manual-soft: #fdf1d8;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-text: var(--accent-text);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-danger: var(--danger);
+  --color-danger-solid: var(--danger-solid);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-manual: var(--manual);
+  --color-manual-soft: var(--manual-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ThemeToggle mostra o ícone do tema para o qual vai trocar. */
+.theme-icon-moon,
+:root[data-theme="light"] .theme-icon-sun {
+  display: none;
+}
+:root[data-theme="light"] .theme-icon-moon {
+  display: block;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
-/* Grade da ficha (design S8): uma coluna no celular e três no desktop. */
-.sheet-grid {
+/*
+ * Faixa de topo da ficha (design V5). O DOM segue a ordem do celular (PV,
+ * combate, dados de vida); no desktop o combate vai para a esquerda.
+ */
+.sheet-top {
   display: grid;
-  gap: 1.5rem;
+  gap: 1rem;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "identity" "combat" "abilities" "skills";
+  grid-template-areas: "hp" "stats" "dice";
+}
+
+@media (width >= 40rem) {
+  .sheet-top {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas: "hp hp" "stats dice";
+  }
 }
 
 @media (width >= 64rem) {
-  .sheet-grid {
-    align-items: start;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-areas:
-      "identity identity identity"
-      "abilities skills combat";
+  .sheet-top {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 0.9fr);
+    grid-template-areas: "stats hp dice";
   }
 }
