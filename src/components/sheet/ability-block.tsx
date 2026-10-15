@@ -88,7 +88,7 @@ export function AbilityBlock({
           signed
           className="text-3xl"
         />
-        {mode === "play" && (
+        {mode !== "edit" && (
           <span className="text-xs font-semibold tracking-wide uppercase">
             {name}
           </span>
@@ -122,7 +122,7 @@ export function AbilityBlock({
           )}
           <span className="min-w-0 flex-1 truncate font-medium">
             Salvaguarda
-            {mode === "play" && saveProficient && (
+            {mode !== "edit" && saveProficient && (
               <span className="sr-only"> (proficiente)</span>
             )}
           </span>
@@ -161,7 +161,7 @@ export function AbilityBlock({
               )}
               <span className="min-w-0 flex-1 truncate">
                 {SKILL_LABEL[skill]}
-                {mode === "play" && level !== "none" && (
+                {mode !== "edit" && level !== "none" && (
                   <span className="sr-only"> ({PROFICIENCY_LABEL[level]})</span>
                 )}
               </span>

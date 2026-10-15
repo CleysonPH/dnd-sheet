@@ -2,8 +2,8 @@
 
 ## 1. Banco e servidor
 
-- [ ] 1.1 Acrescentar `share_token` (nula e única) à tabela `sheet` e gerar a migração com `npm run db:generate` (L1). Verificar que `npm run db:migrate` aplica a migração no banco de dev e que `npm run test:int` passa
-- [ ] 1.2 Criar `src/server/sheets/share.ts` com `enableShare`, `regenerateShare`, `disableShare` e `getSharedSheet`, e devolver o `shareToken` em `getSheet` (L2). Testes de integração:
+- [x] 1.1 Acrescentar `share_token` (nula e única) à tabela `sheet` e gerar a migração com `npm run db:generate` (L1). Verificar que `npm run db:migrate` aplica a migração no banco de dev e que `npm run test:int` passa
+- [x] 1.2 Criar `src/server/sheets/share.ts` com `enableShare`, `regenerateShare`, `disableShare` e `getSharedSheet`, e devolver o `shareToken` em `getSheet` (L2). Testes de integração:
   - o dono gera o link, e gerar de novo devolve o mesmo token;
   - trocar devolve outro token, e o anterior deixa de ler;
   - desativar faz a leitura dar `null`;
@@ -18,8 +18,8 @@
 
 ## 2. Página pública
 
-- [ ] 2.1 Liberar `/compartilhada/` no proxy, com e sem sessão, mantendo a troca de senha pendente (L3). Extrair o `SheetBody` do `SheetEditor` e criar o modo `"view"`, com `canAct`, nos cartões de PV, dados de vida, Recursos e fontes (L4). Verificar que `npm run lint`, `npm run typecheck` e `npm test` passam e que a ficha do dono continua igual em Jogar e Editar
-- [ ] 2.2 Criar `src/app/compartilhada/[token]/page.tsx` com o `SheetViewer`, `notFound()`, `noindex` e um cabeçalho sem a área logada (L3, L4). Verificar no navegador:
+- [x] 2.1 Liberar `/compartilhada/` no proxy, com e sem sessão, mantendo a troca de senha pendente (L3). Extrair o `SheetBody` do `SheetEditor` e criar o modo `"view"`, com `canAct`, nos cartões de PV, dados de vida, Recursos e fontes (L4). Verificar que `npm run lint`, `npm run typecheck` e `npm test` passam e que a ficha do dono continua igual em Jogar e Editar
+- [x] 2.2 Criar `src/app/compartilhada/[token]/page.tsx` com o `SheetViewer`, `notFound()`, `noindex` e um cabeçalho sem a área logada (L3, L4). Verificar no navegador:
   - sem sessão, o link de Ária mostra a ficha sem campos editáveis nem botões de dano, cura, descanso, recursos ou ações das fontes;
   - "Ver origem" e as abas funcionam;
   - a página não mostra o nome nem o e-mail do jogador;
@@ -30,11 +30,11 @@
 
 ## 3. Compartilhar na ficha do dono
 
-- [ ] 3.1 Criar o `SharePanel` com "Gerar link", o endereço, "Copiar", "Gerar novo link" e "Desativar link", e as server actions (L5). Verificar no navegador:
+- [x] 3.1 Criar o `SharePanel` com "Gerar link", o endereço, "Copiar", "Gerar novo link" e "Desativar link", e as server actions (L5). Verificar no navegador:
   - gerar o link de Ária e abri-lo numa aba sem sessão;
   - aplicar dano e ver o PV novo ao recarregar o link;
   - gerar um novo link e ver o antigo dar "não encontrado";
   - desativar e ver o link dar "não encontrado".
 
   Atualizar o README (rotas e compartilhamento)
-- [ ] 3.2 Rodar `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:int`, `npm run build` e `npm run format:check` e verificar que todos passam
+- [x] 3.2 Rodar `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:int`, `npm run build` e `npm run format:check` e verificar que todos passam

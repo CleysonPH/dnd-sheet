@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from "react";
 
-import type { SheetMode } from "./mode";
+import { canAct, type SheetMode } from "./mode";
 
 const SheetModeContext = createContext<SheetMode>("edit");
 
@@ -11,6 +11,11 @@ export const SheetModeProvider = SheetModeContext;
 /** Modo atual da ficha (design V4). */
 export function useSheetMode(): SheetMode {
   return useContext(SheetModeContext);
+}
+
+/** false na ficha compartilhada, só para leitura (design L4). */
+export function useCanAct(): boolean {
+  return canAct(useContext(SheetModeContext));
 }
 
 const OPTIONS: { mode: SheetMode; label: string }[] = [

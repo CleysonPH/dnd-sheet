@@ -20,7 +20,7 @@ import {
 import { NumberField } from "./number-field";
 import { parseInteger } from "./parse";
 import type { SheetPartProps } from "./props";
-import { useSheetMode } from "./sheet-mode";
+import { useCanAct, useSheetMode } from "./sheet-mode";
 import { describeRecharge } from "./sources/trackers-editor";
 
 /** − atual / máximo +, com os limites de 0 e do máximo (design R3). */
@@ -36,32 +36,37 @@ function Counter({
   onChange: (used: number) => void;
 }) {
   const current = currentOf(max, used);
+  const acts = useCanAct();
   return (
     <span className="flex shrink-0 items-center rounded-md border border-line text-sm">
-      <button
-        type="button"
-        aria-label={`Gastar ${label}`}
-        disabled={current === 0}
-        onClick={() => onChange(spend(used, max))}
-        className="px-2 py-1 text-muted hover:text-text disabled:opacity-40"
-      >
-        −
-      </button>
+      {acts && (
+        <button
+          type="button"
+          aria-label={`Gastar ${label}`}
+          disabled={current === 0}
+          onClick={() => onChange(spend(used, max))}
+          className="px-2 py-1 text-muted hover:text-text disabled:opacity-40"
+        >
+          −
+        </button>
+      )}
       <span
         className="min-w-12 text-center font-semibold tabular-nums"
         aria-label={`${label}: ${current} de ${max}`}
       >
         {current} / {max}
       </span>
-      <button
-        type="button"
-        aria-label={`Recuperar ${label}`}
-        disabled={current >= max}
-        onClick={() => onChange(recover(used, max))}
-        className="px-2 py-1 text-muted hover:text-text disabled:opacity-40"
-      >
-        +
-      </button>
+      {acts && (
+        <button
+          type="button"
+          aria-label={`Recuperar ${label}`}
+          disabled={current >= max}
+          onClick={() => onChange(recover(used, max))}
+          className="px-2 py-1 text-muted hover:text-text disabled:opacity-40"
+        >
+          +
+        </button>
+      )}
     </span>
   );
 }
@@ -75,6 +80,7 @@ const REST_SUMMARY = {
 /** Trackers, espaços de magia e descansos, abaixo da faixa de topo. */
 export function ResourcesCard({ document, stats, update }: SheetPartProps) {
   const mode = useSheetMode();
+  const acts = useCanAct();
   const [confirming, setConfirming] = useState<"short" | "long" | null>(null);
   const trackers = resolveTrackers(document, stats.variables);
   const { spellSlots, pactSlots } = document;
@@ -112,6 +118,7 @@ export function ResourcesCard({ document, stats, update }: SheetPartProps) {
     <Card
       title="Recursos"
       actions={
+        acts &&
         confirming === null && (
           <div className="flex flex-wrap gap-2">
             <Button

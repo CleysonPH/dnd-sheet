@@ -34,6 +34,8 @@ export type LoadedSheet = {
   id: string;
   version: number;
   document: SheetDocument;
+  /** Código do link de compartilhamento; null sem link (design L2). */
+  shareToken: string | null;
 };
 
 export type CreateSheetResult =
@@ -50,7 +52,7 @@ export type DeleteSheetResult =
   | { status: "not_found" }
   | { status: "confirmation_mismatch" };
 
-function ownedBy(ownerId: string, id: string) {
+export function ownedBy(ownerId: string, id: string) {
   return and(eq(sheet.id, id), eq(sheet.ownerId, ownerId));
 }
 
@@ -111,7 +113,12 @@ export async function getSheet(
 ): Promise<LoadedSheet | null> {
   const { user } = await requireUser(headers);
   const [row] = await getDb()
-    .select({ id: sheet.id, version: sheet.version, data: sheet.data })
+    .select({
+      id: sheet.id,
+      version: sheet.version,
+      data: sheet.data,
+      shareToken: sheet.shareToken,
+    })
     .from(sheet)
     .where(ownedBy(user.id, id));
   if (!row) return null;
@@ -119,6 +126,7 @@ export async function getSheet(
     id: row.id,
     version: row.version,
     document: migrateSheetDocument(row.data),
+    shareToken: row.shareToken,
   };
 }
 

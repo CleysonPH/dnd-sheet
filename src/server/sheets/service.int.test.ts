@@ -60,6 +60,7 @@ describe("fichas", () => {
         id: result.id,
         version: 1,
         document: createSheetDocument("Thorin"),
+        shareToken: null,
       });
     });
 

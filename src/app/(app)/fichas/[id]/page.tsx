@@ -27,6 +27,7 @@ async function Sheet({ params }: { params: Promise<{ id: string }> }) {
       initialDocument={sheet.document}
       initialVersion={sheet.version}
       save={saveSheetAction.bind(null, sheet.id)}
+      shareToken={sheet.shareToken}
     />
   );
 }

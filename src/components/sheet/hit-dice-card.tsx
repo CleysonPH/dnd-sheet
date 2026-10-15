@@ -7,7 +7,7 @@ import { HIT_DICE, type HitDie } from "@/engine/stats/keys";
 
 import { DerivedValue } from "./derived-value";
 import type { SheetPartProps } from "./props";
-import { useSheetMode } from "./sheet-mode";
+import { useCanAct, useSheetMode } from "./sheet-mode";
 
 /** Marcar a caixa `index` leva o total a `index + 1`; desmarcar, a `index`. */
 function toggleCount(count: number, index: number) {
@@ -17,6 +17,7 @@ function toggleCount(count: number, index: number) {
 /** Dados de vida e, só com 0 PV, os testes contra a morte (design V5). */
 export function HitDiceCard({ document, stats, update }: SheetPartProps) {
   const mode = useSheetMode();
+  const acts = useCanAct();
   const { hitPoints, deathSaves } = document;
   const hitDiceMax = stats.values.hitDiceMax.value;
   // Gastos acima do total (ex.: o nível baixou) contam como o total.
@@ -50,7 +51,7 @@ export function HitDiceCard({ document, stats, update }: SheetPartProps) {
             valueKey="hitDiceMax"
             derived={stats.values.hitDiceMax}
           />
-          {mode === "play" && (
+          {mode !== "edit" && (
             <span className="text-base text-muted">d{hitPoints.hitDie}</span>
           )}
         </span>
@@ -76,24 +77,26 @@ export function HitDiceCard({ document, stats, update }: SheetPartProps) {
           </span>
         )}
       </div>
-      <div className="mt-3 flex gap-2">
-        <Button
-          type="button"
-          variant="secondary"
-          disabled={stats.hitDiceAvailable === 0}
-          onClick={() => setHitPoints({ hitDiceSpent: spent + 1 })}
-        >
-          Gastar
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          disabled={spent === 0}
-          onClick={() => setHitPoints({ hitDiceSpent: spent - 1 })}
-        >
-          Recuperar
-        </Button>
-      </div>
+      {acts && (
+        <div className="mt-3 flex gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={stats.hitDiceAvailable === 0}
+            onClick={() => setHitPoints({ hitDiceSpent: spent + 1 })}
+          >
+            Gastar
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={spent === 0}
+            onClick={() => setHitPoints({ hitDiceSpent: spent - 1 })}
+          >
+            Recuperar
+          </Button>
+        </div>
+      )}
 
       {/* Só com 0 PV; ao sair de 0 eles são zerados (design V3). */}
       {dying && (
@@ -112,6 +115,7 @@ export function HitDiceCard({ document, stats, update }: SheetPartProps) {
                     className="size-4 accent-accent"
                     aria-label={`${kind === "successes" ? "Sucesso" : "Falha"} ${index + 1}`}
                     checked={deathSaves[kind] > index}
+                    disabled={!acts}
                     onChange={() =>
                       update({
                         deathSaves: {
@@ -124,16 +128,20 @@ export function HitDiceCard({ document, stats, update }: SheetPartProps) {
                 ))}
               </span>
             ))}
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={deathSaves.successes === 0 && deathSaves.failures === 0}
-              onClick={() =>
-                update({ deathSaves: { successes: 0, failures: 0 } })
-              }
-            >
-              Limpar
-            </Button>
+            {acts && (
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={
+                  deathSaves.successes === 0 && deathSaves.failures === 0
+                }
+                onClick={() =>
+                  update({ deathSaves: { successes: 0, failures: 0 } })
+                }
+              >
+                Limpar
+              </Button>
+            )}
           </div>
         </fieldset>
       )}

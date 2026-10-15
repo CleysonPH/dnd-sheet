@@ -11,6 +11,7 @@ import type { Item, Source, Spell } from "@/engine/sources/schema";
 import type { EffectIssue } from "@/engine/stats/derive";
 
 import type { SheetMode } from "../mode";
+import { useCanAct } from "../sheet-mode";
 import {
   ARMOR_TYPE_LABEL,
   FEAT_CATEGORY_LABEL,
@@ -37,12 +38,14 @@ function ItemActions({
   item: Item;
   onChange: (patch: SourcePatch) => void;
 }) {
+  const acts = useCanAct();
   return (
     <>
       {isItemActive(item) && <Badge tone="success">Ativo</Badge>}
       <button
         type="button"
         aria-pressed={item.equipped}
+        disabled={!acts}
         onClick={() => onChange({ equipped: !item.equipped })}
         className={TOGGLE}
       >
@@ -52,6 +55,7 @@ function ItemActions({
         <button
           type="button"
           aria-pressed={item.attuned}
+          disabled={!acts}
           onClick={() => onChange({ attuned: !item.attuned })}
           className={TOGGLE}
         >
@@ -59,15 +63,17 @@ function ItemActions({
         </button>
       )}
       <span className="flex items-center rounded-md border border-line text-sm">
-        <button
-          type="button"
-          aria-label={`Diminuir quantidade de ${item.name}`}
-          disabled={item.quantity === 0}
-          onClick={() => onChange({ quantity: item.quantity - 1 })}
-          className="px-2 py-0.5 text-muted hover:text-text disabled:opacity-40"
-        >
-          −
-        </button>
+        {acts && (
+          <button
+            type="button"
+            aria-label={`Diminuir quantidade de ${item.name}`}
+            disabled={item.quantity === 0}
+            onClick={() => onChange({ quantity: item.quantity - 1 })}
+            className="px-2 py-0.5 text-muted hover:text-text disabled:opacity-40"
+          >
+            −
+          </button>
+        )}
         <span
           className="min-w-6 text-center tabular-nums"
           aria-label={`Quantidade: ${item.quantity}`}
@@ -77,6 +83,7 @@ function ItemActions({
         <button
           type="button"
           aria-label={`Aumentar quantidade de ${item.name}`}
+          hidden={!acts}
           disabled={item.quantity === 9999}
           onClick={() => onChange({ quantity: item.quantity + 1 })}
           className="px-2 py-0.5 text-muted hover:text-text disabled:opacity-40"
@@ -97,12 +104,14 @@ function SpellActions({
   castingLabel?: string;
   onChange: (patch: SourcePatch) => void;
 }) {
+  const acts = useCanAct();
   return (
     <>
       {castingLabel && <Badge>{castingLabel}</Badge>}
       <button
         type="button"
         aria-pressed={spell.active}
+        disabled={!acts}
         onClick={() => onChange({ active: !spell.active })}
         className={TOGGLE}
       >
@@ -127,6 +136,7 @@ function SpellActions({
           <input
             type="checkbox"
             checked={spell.preparation === "prepared"}
+            disabled={!acts}
             onChange={(event) =>
               onChange({
                 preparation: event.target.checked ? "prepared" : "none",

@@ -21,7 +21,7 @@ import { DerivedValue } from "./derived-value";
 import { NumberField } from "./number-field";
 import { formatSigned, parseInteger } from "./parse";
 import type { SheetPartProps } from "./props";
-import { useSheetMode } from "./sheet-mode";
+import { useCanAct, useSheetMode } from "./sheet-mode";
 
 /** O PV atual vai de 0 ao máximo vigente, que o schema não conhece (design S3). */
 function currentHitPointsSchema(max: number) {
@@ -40,6 +40,7 @@ type ConcentrationNotice =
 /** PV atual, máximo e temporário, com dano e cura (design V3/V5). */
 export function HitPointsCard({ document, stats, update }: SheetPartProps) {
   const mode = useSheetMode();
+  const acts = useCanAct();
   const { hitPoints } = document;
   const max = stats.values.hitPointsMax.value;
   const [amount, setAmount] = useState("");
@@ -105,19 +106,22 @@ export function HitPointsCard({ document, stats, update }: SheetPartProps) {
                 className="size-2 animate-pulse rounded-full bg-on-accent"
               />
               Concentrando em {concentration.name}
-              <button
-                type="button"
-                onClick={() => update((current) => endConcentration(current))}
-                aria-label={`Encerrar a concentração em ${concentration.name}`}
-                className="rounded px-1.5 py-0.5 hover:bg-white/20"
-              >
-                Encerrar
-              </button>
+              {acts && (
+                <button
+                  type="button"
+                  onClick={() => update((current) => endConcentration(current))}
+                  aria-label={`Encerrar a concentração em ${concentration.name}`}
+                  className="rounded px-1.5 py-0.5 hover:bg-white/20"
+                >
+                  Encerrar
+                </button>
+              )}
             </span>
           )}
           <button
             type="button"
             aria-pressed={document.heroicInspiration}
+            disabled={!acts}
             onClick={() =>
               update({ heroicInspiration: !document.heroicInspiration })
             }
@@ -161,50 +165,59 @@ export function HitPointsCard({ document, stats, update }: SheetPartProps) {
             />
           </span>
         </div>
-        <div className="w-24">
-          <NumberField
-            label="Temporário"
-            name="hp-temp"
-            inputMode="numeric"
-            value={hitPoints.temp}
-            parse={(text) => parseInteger(text, hitPointsSchema.shape.temp)}
-            onCommit={(temp) => update({ hitPoints: { ...hitPoints, temp } })}
-          />
-        </div>
+        {acts ? (
+          <div className="w-24">
+            <NumberField
+              label="Temporário"
+              name="hp-temp"
+              inputMode="numeric"
+              value={hitPoints.temp}
+              parse={(text) => parseInteger(text, hitPointsSchema.shape.temp)}
+              onCommit={(temp) => update({ hitPoints: { ...hitPoints, temp } })}
+            />
+          </div>
+        ) : (
+          <p className="pb-1 text-sm text-muted">
+            Temporário{" "}
+            <strong className="text-text tabular-nums">{hitPoints.temp}</strong>
+          </p>
+        )}
       </div>
 
-      <div className="mt-4 flex items-start gap-2">
-        <div className="w-24">
-          <TextField
-            label="Quantidade"
-            name="hp-amount"
-            inputMode="numeric"
-            autoComplete="off"
-            value={amount}
-            error={amountError}
-            onChange={(event) => {
-              setAmount(event.target.value);
-              setAmountError(undefined);
-            }}
-          />
+      {acts && (
+        <div className="mt-4 flex items-start gap-2">
+          <div className="w-24">
+            <TextField
+              label="Quantidade"
+              name="hp-amount"
+              inputMode="numeric"
+              autoComplete="off"
+              value={amount}
+              error={amountError}
+              onChange={(event) => {
+                setAmount(event.target.value);
+                setAmountError(undefined);
+              }}
+            />
+          </div>
+          <Button
+            type="button"
+            variant="danger"
+            className="mt-6"
+            onClick={() => apply("damage")}
+          >
+            Dano
+          </Button>
+          <Button
+            type="button"
+            variant="success"
+            className="mt-6"
+            onClick={() => apply("healing")}
+          >
+            Cura
+          </Button>
         </div>
-        <Button
-          type="button"
-          variant="danger"
-          className="mt-6"
-          onClick={() => apply("damage")}
-        >
-          Dano
-        </Button>
-        <Button
-          type="button"
-          variant="success"
-          className="mt-6"
-          onClick={() => apply("healing")}
-        >
-          Cura
-        </Button>
-      </div>
+      )}
 
       {notice && (
         <div

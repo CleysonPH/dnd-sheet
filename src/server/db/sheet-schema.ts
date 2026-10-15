@@ -23,6 +23,8 @@ export const sheet = pgTable(
     name: text("name").notNull(),
     version: integer("version").notNull().default(1),
     data: jsonb("data").notNull(),
+    // Código do link de compartilhamento; nulo sem link (design L1).
+    shareToken: text("share_token").unique(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

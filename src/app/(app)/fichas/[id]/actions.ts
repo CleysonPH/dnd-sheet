@@ -10,6 +10,12 @@ import {
   type DeleteSheetResult,
   type SaveSheetResult,
 } from "@/server/sheets/service";
+import {
+  disableShare,
+  enableShare,
+  regenerateShare,
+  type ShareResult,
+} from "@/server/sheets/share";
 
 /** Sessão perdida no meio da edição: leva ao login ou à troca de senha. */
 async function withAuth<T>(run: (headers: Headers) => Promise<T>): Promise<T> {
@@ -48,4 +54,17 @@ export async function deleteSheetAction(
   }
   // Excluída aqui ou já inexistente: em ambos os casos, de volta à lista.
   redirect("/");
+}
+
+/** Link de compartilhamento: gerar, trocar e desativar (design L5). */
+export async function shareSheetAction(
+  id: string,
+  action: "enable" | "regenerate" | "disable",
+): Promise<ShareResult> {
+  const run = {
+    enable: enableShare,
+    regenerate: regenerateShare,
+    disable: disableShare,
+  }[action];
+  return withAuth((h) => run(h, id));
 }

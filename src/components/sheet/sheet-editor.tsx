@@ -7,21 +7,16 @@ import { Button, FormMessage } from "@/components/form";
 import type { SheetDocument } from "@/engine/sheet/document";
 import { deriveStats } from "@/engine/stats/derive";
 import { normalizeDeathSaves } from "@/engine/stats/hit-points";
-import { ABILITIES, type DerivedKey } from "@/engine/stats/keys";
+import type { DerivedKey } from "@/engine/stats/keys";
 
-import { AbilityBlock } from "./ability-block";
 import type { AutosaveStatus } from "./autosave";
 import { DeleteSheetPanel } from "./delete-sheet-panel";
 import { OverrideProvider } from "./derived-value";
-import { HitDiceCard } from "./hit-dice-card";
-import { HitPointsCard } from "./hit-points-card";
-import { IdentitySection } from "./identity-section";
 import { initialSheetMode, type SheetMode } from "./mode";
 import type { SheetChange } from "./props";
+import { SharePanel } from "./share-panel";
+import { SheetBody } from "./sheet-body";
 import { ModeSwitch, SheetModeProvider } from "./sheet-mode";
-import { SourcesPanel } from "./sources/sources-panel";
-import { CombatStats } from "./top-band";
-import { ResourcesCard } from "./resources-card";
 import { useSheetAutosave, type SaveOutcome } from "./use-sheet-autosave";
 
 const STATUS_TEXT: Record<AutosaveStatus, string> = {
@@ -35,7 +30,7 @@ const STATUS_TEXT: Record<AutosaveStatus, string> = {
 };
 
 /** "Anão · Bárbaro 5 · Soldado", sem as partes vazias. */
-function subtitle({ identity }: SheetDocument): string {
+export function subtitle({ identity }: SheetDocument): string {
   const classLevel = identity.class
     ? `${identity.class} ${identity.level}`
     : `Nível ${identity.level}`;
@@ -49,8 +44,11 @@ export function SheetEditor({
   initialDocument,
   initialVersion,
   save,
+  shareToken,
 }: {
   id: string;
+  /** Código do link de compartilhamento atual (design L5). */
+  shareToken: string | null;
   initialDocument: SheetDocument;
   initialVersion: number;
   save: (baseVersion: number, document: SheetDocument) => Promise<SaveOutcome>;
@@ -130,30 +128,16 @@ export function SheetEditor({
             disabled={locked}
             className="flex min-w-0 flex-col gap-4 disabled:opacity-60"
           >
-            {mode === "edit" && <IdentitySection {...part} />}
-            {/* Ordem do DOM = ordem no celular; colunas no desktop via CSS. */}
-            <div className="sheet-top">
-              <HitPointsCard {...part} />
-              <CombatStats {...part} />
-              <HitDiceCard {...part} />
-            </div>
-            {/* DOM: Recursos antes dos atributos (ordem do celular). A partir
-                de lg, atributos 2x3 à esquerda e Recursos à direita (design R3). */}
-            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-              <div className="min-w-0 lg:col-start-2 lg:row-start-1">
-                <ResourcesCard {...part} />
-              </div>
-              <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:col-start-1 lg:row-start-1">
-                {ABILITIES.map((ability) => (
-                  <AbilityBlock key={ability} ability={ability} {...part} />
-                ))}
-              </div>
-            </div>
-            <SourcesPanel {...part} />
+            <SheetBody {...part} />
           </fieldset>
         </OverrideProvider>
 
-        {/* Em conflito ou já excluída, excluir daqui não faz sentido. */}
+        {/* Em conflito ou já excluída, compartilhar e excluir não fazem sentido. */}
+        {!locked && (
+          <div className="mt-6 border-t border-line pt-6">
+            <SharePanel id={id} initialToken={shareToken} />
+          </div>
+        )}
         {mode === "edit" && !locked && (
           <div className="mt-6 border-t border-line pt-6">
             {/* Usa o nome atual, já que a pessoa pode ter renomeado o personagem. */}

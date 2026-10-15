@@ -7,6 +7,11 @@ const CHANGE_PASSWORD = "/trocar-senha";
 /** Abrem sem sessão: o login e a recuperação de senha (design P6). */
 const PUBLIC_PATHS = ["/login", "/esqueci-senha", "/redefinir-senha"];
 
+/** Ficha compartilhada por link: aberta com ou sem sessão (design L3). */
+function isSharedPath(pathname: string): boolean {
+  return pathname.startsWith("/compartilhada/");
+}
+
 /**
  * Redirecionamentos de conveniência (design A4) e 404 em /admin para quem não
  * é admin. A garantia de acesso está nos guards de cada página e action; isto
@@ -21,7 +26,7 @@ export async function proxy(request: NextRequest) {
     NextResponse.redirect(new URL(path, request.url));
 
   if (!user) {
-    return PUBLIC_PATHS.includes(pathname)
+    return PUBLIC_PATHS.includes(pathname) || isSharedPath(pathname)
       ? NextResponse.next()
       : redirectTo(LOGIN);
   }
@@ -30,6 +35,8 @@ export async function proxy(request: NextRequest) {
       ? NextResponse.next()
       : redirectTo(CHANGE_PASSWORD);
   }
+  // Ficha compartilhada: abre também com sessão, sem redirecionar (design L3).
+  if (isSharedPath(pathname)) return NextResponse.next();
   if (PUBLIC_PATHS.includes(pathname) || pathname === CHANGE_PASSWORD) {
     return redirectTo("/");
   }

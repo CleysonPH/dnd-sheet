@@ -31,6 +31,8 @@ npm run dev               # http://localhost:3000
 
 Entre com o e-mail e a senha de `SEED_ADMIN_*`. No primeiro login o admin precisa trocar a senha. Não existe cadastro público: as outras contas são criadas pelo admin em **Contas**.
 
+Na seção **Compartilhar**, no fim da ficha, o dono gera um link de leitura: qualquer pessoa com o endereço vê a versão salva mais recente da ficha, sem conta e sem poder alterar nada. O link pode ser trocado ou desativado a qualquer momento, e o anterior deixa de funcionar na hora.
+
 Quem esquece a senha usa **Esqueci a senha** no login: a aplicação envia um link que vale 1 hora para o e-mail da conta, se ela existir e estiver ativa. Por isso, as contas precisam de e-mails reais. O admin pode corrigir qualquer e-mail, inclusive o próprio, em **Contas › Alterar e-mail**. O admin também pode redefinir a senha de outra conta, gerando uma senha provisória.
 
 ### Variáveis de ambiente
@@ -93,7 +95,7 @@ drizzle/        migrações SQL geradas (versionadas)
 scripts/        comandos de operação (seed, config da CLI do Better Auth)
 ```
 
-Rotas principais: `/` (Minhas fichas), `/fichas/[id]` (ficha com salvamento automático), `/conta`, `/admin/contas` (só admins), `/login` e `/trocar-senha`.
+Rotas principais: `/` (Minhas fichas), `/fichas/[id]` (ficha com salvamento automático), `/compartilhada/[token]` (ficha compartilhada, pública e só leitura), `/conta`, `/admin/contas` (só admins), `/login` e `/trocar-senha`.
 
 A ficha é um documento JSON versionado (`schemaVersion`, hoje no formato 8). O documento guarda só entradas: atributos, proficiências, dado de vida, dano sofrido, deslocamento, inspiração heroica, atributo de conjuração, valores manuais (`overrides`) e as fontes (`sources`: talentos, traços, itens e magias, cada uma com id próprio, seus efeitos e trackers) e os espaços de magia e de pacto. Modificadores, perícias, PV máximo e os demais valores derivados são recalculados no navegador por `deriveStats` (`src/engine/stats/derive.ts`) e nunca são gravados. Ao mudar o formato em `src/engine/sheet/document.ts`, incremente `SHEET_SCHEMA_VERSION` e acrescente a migração correspondente em `src/engine/sheet/migrate.ts`, com teste.
 

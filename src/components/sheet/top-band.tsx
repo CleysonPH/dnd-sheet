@@ -57,10 +57,10 @@ export function CombatStats({ document, stats, update }: SheetPartProps) {
           />
         </Tile>
         <Tile
-          label={mode === "play" ? "Desloc." : undefined}
+          label={mode !== "edit" ? "Desloc." : undefined}
           icon={<BootIcon className="size-3.5" />}
         >
-          {mode === "play" ? (
+          {mode !== "edit" ? (
             <DerivedValue
               valueKey="speed"
               derived={stats.values.speed}
