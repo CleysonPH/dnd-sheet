@@ -2,8 +2,14 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { admin } from "better-auth/plugins";
+import { eq } from "drizzle-orm";
 
 import type { Database } from "@/server/db";
+import { user } from "@/server/db/schema";
+import {
+  RESET_LINK_TTL_SECONDS,
+  passwordResetUrl,
+} from "@/server/mail/password-reset";
 
 const DAY = 60 * 60 * 24;
 
@@ -35,11 +41,16 @@ export const DISABLED_PATHS = [
   "/admin/has-permission",
 ];
 
+/** Dados do e-mail de redefinição, enviados pelo `sendPasswordResetMail`. */
+export type PasswordResetMailInput = { to: string; name: string; url: string };
+
 /** Monta a instância do Better Auth. Sem `server-only`, para a CLI conseguir carregá-la. */
 export function createAuth(options: {
   db: Database;
   secret: string;
   baseURL: string;
+  /** Envia o e-mail de redefinição. Injetado para a CLI não depender do SMTP. */
+  sendPasswordResetMail: (input: PasswordResetMailInput) => Promise<void>;
 }) {
   return betterAuth({
     secret: options.secret,
@@ -50,6 +61,30 @@ export function createAuth(options: {
       disableSignUp: true,
       minPasswordLength: 8,
       maxPasswordLength: 128,
+      resetPasswordTokenExpiresIn: RESET_LINK_TTL_SECONDS,
+      revokeSessionsOnPasswordReset: true,
+      // Sem await (design P3): a resposta leva o mesmo tempo exista a conta ou
+      // não, e uma falha de SMTP só vai para o log. Conta desativada não
+      // recebe o link (design P4).
+      sendResetPassword: async ({ user: target, token }) => {
+        if ((target as { banned?: boolean | null }).banned) return;
+        void options
+          .sendPasswordResetMail({
+            to: target.email,
+            name: target.name,
+            url: passwordResetUrl(options.baseURL, token),
+          })
+          .catch((error: unknown) => {
+            console.error("Falha ao enviar o e-mail de redefinição:", error);
+          });
+      },
+      // A pessoa acabou de escolher a própria senha (design P5).
+      onPasswordReset: async ({ user: target }) => {
+        await options.db
+          .update(user)
+          .set({ mustChangePassword: false })
+          .where(eq(user.id, target.id));
+      },
     },
     user: {
       additionalFields: {
@@ -72,6 +107,7 @@ export function createAuth(options: {
       enabled: true,
       customRules: {
         "/sign-in/email": { window: 60, max: 5 },
+        "/request-password-reset": { window: 60, max: 3 },
       },
     },
     disabledPaths: DISABLED_PATHS,

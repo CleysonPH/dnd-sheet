@@ -4,16 +4,12 @@ import { isAPIError } from "better-auth/api";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
+import { passwordSchema } from "@/lib/password";
 import { getDb } from "@/server/db";
 import { user } from "@/server/db/schema";
 
 import { requireSession } from "./guards";
 import { getAuth } from "./index";
-
-export const passwordSchema = z
-  .string()
-  .min(8, "A senha precisa ter pelo menos 8 caracteres")
-  .max(128, "A senha pode ter no máximo 128 caracteres");
 
 export const changePasswordSchema = z
   .object({

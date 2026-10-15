@@ -9,4 +9,5 @@ export const auth = createAuth({
   db: drizzle("postgresql://cli:cli@localhost:5432/cli", { schema }),
   secret: "x".repeat(32),
   baseURL: "http://localhost:3000",
+  sendPasswordResetMail: async () => {},
 });

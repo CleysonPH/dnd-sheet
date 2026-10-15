@@ -7,6 +7,7 @@ import { listAccounts } from "@/server/accounts/service";
 import { getPageSession } from "@/server/auth/page";
 
 import { AccountRowActions } from "./account-row-actions";
+import { EditEmail } from "./edit-email";
 import { CreateAccountForm } from "./create-account-form";
 
 export const metadata: Metadata = { title: "Contas · Ficha D&D" };
@@ -63,16 +64,20 @@ async function Accounts() {
                     {dateFormat.format(account.createdAt)}
                   </td>
                   <td className="py-3">
-                    {account.id === me.id ? (
-                      <span className="text-xs text-muted">Sua conta</span>
-                    ) : (
-                      <AccountRowActions
-                        userId={account.id}
-                        name={account.name}
-                        role={account.role}
-                        active={account.active}
-                      />
-                    )}
+                    <div className="flex flex-col items-start gap-2">
+                      {account.id === me.id ? (
+                        <span className="text-xs text-muted">Sua conta</span>
+                      ) : (
+                        <AccountRowActions
+                          userId={account.id}
+                          name={account.name}
+                          role={account.role}
+                          active={account.active}
+                        />
+                      )}
+                      {/* Inclusive na própria conta: não muda o acesso (P7). */}
+                      <EditEmail userId={account.id} email={account.email} />
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -4,6 +4,8 @@ import { getAuth } from "@/server/auth";
 
 const LOGIN = "/login";
 const CHANGE_PASSWORD = "/trocar-senha";
+/** Abrem sem sessão: o login e a recuperação de senha (design P6). */
+const PUBLIC_PATHS = ["/login", "/esqueci-senha", "/redefinir-senha"];
 
 /**
  * Redirecionamentos de conveniência (design A4) e 404 em /admin para quem não
@@ -19,14 +21,16 @@ export async function proxy(request: NextRequest) {
     NextResponse.redirect(new URL(path, request.url));
 
   if (!user) {
-    return pathname === LOGIN ? NextResponse.next() : redirectTo(LOGIN);
+    return PUBLIC_PATHS.includes(pathname)
+      ? NextResponse.next()
+      : redirectTo(LOGIN);
   }
   if (user.mustChangePassword) {
     return pathname === CHANGE_PASSWORD
       ? NextResponse.next()
       : redirectTo(CHANGE_PASSWORD);
   }
-  if (pathname === LOGIN || pathname === CHANGE_PASSWORD) {
+  if (PUBLIC_PATHS.includes(pathname) || pathname === CHANGE_PASSWORD) {
     return redirectTo("/");
   }
   if (pathname.startsWith("/admin") && user.role !== "admin") {

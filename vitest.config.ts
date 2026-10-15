@@ -41,6 +41,10 @@ export default defineConfig({
             DATABASE_URL: testDatabaseUrl(),
             BETTER_AUTH_SECRET: "segredo-de-teste-com-mais-de-32-caracteres",
             BETTER_AUTH_URL: "http://localhost:3000",
+            // Mailpit do Compose (design P8).
+            SMTP_HOST: "localhost",
+            SMTP_PORT: "1025",
+            MAIL_FROM: "Ficha D&D <ficha@localhost>",
           },
         },
       },

@@ -18,3 +18,28 @@ export function loginErrorMessage(error: LoginError): string {
   }
   return LOGIN_MESSAGES.unexpected;
 }
+
+/** Mensagens das specs para a recuperação de senha (design P6). */
+export const RESET_MESSAGES = {
+  requested:
+    "Se o e-mail estiver cadastrado, enviamos um link para redefinir a senha.",
+  tooManyAttempts: "Muitas tentativas. Tente de novo em alguns instantes.",
+  invalidLink: "Link inválido ou expirado.",
+  done: "Senha redefinida. Entre com a nova senha.",
+  unexpected: "Não foi possível concluir. Tente de novo.",
+} as const;
+
+type ResetError = { status?: number; code?: string } | null | undefined;
+
+/** Erro do pedido de link. Fora o excesso de pedidos, a resposta é a padrão. */
+export function requestResetErrorMessage(error: ResetError): string {
+  if (error?.status === 429) return RESET_MESSAGES.tooManyAttempts;
+  return RESET_MESSAGES.unexpected;
+}
+
+/** Erro da redefinição pelo link. */
+export function resetPasswordErrorMessage(error: ResetError): string {
+  if (error?.status === 429) return RESET_MESSAGES.tooManyAttempts;
+  if (error?.code === "INVALID_TOKEN") return RESET_MESSAGES.invalidLink;
+  return RESET_MESSAGES.unexpected;
+}

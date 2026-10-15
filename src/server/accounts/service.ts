@@ -1,6 +1,6 @@
 import "server-only";
 
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, ne } from "drizzle-orm";
 import { z } from "zod";
 
 import { getAuth } from "@/server/auth";
@@ -8,6 +8,7 @@ import { requireAdmin } from "@/server/auth/guards";
 import { getDb } from "@/server/db";
 import { user } from "@/server/db/schema";
 
+import { revokePasswordResetLinks } from "./reset-links";
 import { generateTempPassword } from "./temp-password";
 
 /*
@@ -39,17 +40,19 @@ export type AccountResult<T = object> =
       fieldErrors?: Partial<Record<"name" | "email", string>>;
     };
 
+const emailSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .pipe(z.email("E-mail em formato inválido"));
+
 export const createAccountSchema = z.object({
   name: z
     .string()
     .trim()
     .min(1, "Informe o nome")
     .max(100, "O nome pode ter no máximo 100 caracteres"),
-  email: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .pipe(z.email("E-mail em formato inválido")),
+  email: emailSchema,
 });
 
 export type CreateAccountInput = z.input<typeof createAccountSchema>;
@@ -146,7 +149,10 @@ async function resolveTarget(
   return target ? { ok: true } : { ok: false, error: "NOT_FOUND" };
 }
 
-/** Bloqueia o login e encerra todas as sessões da conta. Os dados ficam. */
+/**
+ * Bloqueia o login, encerra todas as sessões da conta e apaga os links de
+ * redefinição pendentes (design P4). Os dados ficam.
+ */
 export async function deactivateAccount(
   headers: Headers,
   userId: string,
@@ -154,6 +160,7 @@ export async function deactivateAccount(
   const target = await resolveTarget(headers, userId);
   if (!target.ok) return target;
   await getAuth().api.banUser({ headers, body: { userId } });
+  await revokePasswordResetLinks(userId);
   return { ok: true };
 }
 
@@ -198,4 +205,52 @@ export async function setAccountRole(
   if (!target.ok) return target;
   await getAuth().api.setRole({ headers, body: { userId, role } });
   return { ok: true };
+}
+
+/**
+ * Altera o e-mail de qualquer conta, inclusive a do próprio admin: não muda o
+ * acesso, então não passa por resolveTarget (design P7). A senha e as sessões
+ * ficam; os links de redefinição pendentes deixam de valer.
+ */
+export async function updateAccountEmail(
+  headers: Headers,
+  userId: string,
+  email: string,
+): Promise<AccountResult<{ email: string }>> {
+  await requireAdmin(headers);
+
+  const parsed = emailSchema.safeParse(email);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: "INVALID_INPUT",
+      fieldErrors: { email: parsed.error.issues[0]?.message },
+    };
+  }
+
+  const db = getDb();
+  const [target] = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.id, userId));
+  if (!target) return { ok: false, error: "NOT_FOUND" };
+
+  const [inUse] = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(and(eq(user.email, parsed.data), ne(user.id, userId)));
+  if (inUse) {
+    return {
+      ok: false,
+      error: "EMAIL_IN_USE",
+      fieldErrors: { email: "Este e-mail já está em uso" },
+    };
+  }
+
+  await db
+    .update(user)
+    .set({ email: parsed.data, emailVerified: false, updatedAt: new Date() })
+    .where(eq(user.id, userId));
+  await revokePasswordResetLinks(userId);
+  return { ok: true, email: parsed.data };
 }

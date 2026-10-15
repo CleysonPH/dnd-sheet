@@ -18,6 +18,16 @@ services:
       timeout: 5s
       retries: 10
 
+  # SMTP de desenvolvimento e dos testes de integração (design P8). Só sobe com
+  # o profile "dev": docker compose --profile dev up -d
+  mailpit:
+    profiles: ["dev"]
+    image: axllent/mailpit:v1.31.3
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:1025:1025" # SMTP
+      - "127.0.0.1:8025:8025" # interface web e API
+
   # Migrações e seed do primeiro admin, rodados antes do app no profile "prod".
   # Usa o estágio builder do Dockerfile, que tem as dependências completas.
   migrate:
@@ -50,6 +60,14 @@ services:
       DATABASE_URL: *database-url
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?defina BETTER_AUTH_SECRET no .env}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+      # Envio do link de redefinição de senha (design P9). O migrate não envia
+      # e-mail e não precisa destas variáveis.
+      SMTP_HOST: ${SMTP_HOST:?defina SMTP_HOST no .env}
+      SMTP_PORT: ${SMTP_PORT:?defina SMTP_PORT no .env}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:?defina MAIL_FROM no .env}
     ports:
       - "3000:3000"
     depends_on:

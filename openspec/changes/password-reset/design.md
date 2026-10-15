@@ -47,7 +47,7 @@ Motivação: proposal.md. Comportamento: `specs/authentication` e `specs/account
 
 ### P2. Link montado por nós, apontando para `/redefinir-senha?token=…`
 
-- O `sendResetPassword` ignora o `url` do Better Auth, que passa por `GET /api/auth/reset-password/:token` e por um redirecionamento. Em vez disso, monta `${BETTER_AUTH_URL}/redefinir-senha?token=<token>`. O `GET /reset-password/:token` entra em `DISABLED_PATHS`.
+- O `sendResetPassword` ignora o `url` do Better Auth, que passa por `GET /api/auth/reset-password/:token` e por um redirecionamento. Em vez disso, monta `${BETTER_AUTH_URL}/redefinir-senha?token=<token>`. O `GET /reset-password/:token` continua existindo, mas nada o usa. Ele só redireciona para um `callbackURL` aprovado pela verificação de origem. *(Ajustado na implementação: a ideia era colocá-lo em `DISABLED_PATHS`, mas o Better Auth compara os caminhos desligados com o caminho exato da requisição, e um caminho com parâmetro não pode ser desligado assim.)*
 - **Por quê**: o link vai direto à página, sem `callbackURL` nem verificação de origem. A página só valida o token ao enviar o formulário, e o `POST /reset-password` já trata os casos de token inválido, expirado ou usado.
 - **Alternativa**: usar o `url` padrão com `redirectTo`. São dois saltos a mais, e o erro chega como `?error=INVALID_TOKEN`.
 

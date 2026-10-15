@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { getAuth } from "@/server/auth";
-import { passwordSchema } from "@/server/auth/password";
+import { passwordSchema } from "@/lib/password";
 import { getDb } from "@/server/db";
 import { user } from "@/server/db/schema";
 

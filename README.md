@@ -23,7 +23,7 @@ As decisões de produto e de arquitetura estão em `openspec/changes/dnd-sheet-a
 ```bash
 cp .env.example .env      # ajuste BETTER_AUTH_SECRET e as variáveis SEED_ADMIN_*
 npm install
-docker compose up -d db   # sobe o Postgres em localhost:5432
+docker compose --profile dev up -d   # sobe o Postgres (localhost:5432) e o Mailpit (http://localhost:8025)
 npm run db:migrate        # cria as tabelas
 npm run db:seed           # cria o primeiro admin
 npm run dev               # http://localhost:3000
@@ -31,15 +31,21 @@ npm run dev               # http://localhost:3000
 
 Entre com o e-mail e a senha de `SEED_ADMIN_*`. No primeiro login o admin precisa trocar a senha. Não existe cadastro público: as outras contas são criadas pelo admin em **Contas**.
 
+Quem esquece a senha usa **Esqueci a senha** no login: a aplicação envia um link que vale 1 hora para o e-mail da conta, se ela existir e estiver ativa. Por isso, as contas precisam de e-mails reais. O admin pode corrigir qualquer e-mail, inclusive o próprio, em **Contas › Alterar e-mail**. O admin também pode redefinir a senha de outra conta, gerando uma senha provisória.
+
 ### Variáveis de ambiente
 
-| Variável                                                     | Uso                                                                              |
-| ------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| `DATABASE_URL`                                               | Conexão da aplicação com o Postgres                                              |
-| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`          | Credenciais do Postgres do Compose                                               |
-| `BETTER_AUTH_SECRET`                                         | Assina os cookies de sessão; no mínimo 32 caracteres (`openssl rand -base64 32`) |
-| `BETTER_AUTH_URL`                                            | URL pública da aplicação                                                         |
-| `SEED_ADMIN_NAME`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | Usadas só por `npm run db:seed`; podem ser removidas depois                      |
+| Variável                                                     | Uso                                                                                    |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                               | Conexão da aplicação com o Postgres                                                    |
+| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`          | Credenciais do Postgres do Compose                                                     |
+| `BETTER_AUTH_SECRET`                                         | Assina os cookies de sessão; no mínimo 32 caracteres (`openssl rand -base64 32`)       |
+| `BETTER_AUTH_URL`                                            | URL pública da aplicação                                                               |
+| `SEED_ADMIN_NAME`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | Usadas só por `npm run db:seed`; podem ser removidas depois                            |
+| `SMTP_HOST`, `SMTP_PORT`                                     | Servidor SMTP do envio de e-mail. Em desenvolvimento, o Mailpit (`localhost` e `1025`) |
+| `SMTP_SECURE`                                                | `true` para TLS direto (porta 465); `false` para STARTTLS (porta 587) ou o Mailpit     |
+| `SMTP_USER`, `SMTP_PASSWORD`                                 | Usuário e senha do SMTP, juntos; vazios para o Mailpit                                 |
+| `MAIL_FROM`                                                  | Remetente dos e-mails, ex.: `Ficha D&D <ficha@seudominio.com>`                         |
 
 | Comando                 | O que faz                                    |
 | ----------------------- | -------------------------------------------- |
@@ -49,7 +55,7 @@ Entre com o e-mail e a senha de `SEED_ADMIN_*`. No primeiro login o admin precis
 | `npm run typecheck`     | Gera os tipos do Next e roda `tsc`           |
 | `npm test`              | Testes unitários (Vitest)                    |
 | `npm run test:watch`    | Testes em modo watch                         |
-| `npm run test:int`      | Testes de integração (precisa do banco)      |
+| `npm run test:int`      | Testes de integração (banco e Mailpit)       |
 | `npm run db:migrate`    | Aplica as migrações pendentes                |
 | `npm run db:generate`   | Gera uma migração a partir do schema         |
 | `npm run db:seed`       | Cria o primeiro admin (`SEED_ADMIN_*`)       |
@@ -57,7 +63,9 @@ Entre com o e-mail e a senha de `SEED_ADMIN_*`. No primeiro login o admin precis
 | `npm run format`        | Formata o código com Prettier                |
 | `npm run format:check`  | Verifica a formatação sem alterar arquivo    |
 
-Os testes de integração usam um banco separado, `dnd_sheet_test`, no mesmo Postgres. Ele é criado e migrado automaticamente; basta o `db` estar rodando.
+Os testes de integração usam um banco separado, `dnd_sheet_test`, no mesmo Postgres. Ele é criado e migrado automaticamente. Eles também enviam e-mails de verdade para o Mailpit e os leem pela API dele, então precisam do `db` e do `mailpit` rodando (`docker compose --profile dev up -d`).
+
+Em desenvolvimento, todo e-mail enviado pela aplicação, como o link de redefinição de senha, cai no Mailpit e aparece em http://localhost:8025.
 
 Para parar o banco: `docker compose down`. Os dados ficam no volume `db-data`; `docker compose down -v` apaga esse volume.
 

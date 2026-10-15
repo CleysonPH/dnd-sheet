@@ -20,6 +20,7 @@ import {
   reactivateAccount,
   resetAccountPassword,
   setAccountRole,
+  updateAccountEmail,
 } from "./service";
 
 async function signInAdmin() {
@@ -52,6 +53,9 @@ describe("administração de contas", () => {
       ).rejects.toMatchObject(forbidden);
       await expect(
         resetAccountPassword(headers, lyra.id),
+      ).rejects.toMatchObject(forbidden);
+      await expect(
+        updateAccountEmail(headers, lyra.id, "outro@mesa.com"),
       ).rejects.toMatchObject(forbidden);
     });
   });
@@ -235,6 +239,74 @@ describe("administração de contas", () => {
       await expect(requireAdmin(outroSession)).rejects.toMatchObject({
         code: "FORBIDDEN",
       });
+    });
+  });
+
+  describe("alterar e-mail", () => {
+    it("troca o e-mail e mantém a senha", async () => {
+      const { headers } = await signInAdmin();
+      const lyra = await createTestUser({ email: "lyra@mesa.local" });
+
+      const result = await updateAccountEmail(
+        headers,
+        lyra.id,
+        "  Lyra@Gmail.com ",
+      );
+
+      expect(result).toEqual({ ok: true, email: "lyra@gmail.com" });
+      const accounts = await listAccounts(headers);
+      expect(accounts.find((a) => a.id === lyra.id)?.email).toBe(
+        "lyra@gmail.com",
+      );
+      await expect(signIn("lyra@gmail.com")).resolves.toBeDefined();
+      await expect(signIn("lyra@mesa.local")).rejects.toThrow();
+    });
+
+    it("o admin altera o próprio e-mail e a sessão continua", async () => {
+      const { admin, headers } = await signInAdmin();
+
+      const result = await updateAccountEmail(
+        headers,
+        admin.id,
+        "mestre@gmail.com",
+      );
+
+      expect(result.ok).toBe(true);
+      const session = await requireAdmin(headers);
+      expect(session.user.email).toBe("mestre@gmail.com");
+    });
+
+    it("recusa e-mail em uso, em qualquer caixa", async () => {
+      const { headers } = await signInAdmin();
+      const lyra = await createTestUser({ email: "lyra@mesa.com" });
+      await createTestUser({ email: "thorin@mesa.com" });
+
+      const result = await updateAccountEmail(
+        headers,
+        lyra.id,
+        "Thorin@Mesa.com",
+      );
+
+      expect(result).toMatchObject({ ok: false, error: "EMAIL_IN_USE" });
+      await expect(signIn("lyra@mesa.com")).resolves.toBeDefined();
+    });
+
+    it("recusa formato inválido", async () => {
+      const { headers } = await signInAdmin();
+      const lyra = await createTestUser({ email: "lyra@mesa.com" });
+
+      expect(await updateAccountEmail(headers, lyra.id, "lyra@")).toEqual({
+        ok: false,
+        error: "INVALID_INPUT",
+        fieldErrors: { email: "E-mail em formato inválido" },
+      });
+    });
+
+    it("recusa conta inexistente", async () => {
+      const { headers } = await signInAdmin();
+      expect(
+        await updateAccountEmail(headers, "nao-existe", "x@mesa.com"),
+      ).toEqual({ ok: false, error: "NOT_FOUND" });
     });
   });
 

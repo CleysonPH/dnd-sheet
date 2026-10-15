@@ -10,6 +10,7 @@ import {
   reactivateAccount,
   resetAccountPassword,
   setAccountRole,
+  updateAccountEmail,
   type AccountError,
 } from "@/server/accounts/service";
 import { AuthError } from "@/server/auth/guards";
@@ -91,4 +92,24 @@ export async function accountRowAction(
   if (!result.ok) return { error: ERROR_MESSAGES[result.error] };
   refresh();
   return {};
+}
+
+export type EmailActionState = { error?: string; saved?: boolean };
+
+/** Altera o e-mail de uma conta, inclusive a do próprio admin (design P7). */
+export async function updateEmailAction(
+  userId: string,
+  _state: EmailActionState,
+  formData: FormData,
+): Promise<EmailActionState> {
+  const result = await withAuth((h) =>
+    updateAccountEmail(h, userId, String(formData.get("email") ?? "")),
+  );
+  if (!result.ok) {
+    return {
+      error: result.fieldErrors?.email ?? ERROR_MESSAGES[result.error],
+    };
+  }
+  refresh();
+  return { saved: true };
 }
