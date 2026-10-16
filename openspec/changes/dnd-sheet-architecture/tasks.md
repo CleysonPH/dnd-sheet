@@ -20,7 +20,7 @@ Esta change é um registro de decisões. As tarefas abaixo não implementam cód
 
 ## 4. Operação
 
-- [ ] 4.1 Abrir a change `deployment` (proxy reverso com HTTPS, containers na VPS, backup agendado do Postgres para fora da VPS, procedimento de restauração, conforme D1); verificar que `openspec validate deployment` passa e que o plano inclui um teste de restauração de backup
+- [ ] 4.1 Abrir a change `deployment` (Vercel + Neon, migrações no deploy, recuperação pelo histórico do Neon e procedimento de restauração, conforme D1); verificar que `openspec validate deployment` passa e que o plano inclui um ensaio de restauração
 
 ## 5. Fechamento
 

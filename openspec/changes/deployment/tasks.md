@@ -20,12 +20,12 @@
 ## 3. Produção no ar
 
 - [x] 3.1 Rodar o seed do primeiro admin contra o Neon, com a URL direta só no ambiente do comando (Y5). Verificar com o usuário que ele entra, troca a senha e corrige o e-mail do admin para um endereço real
-- [ ] 3.5 Criar o `RetryingPool` e usá-lo no `getPool` (Y2), com um teste de integração em que um proxy TCP derruba a primeira conexão: o `Pool` comum falha, e o `RetryingPool` conecta na segunda tentativa e faz `select 1`. Uma falha que não é de conexão (SQL inválido) não é repetida. Verificar que `npm run test:int` passa e, depois do push e do deploy, que a primeira requisição depois de mais de 5 minutos parado não gera erro em `get_runtime_errors`
-- [ ] 3.2 Fazer a verificação em produção (Y5). Verificar:
+- [x] 3.5 Criar o `RetryingPool` e usá-lo no `getPool` (Y2), com um teste de integração em que um proxy TCP derruba a primeira conexão: o `Pool` comum falha, e o `RetryingPool` conecta na segunda tentativa e faz `select 1`. Uma falha que não é de conexão (SQL inválido) não é repetida. Verificar que `npm run test:int` passa e, depois do push e do deploy, que a primeira requisição depois de mais de 5 minutos parado não gera erro em `get_runtime_errors`
+- [x] 3.2 Fazer a verificação em produção (Y5). Verificar:
   - "Esqueci a senha" entrega o e-mail com o link, e a redefinição funciona;
   - uma ficha nova aparece na lista com a hora de Brasília;
   - o link compartilhado abre numa aba anônima;
   - a 6ª tentativa de login errada em 1 minuto é recusada;
   - `get_runtime_errors` na Vercel não mostra erros
-- [ ] 3.3 Fazer o ensaio de restauração no Neon (Y6): criar um branch do momento de 1 hora atrás, contar as fichas e as contas nele, comparar com o `main` e excluir o branch. Verificar que o `main` não mudou e registrar o ensaio no README
-- [ ] 3.4 Rever a D1 em `openspec/changes/dnd-sheet-architecture/design.md` (Vercel + Neon, com a divergência do backup) e reescrever o texto da tarefa 4.1 em `tasks.md`. Verificar que `openspec validate dnd-sheet-architecture` passa
+- [x] 3.3 Fazer o ensaio de restauração no Neon (Y6): criar um branch do momento de 1 hora atrás, contar as fichas e as contas nele, comparar com o `main` e excluir o branch. Verificar que o `main` não mudou e registrar o ensaio no README
+- [x] 3.4 Rever a D1 em `openspec/changes/dnd-sheet-architecture/design.md` (Vercel + Neon, com a divergência do backup) e reescrever o texto da tarefa 4.1 em `tasks.md`. Verificar que `openspec validate dnd-sheet-architecture` passa

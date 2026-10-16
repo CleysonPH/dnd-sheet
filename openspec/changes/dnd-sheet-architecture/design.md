@@ -27,21 +27,20 @@ Este documento registra decisões de nível de arquitetura. Os detalhes de cada 
 
 ## Decisions
 
-### D1. Stack: Next.js (TypeScript) + Postgres, Docker numa VPS
+### D1. Stack: Next.js (TypeScript) + Postgres, na Vercel com o Neon
 
-Monolito Next.js com `output: 'standalone'` em container, Postgres em outro container e um proxy reverso (Caddy ou nginx) com HTTPS na frente.
+Monolito Next.js em funções serverless da Vercel (região `gru1`), com o Postgres gerenciado pelo Neon, em São Paulo. HTTPS e deploy a cada push na `main` vêm da Vercel.
 
 ```
-  VPS
-  +--------------------------------------------------------------+
-  |  Caddy/nginx (HTTPS) --> container Next.js (standalone)      |
-  |                            |                                 |
-  |                            v                                 |
-  |                          container Postgres                  |
-  |  backup: pg_dump agendado --> armazenamento fora da VPS      |
-  +--------------------------------------------------------------+
+  Vercel (gru1)                         Neon (aws-sa-east-1)
+  +---------------------------+         +-----------------------------+
+  |  HTTPS --> funções Next.js| ------> |  Postgres (pooler)          |
+  |  build: migrações + build |         |  histórico de 6 h (restore) |
+  +---------------------------+         +-----------------------------+
 ```
 
+- **Revisão** (change `deployment`): o plano original era Docker numa VPS, com proxy reverso (Caddy ou nginx), Postgres em container e `pg_dump` agendado para fora da VPS. Ele foi trocado por Vercel + Neon, sem servidor para manter.
+- **Divergência no backup**: não há `pg_dump` agendado. A recuperação depende do histórico do Neon (6 horas no plano free), com o procedimento e um ensaio no README. Foi decisão do usuário. Um `pg_dump` manual continua possível.
 - **Por quê**: uma linguagem só (TypeScript) para UI, servidor e motor de cálculo; deploy de um único app; Postgres cobre tanto os dados relacionais (usuários) quanto os documentos (fichas, em JSONB).
 - **Alternativas**: SPA + API separada (dois deploys, sem ganho real nesse porte); SQLite (mais simples, mas o Postgres com JSONB deixa espaço para consultas futuras e backup padronizado); um banco de documentos (desnecessário, já que JSONB cobre o caso).
 

@@ -97,7 +97,7 @@ Motivação: proposal.md. Comportamento: `specs/operations`.
 - **Procedimento no README**:
   - criar um branch a partir do momento desejado (instant restore) e conferir os dados nele;
   - depois, ou restaurar o `main` para aquele momento, ou copiar só o que falta.
-- **Ensaio**, feito durante a change e sem alterar o `main`: um branch do momento de 1 hora atrás, a contagem das fichas nele e a exclusão do branch.
+- **Ensaio**, feito durante a change e sem alterar o `main`: um branch do momento de 1 hora atrás, a contagem das fichas nele e a exclusão do branch. *(Ajustado na execução: o momento foi 10:00 UTC, antes da última edição, para o ensaio mostrar uma diferença real. O `restore_snapshot` sem `finalize: false` finalizou a restauração e levou a produção para o branch restaurado por 24 minutos, sem gravações nesse intervalo. A produção foi devolvida ao branch original, e o README registra o cuidado.)*
 - **Divergência do roadmap**: registrada na D1 de `dnd-sheet-architecture`. A tarefa 4.1 pedia `pg_dump` para fora do servidor.
 
 ## Risks / Trade-offs

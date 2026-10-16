@@ -170,3 +170,11 @@ pg_dump --format=custom --no-owner '<URL direta do Neon>' > dnd-sheet-$(date +%F
 ```
 
 Guarde esse arquivo fora do repositório: ele contém e-mails e hashes de senha.
+
+#### Ensaio de 16/10/2026
+
+Feito com o MCP do Neon: um snapshot do `main` às 10:00 UTC (`create_snapshot` com `timestamp`) e a restauração dele (`restore_snapshot`). O branch restaurado tinha as 2 fichas e as 2 contas do `main`, mas sem a edição das 10:48 UTC na primeira ficha, como esperado.
+
+**Cuidado**: sem `finalize: false`, o `restore_snapshot` finaliza na hora. O compute de produção e o nome `main` passam para o branch restaurado, e o `main` antigo vira "<nome> (1)". Foi o que aconteceu no ensaio: a produção ficou 24 minutos lendo os dados restaurados, sem gravações nesse intervalo. Para desfazer, o compute de produção voltou para o branch original, sempre um compute de leitura e escrita por branch, com um branch temporário sem compute para a troca (`update_postgres_endpoint`). Depois, o branch original voltou a ser o padrão e a se chamar `main`.
+
+Para só conferir dados antigos, use `finalize: false` ou o **Past data** do console. Use a restauração finalizada apenas quando a intenção for mesmo voltar a produção.
