@@ -103,11 +103,11 @@ index (search_name)
 | `sendToCompendium(h, source)` | `requireAdmin` | `{ ok, id }` ou `invalid` ou limite |
 
 - O dado recebido do cliente é sempre validado com `sourceSchema` e passa por `withoutTableState` antes de gravar.
-- As actions ficam em `src/app/(app)/admin/compendio/actions.ts` (as de admin) e em `src/app/(app)/fichas/[id]/actions.ts` (busca e envio).
+- As actions ficam num arquivo só, `src/app/(app)/compendium-actions.ts`, usado pela página do admin e pela ficha. *(Ajustado na implementação: o plano era separá-las entre `admin/compendio/actions.ts` e as actions da ficha, mas a busca é a mesma nos dois lugares.)*
 
 ### B6. Página do admin
 
-- **Rota**: `/admin/compendio`, com `notFound()` para quem não é admin, como em `/admin/contas`. O menu ganha "Compêndio" ao lado de "Contas", só para admins.
+- **Rota**: `/admin/compendio`, com `notFound()` para quem não é admin, como em `/admin/contas`. O menu ganha "Compêndio" ao lado de "Contas", só para admins. *(Ajustado na implementação: com o link novo, o menu do admin passava de 375 px. No celular, os links ficaram mais estreitos e "Minha conta" virou "Conta".)*
 - **Conteúdo**:
   - a busca e o filtro por tipo;
   - a lista de resultados com o resumo;

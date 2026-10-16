@@ -15,6 +15,7 @@ import { OverrideProvider } from "./derived-value";
 import { initialSheetMode, type SheetMode } from "./mode";
 import type { SheetChange } from "./props";
 import { SharePanel } from "./share-panel";
+import { SheetAdminProvider } from "./sheet-admin";
 import { SheetBody } from "./sheet-body";
 import { ModeSwitch, SheetModeProvider } from "./sheet-mode";
 import { useSheetAutosave, type SaveOutcome } from "./use-sheet-autosave";
@@ -45,8 +46,11 @@ export function SheetEditor({
   initialVersion,
   save,
   shareToken,
+  isAdmin,
 }: {
   id: string;
+  /** Mostra "Enviar ao compêndio" nas fontes (design B7). */
+  isAdmin: boolean;
   /** Código do link de compartilhamento atual (design L5). */
   shareToken: string | null;
   initialDocument: SheetDocument;
@@ -124,12 +128,14 @@ export function SheetEditor({
         )}
 
         <OverrideProvider setOverride={setOverride}>
-          <fieldset
-            disabled={locked}
-            className="flex min-w-0 flex-col gap-4 disabled:opacity-60"
-          >
-            <SheetBody {...part} />
-          </fieldset>
+          <SheetAdminProvider value={isAdmin}>
+            <fieldset
+              disabled={locked}
+              className="flex min-w-0 flex-col gap-4 disabled:opacity-60"
+            >
+              <SheetBody {...part} />
+            </fieldset>
+          </SheetAdminProvider>
         </OverrideProvider>
 
         {/* Em conflito ou já excluída, compartilhar e excluir não fazem sentido. */}

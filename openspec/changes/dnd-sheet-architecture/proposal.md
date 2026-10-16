@@ -12,7 +12,7 @@ Esta change é um **registro de decisões e roadmap**, não um pacote de impleme
 - Define dois papéis:
   - **Admin**: gerencia contas (cria, ativa e desativa). Não há cadastro público.
   - **Usuário comum**: cria e gerencia as próprias fichas.
-- Define a ficha como **documento autocontido**: tudo o que o personagem tem (feats, itens, magias, trackers) vive dentro da ficha. Não existe compêndio nem reaproveitamento de conteúdo entre fichas.
+- Define a ficha como **documento autocontido**: tudo o que o personagem tem (feats, itens, magias, trackers) vive dentro da ficha. Um compêndio de modelos, mantido pelo admin, só copia conteúdo para a ficha, sem ligação depois da cópia (change `compendium`).
 - Define o modelo de **fonte** (feat, item, magia, traço) com **efeitos** e **trackers**, base de toda a automação.
 - Define as automações da v1: modificadores de atributo, bônus de proficiência, perícias, salvaguardas, CA com fórmulas alternativas (ex.: Defesa sem Armadura), máximos de trackers por fórmula, descanso curto/longo e override manual de qualquer valor calculado.
 - Define a stack: Next.js (TypeScript) + Postgres, em Docker numa VPS.

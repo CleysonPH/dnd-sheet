@@ -128,3 +128,26 @@ export function createSource<K extends SourceKind>(
   };
   return byKind[kind];
 }
+
+/**
+ * A fonte sem o estado de mesa (design B3): trackers sem uso, item desequipado
+ * e dessintonizado, magia fora de efeito. Quantidade e preparação são
+ * configuração do jogador e ficam como estão.
+ */
+export function withoutTableState<S extends Source>(source: S): S {
+  const trackers = source.trackers.map((tracker) => ({ ...tracker, used: 0 }));
+  const base: Source = { ...source, trackers };
+  switch (base.kind) {
+    case "item":
+      return { ...base, equipped: false, attuned: false } as S;
+    case "spell":
+      return { ...base, active: false } as S;
+    default:
+      return base as S;
+  }
+}
+
+/** Cópia de uma entrada do compêndio para a ficha, com id próprio (B3). */
+export function copyToSheet<S extends Source>(entry: S, id: string): S {
+  return { ...withoutTableState(entry), id };
+}

@@ -24,6 +24,9 @@ import {
   spellComponents,
   spellLevelLabel,
 } from "./labels";
+import { SendToCompendium } from "@/components/compendium/send-to-compendium";
+
+import { useIsSheetAdmin } from "../sheet-admin";
 import { describeEffect } from "./effect-labels";
 import { SourceForm, type SourcePatch } from "./source-form";
 
@@ -254,6 +257,7 @@ export function SourceCard({
   onChange: (patch: SourcePatch) => void;
   onDelete: () => void;
 }) {
+  const isAdmin = useIsSheetAdmin();
   const [expanded, setExpanded] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const bodyId = `source-${source.id}-body`;
@@ -298,6 +302,7 @@ export function SourceCard({
               Editar
             </Button>
           )}
+          {mode === "edit" && isAdmin && <SendToCompendium source={source} />}
         </div>
       </div>
 

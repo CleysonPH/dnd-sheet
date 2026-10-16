@@ -8,24 +8,31 @@ import { isAdmin } from "@/server/auth/guards";
 import { getPageSession } from "@/server/auth/page";
 
 const NAV_LINK =
-  "rounded-md px-2 py-1 text-sm whitespace-nowrap text-muted hover:bg-surface-2 hover:text-text";
+  "rounded-md px-1.5 py-1 text-sm whitespace-nowrap text-muted hover:bg-surface-2 hover:text-text sm:px-2";
 
 async function Header() {
   const { user } = await getPageSession("user");
   return (
     <header className="sticky top-0 z-10 border-b border-line bg-surface/90 backdrop-blur">
-      <nav className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:gap-3">
+      <nav className="mx-auto flex h-14 max-w-6xl items-center gap-1 px-4 sm:gap-3">
         <Link href="/" aria-label="Minhas fichas">
           <Brand compact />
         </Link>
         <span className="flex-1" />
         {isAdmin(user) && (
-          <Link href="/admin/contas" className={NAV_LINK}>
-            Contas
-          </Link>
+          <>
+            <Link href="/admin/compendio" className={NAV_LINK}>
+              Compêndio
+            </Link>
+            <Link href="/admin/contas" className={NAV_LINK}>
+              Contas
+            </Link>
+          </>
         )}
         <Link href="/conta" className={NAV_LINK}>
-          Minha conta
+          {/* No celular, "Conta": o menu do admin precisa caber em 360 px. */}
+          <span className="sm:hidden">Conta</span>
+          <span className="hidden sm:inline">Minha conta</span>
         </Link>
         <span className="hidden max-w-40 truncate text-sm text-muted md:inline">
           {user.name}

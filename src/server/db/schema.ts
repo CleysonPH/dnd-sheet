@@ -2,3 +2,4 @@
 // auth-schema.ts é gerado por `npm run auth:generate`; não edite à mão.
 export * from "./auth-schema";
 export * from "./sheet-schema";
+export * from "./compendium-schema";

@@ -2,17 +2,27 @@
 
 import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
+import {
+  COMPENDIUM_DRAG_TYPE,
+  CompendiumPanel,
+} from "@/components/compendium/compendium-panel";
 import { Badge, Button, Card, TextField } from "@/components/form";
+import { MAX_SOURCES, type SourceKind } from "@/engine/sources/kinds";
 import {
   ATTUNEMENT_LIMIT,
   attunedCount,
+  copyToSheet,
   createSource,
   alwaysPreparedCount,
   preparedCount,
   spellsByLevel,
   totalWeight,
 } from "@/engine/sources/rules";
-import { sourceNameSchema, type Source } from "@/engine/sources/schema";
+import {
+  sourceNameSchema,
+  sourceSchema,
+  type Source,
+} from "@/engine/sources/schema";
 import { enforceSingleConcentration } from "@/engine/stats/concentration";
 import { spellcastingFor } from "@/engine/stats/derive";
 import { SPELLCASTING_ABILITIES } from "@/engine/stats/keys";
@@ -37,6 +47,21 @@ const TABS: { tab: Tab; label: string; empty: string }[] = [
   { tab: "inventory", label: "Inventário", empty: "Ainda não há itens." },
   { tab: "spells", label: "Magias", empty: "Ainda não há magias." },
 ];
+
+/** Tipos de fonte de cada aba, para o filtro inicial do compêndio (B7). */
+const TAB_KINDS: Record<Tab, SourceKind[]> = {
+  features: ["feat", "trait"],
+  inventory: ["item"],
+  spells: ["spell"],
+};
+
+function tabOf(kind: SourceKind): Tab {
+  return kind === "item"
+    ? "inventory"
+    : kind === "spell"
+      ? "spells"
+      : "features";
+}
 
 function inTab(tab: Tab, source: Source): boolean {
   if (tab === "features")
@@ -127,6 +152,10 @@ export function SourcesPanel({ document, stats, update }: SheetPartProps) {
   const mode = useSheetMode();
   const [tab, setTab] = useState<Tab>("features");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [compendiumOpen, setCompendiumOpen] = useState(false);
+  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(
+    null,
+  );
   const tabRefs = useRef<Record<Tab, HTMLButtonElement | null>>({
     features: null,
     inventory: null,
@@ -154,6 +183,38 @@ export function SourcesPanel({ document, stats, update }: SheetPartProps) {
       sources: [...current.sources, source],
     }));
     setEditingId(source.id);
+  }
+
+  /** Copia uma entrada do compêndio para a ficha (spec compendium, B3). */
+  function addFromCompendium(entry: Source) {
+    if (sources.length >= MAX_SOURCES) {
+      setNotice({
+        ok: false,
+        text: `A ficha chegou ao limite de ${MAX_SOURCES} fontes.`,
+      });
+      return;
+    }
+    const source = copyToSheet(entry, crypto.randomUUID());
+    update((current) => ({
+      ...current,
+      sources: [...current.sources, source],
+    }));
+    setTab(tabOf(source.kind));
+    setNotice({ ok: true, text: `${source.name} adicionado à ficha.` });
+  }
+
+  function onDrop(event: React.DragEvent) {
+    const data = event.dataTransfer.getData(COMPENDIUM_DRAG_TYPE);
+    if (!data) return;
+    event.preventDefault();
+    let value: unknown;
+    try {
+      value = JSON.parse(data);
+    } catch {
+      return;
+    }
+    const parsed = sourceSchema.safeParse(value);
+    if (parsed.success) addFromCompendium(parsed.data);
   }
 
   function deleteSource(id: string) {
@@ -307,26 +368,84 @@ export function SourcesPanel({ document, stats, update }: SheetPartProps) {
       </div>
 
       <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
-        {mode === "edit" && <AddSource key={tab} tab={tab} onAdd={addSource} />}
-        {summary}
-        {visible.length === 0 ? (
-          <p className="text-sm text-muted">{current.empty}</p>
-        ) : tab === "spells" ? (
-          <div className="flex flex-col gap-4">
-            {spellsByLevel(sources).map((group) => (
-              <section key={group.level}>
-                <h3 className="mb-2 text-xs font-semibold tracking-wider text-muted uppercase">
-                  {group.level === 0 ? "Truques" : spellLevelLabel(group.level)}
-                </h3>
-                <ul className="flex flex-col gap-2">
-                  {group.spells.map(card)}
-                </ul>
-              </section>
-            ))}
+        {mode === "edit" && (
+          <div className="flex flex-wrap items-start gap-x-2">
+            <div className="min-w-0 flex-1">
+              <AddSource key={tab} tab={tab} onAdd={addSource} />
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              className="mt-6 mb-4"
+              aria-pressed={compendiumOpen}
+              onClick={() => {
+                setCompendiumOpen((open) => !open);
+                setNotice(null);
+              }}
+            >
+              Compêndio
+            </Button>
           </div>
-        ) : (
-          <ul className="flex flex-col gap-2">{visible.map(card)}</ul>
         )}
+        {notice && mode === "edit" && (
+          <p
+            role="status"
+            className={`mb-3 text-sm ${notice.ok ? "text-success" : "text-danger"}`}
+          >
+            {notice.text}
+          </p>
+        )}
+        <div
+          className={
+            mode === "edit" && compendiumOpen
+              ? "grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]"
+              : undefined
+          }
+        >
+          {mode === "edit" && compendiumOpen && (
+            // No celular, acima da lista; no desktop, à direita (B7).
+            <div className="min-w-0 lg:order-2">
+              <CompendiumPanel
+                key={tab}
+                tabKinds={TAB_KINDS[tab]}
+                sheetSources={sources}
+                onAdd={addFromCompendium}
+              />
+            </div>
+          )}
+          <div
+            className="min-w-0"
+            onDragOver={(event) => {
+              if (event.dataTransfer.types.includes(COMPENDIUM_DRAG_TYPE)) {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "copy";
+              }
+            }}
+            onDrop={onDrop}
+          >
+            {summary}
+            {visible.length === 0 ? (
+              <p className="text-sm text-muted">{current.empty}</p>
+            ) : tab === "spells" ? (
+              <div className="flex flex-col gap-4">
+                {spellsByLevel(sources).map((group) => (
+                  <section key={group.level}>
+                    <h3 className="mb-2 text-xs font-semibold tracking-wider text-muted uppercase">
+                      {group.level === 0
+                        ? "Truques"
+                        : spellLevelLabel(group.level)}
+                    </h3>
+                    <ul className="flex flex-col gap-2">
+                      {group.spells.map(card)}
+                    </ul>
+                  </section>
+                ))}
+              </div>
+            ) : (
+              <ul className="flex flex-col gap-2">{visible.map(card)}</ul>
+            )}
+          </div>
+        </div>
       </div>
     </Card>
   );

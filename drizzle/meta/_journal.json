@@ -29,6 +29,13 @@
       "when": 1792097516280,
       "tag": "0003_minor_emma_frost",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792181385640,
+      "tag": "0004_fast_devos",
+      "breakpoints": true
     }
   ]
 }

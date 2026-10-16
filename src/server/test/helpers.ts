@@ -6,7 +6,7 @@ import { getDb } from "@/server/db";
 /** Apaga todos os dados entre testes. */
 export async function resetDatabase() {
   await getDb().execute(
-    sql`truncate table "session", "account", "verification", "user", "rate_limit" cascade`,
+    sql`truncate table "session", "account", "verification", "user", "rate_limit", "compendium_entry" cascade`,
   );
 }
 

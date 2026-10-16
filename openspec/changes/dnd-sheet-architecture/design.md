@@ -56,6 +56,7 @@ Cada ficha é um documento JSON salvo numa coluna JSONB. Feats, itens, magias, t
 
 - **Por quê**: o usuário decidiu que não haverá reaproveitamento entre fichas. Um documento evita dezenas de tabelas para um conteúdo cujo formato vai evoluir muito, e torna exportar/importar trivial no futuro.
 - **Alternativas**: modelo relacional normalizado (fontes, efeitos e trackers como tabelas). Rejeitado: custo alto de migração a cada mudança no formato e nenhum benefício, já que não há consultas entre fichas.
+- **Revisão** (change `compendium`): passou a existir um compêndio de *modelos* mantido pelo admin. Cada entrada é uma fonte em JSONB, na tabela `compendium_entry`. Adicionar uma entrada à ficha a **copia** para `sources`, sem referência, e a ficha continua autocontida: editar ou excluir a entrada não muda as fichas. O reaproveitamento é só no momento da cópia.
 - **Regras do documento**:
   - Possui `schemaVersion` desde a primeira versão; documentos antigos são migrados ao carregar.
   - Guarda apenas **entradas** (valores base, fontes, efeitos, trackers, overrides). Valores derivados nunca são persistidos; são recalculados.

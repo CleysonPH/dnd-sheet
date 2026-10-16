@@ -80,6 +80,7 @@ src/
   app/          rotas do Next (UI e route handlers)
   components/   componentes React reutilizáveis
     sheet/      a ficha na tela: modos Jogar/Editar, blocos, override e autosave
+    compendium/ página do admin, painel de busca na ficha e "Enviar ao compêndio"
   engine/       motor de cálculo da ficha: TypeScript puro
     sheet/      formato do documento da ficha (schema, versão, migrações)
     stats/      regras do 5.5e, valores derivados (com override), dano e cura
@@ -91,6 +92,7 @@ src/
     auth/       configuração do Better Auth, guards e troca de senha
     accounts/   administração de contas e seed do primeiro admin
     sheets/     fichas: listar, criar, abrir, salvar (com versão) e excluir
+    compendium/ compêndio: busca para todos, criar, salvar, excluir e enviar só para admins
     db/         cliente Drizzle e schema
   lib/          utilitários compartilhados (ex.: env.ts)
   proxy.ts      redirecionamentos de login e troca de senha
@@ -98,9 +100,11 @@ drizzle/        migrações SQL geradas (versionadas)
 scripts/        comandos de operação (seed, config da CLI do Better Auth)
 ```
 
-Rotas principais: `/` (Minhas fichas), `/fichas/[id]` (ficha com salvamento automático), `/compartilhada/[token]` (ficha compartilhada, pública e só leitura), `/conta`, `/admin/contas` (só admins), `/login` e `/trocar-senha`.
+Rotas principais: `/` (Minhas fichas), `/fichas/[id]` (ficha com salvamento automático), `/compartilhada/[token]` (ficha compartilhada, pública e só leitura), `/conta`, `/admin/compendio` e `/admin/contas` (só admins), `/login` e `/trocar-senha`.
 
-A ficha é um documento JSON versionado (`schemaVersion`, hoje no formato 9). O documento guarda só entradas: atributos, proficiências (perícias, salvaguardas, armaduras, armas, ferramentas e idiomas), defesas, condições ativas e nível de Exaustão, dado de vida, dano sofrido, deslocamento, inspiração heroica, atributo de conjuração, valores manuais (`overrides`) e as fontes (`sources`: talentos, traços, itens e magias, cada uma com id próprio, seus efeitos e trackers) e os espaços de magia e de pacto. Modificadores, perícias, PV máximo e os demais valores derivados são recalculados no navegador por `deriveStats` (`src/engine/stats/derive.ts`) e nunca são gravados. Ao mudar o formato em `src/engine/sheet/document.ts`, incremente `SHEET_SCHEMA_VERSION` e acrescente a migração correspondente em `src/engine/sheet/migrate.ts`, com teste.
+O compêndio (`compendium_entry`) guarda talentos, traços, itens e magias prontos, cada um como uma fonte inteira em JSONB, com o formato em que foi gravado (`schema_version`) e o nome normalizado para a busca (`search_name`, por `searchKey`: sem acentos e minúsculo). Só admins criam, editam e excluem entradas, em `/admin/compendio` ou com "Enviar ao compêndio" numa fonte da própria ficha. Todo usuário logado busca no painel "Compêndio" da aba de fontes, em Editar. "Adicionar" ou arrastar copia a entrada para a ficha com `copyToSheet`: id novo e sem estado de mesa (trackers sem uso, item desequipado, magia fora de efeito). A cópia não guarda ligação com a entrada.
+
+A ficha é um documento JSON versionado (`schemaVersion`, hoje no formato 9). O documento guarda só entradas: atributos, proficiências (perícias, salvaguardas, armaduras, armas, ferramentas e idiomas), defesas, condições ativas e nível de Exaustão, dado de vida, dano sofrido, deslocamento, inspiração heroica, atributo de conjuração, valores manuais (`overrides`) e as fontes (`sources`: talentos, traços, itens e magias, cada uma com id próprio, seus efeitos e trackers) e os espaços de magia e de pacto. Modificadores, perícias, PV máximo e os demais valores derivados são recalculados no navegador por `deriveStats` (`src/engine/stats/derive.ts`) e nunca são gravados. Ao mudar o formato em `src/engine/sheet/document.ts`, incremente `SHEET_SCHEMA_VERSION` e acrescente a migração correspondente em `src/engine/sheet/migrate.ts`, com teste. Se a mudança mexe no formato das fontes, defina também o passo em `SOURCE_MIGRATIONS` (`src/engine/sources/migrate.ts`) e aplique-o a cada fonte na migração da ficha: as entradas do compêndio são fontes soltas e só migram por esse passo.
 
 A ficha tem dois modos. Jogar mostra os números para leitura e só deixa mexer no que muda na mesa (dano e cura, PV temporário, dados de vida e testes contra a morte). Editar mostra todos os campos e os valores manuais. Dano, cura e a regra que zera os testes contra a morte ao sair de 0 PV ficam em `src/engine/stats/hit-points.ts`.
 

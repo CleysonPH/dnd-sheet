@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { SheetEditor } from "@/components/sheet/sheet-editor";
+import { isAdmin } from "@/server/auth/guards";
 import { getPageSession } from "@/server/auth/page";
 import { getSheet } from "@/server/sheets/service";
 
@@ -13,7 +14,7 @@ import { saveSheetAction } from "./actions";
 export const metadata: Metadata = { title: "Ficha · Ficha D&D" };
 
 async function Sheet({ params }: { params: Promise<{ id: string }> }) {
-  await getPageSession("user");
+  const { user } = await getPageSession("user");
   const { id } = await params;
   // Ficha de outro usuário e ficha inexistente: mesmo resultado (design C4).
   const sheet = await getSheet(await headers(), id);
@@ -28,6 +29,7 @@ async function Sheet({ params }: { params: Promise<{ id: string }> }) {
       initialVersion={sheet.version}
       save={saveSheetAction.bind(null, sheet.id)}
       shareToken={sheet.shareToken}
+      isAdmin={isAdmin(user)}
     />
   );
 }

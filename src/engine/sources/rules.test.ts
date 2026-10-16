@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 
+import { createTracker } from "@/engine/resources/schema";
+
 import {
   attunedCount,
+  copyToSheet,
   createSource,
+  withoutTableState,
   isItemActive,
   alwaysPreparedCount,
   preparedCount,
@@ -128,5 +132,45 @@ describe("createSource", () => {
       preparation: "none",
       castingAbility: "sheet",
     });
+  });
+});
+
+describe("withoutTableState e copyToSheet", () => {
+  it("item volta desequipado, dessintonizado e com trackers sem uso", () => {
+    const ring = item("Anel de Proteção", {
+      quantity: 2,
+      equipped: true,
+      requiresAttunement: true,
+      attuned: true,
+      trackers: [{ ...createTracker("t1"), max: "3", used: 2 }],
+    });
+    const clean = withoutTableState(ring);
+    expect(clean).toEqual({
+      ...ring,
+      equipped: false,
+      attuned: false,
+      trackers: [{ ...ring.trackers[0], used: 0 }],
+    });
+    expect(clean.quantity).toBe(2);
+  });
+
+  it("magia sai de efeito e continua preparada", () => {
+    const shield = spell("Escudo da Fé", {
+      level: 1,
+      active: true,
+      preparation: "prepared",
+    });
+    expect(withoutTableState(shield)).toMatchObject({
+      active: false,
+      preparation: "prepared",
+    });
+  });
+
+  it("copyToSheet troca só o id da fonte", () => {
+    const feat = {
+      ...createSource("feat", "Robusto", "entrada"),
+      trackers: [createTracker("t1")],
+    };
+    expect(copyToSheet(feat, "novo")).toEqual({ ...feat, id: "novo" });
   });
 });
