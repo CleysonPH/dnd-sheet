@@ -5,8 +5,10 @@ import type { ReactNode } from "react";
 import { Card } from "@/components/form";
 import { BoltIcon, BootIcon, ShieldIcon } from "@/components/icons";
 import { speedSchema } from "@/engine/sheet/document";
+import { deriveTraits, untrainedArmor } from "@/engine/traits/derive";
 
 import { DerivedValue } from "./derived-value";
+import { ARMOR_PROFICIENCY_LABEL } from "./labels";
 import { NumberField } from "./number-field";
 import { formatDecimal, parseDecimal } from "./parse";
 import type { SheetPartProps } from "./props";
@@ -40,6 +42,7 @@ const formatMeters = (meters: number) => `${formatDecimal(meters)} m`;
 /** CA, iniciativa, deslocamento, percepção passiva e PB (design V5/E6). */
 export function CombatStats({ document, stats, update }: SheetPartProps) {
   const mode = useSheetMode();
+  const untrained = untrainedArmor(document, deriveTraits(document));
   return (
     <Card title="Combate" style={{ gridArea: "stats" }}>
       <div className="grid grid-cols-3 gap-2">
@@ -123,6 +126,31 @@ export function CombatStats({ document, stats, update }: SheetPartProps) {
           </>
         )}
       </div>
+      {untrained.length > 0 && (
+        // Aviso de armadura sem treinamento (design T5): a CA não muda.
+        <ul
+          role="alert"
+          className="mt-3 flex flex-col gap-1 rounded-md border border-danger/40 bg-danger-soft px-3 py-2 text-sm text-danger"
+        >
+          {untrained.map(({ item, training }) => (
+            <li key={item.id}>
+              {training === "shield" ? (
+                <>
+                  <strong>{item.name}</strong> sem treinamento com escudo: o
+                  escudo não dá o bônus de CA (a CA mostrada ainda o inclui).
+                </>
+              ) : (
+                <>
+                  <strong>{item.name}</strong> sem treinamento com armadura{" "}
+                  {ARMOR_PROFICIENCY_LABEL[training].toLocaleLowerCase("pt-BR")}
+                  : desvantagem em testes de d20 de FOR e DES, e não pode
+                  conjurar magias.
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </Card>
   );
 }

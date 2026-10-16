@@ -3,11 +3,13 @@
 import { ABILITIES } from "@/engine/stats/keys";
 
 import { AbilityBlock } from "./ability-block";
+import { ConditionsStrip } from "./conditions-strip";
 import { HitDiceCard } from "./hit-dice-card";
 import { HitPointsCard } from "./hit-points-card";
 import { IdentitySection } from "./identity-section";
 import type { SheetPartProps } from "./props";
 import { ResourcesCard } from "./resources-card";
+import { DefensesCard, ProficienciesCard } from "./traits-cards";
 import { useSheetMode } from "./sheet-mode";
 import { SourcesPanel } from "./sources/sources-panel";
 import { CombatStats } from "./top-band";
@@ -27,11 +29,15 @@ export function SheetBody(part: SheetPartProps) {
         <CombatStats {...part} />
         <HitDiceCard {...part} />
       </div>
-      {/* DOM: Recursos antes dos atributos (ordem do celular). A partir de
-          lg, atributos 2x3 à esquerda e Recursos à direita (design R3). */}
+      <ConditionsStrip {...part} />
+      {/* DOM: Recursos, Defesas e Proficiências antes dos atributos (ordem do
+          celular). A partir de lg, atributos 2x3 à esquerda e os três cartões
+          empilhados à direita (design R3, T7). */}
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        <div className="min-w-0 lg:col-start-2 lg:row-start-1">
+        <div className="flex min-w-0 flex-col gap-4 lg:col-start-2 lg:row-start-1">
           <ResourcesCard {...part} />
+          <DefensesCard {...part} />
+          <ProficienciesCard {...part} />
         </div>
         <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:col-start-1 lg:row-start-1">
           {ABILITIES.map((ability) => (

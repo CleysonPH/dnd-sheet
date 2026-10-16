@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { operationsFor } from "./targets";
+import { GRANT_TARGETS, operationsFor } from "./targets";
 import type { z } from "zod";
 
 import { createEffect, effectSchema, effectsSchema } from "./schema";
@@ -79,4 +79,53 @@ describe("alvos de magia", () => {
       expect(operationsFor(target)).toEqual(["add"]);
     },
   );
+});
+
+describe("conceder", () => {
+  const grant = (target: string, value: string) => ({
+    ...plusOneAc,
+    target,
+    op: "grant",
+    expression: "",
+    value,
+  });
+
+  it.each(GRANT_TARGETS)("%s só aceita conceder", (target) => {
+    expect(operationsFor(target)).toEqual(["grant"]);
+  });
+
+  it("os alvos numéricos não aceitam conceder", () => {
+    expect(firstError({ ...plusOneAc, op: "grant" })).toBe(
+      "Operação incompatível com o alvo",
+    );
+    expect(
+      firstError({ ...grant("proficiency.armor", "heavy"), op: "add" }),
+    ).toBe("Operação incompatível com o alvo");
+  });
+
+  it("aceita só valores da lista nos alvos fechados", () => {
+    expect(firstError(grant("proficiency.armor", "heavy"))).toBeNull();
+    expect(firstError(grant("proficiency.armor", "pesada"))).toBe(
+      "Escolha um item da lista",
+    );
+    expect(firstError(grant("defense.resistance", "fire"))).toBeNull();
+    expect(
+      firstError(grant("defense.conditionImmunity", "exhaustion")),
+    ).toBeNull();
+  });
+
+  it("aceita texto livre de 1 a 50 caracteres nos alvos livres", () => {
+    expect(firstError(grant("language", "Élfico"))).toBeNull();
+    expect(firstError(grant("proficiency.weapon", "martial"))).toBeNull();
+    expect(firstError(grant("proficiency.weapon", "Espada longa"))).toBeNull();
+    expect(firstError(grant("language", ""))).toBe("Informe um nome");
+    expect(firstError(grant("proficiency.tool", "   "))).toBe(
+      "Informe um nome",
+    );
+    expect(firstError(grant("language", "x".repeat(51)))).not.toBeNull();
+  });
+
+  it("as outras operações ignoram o valor", () => {
+    expect(firstError({ ...plusOneAc, value: "qualquer coisa" })).toBeNull();
+  });
 });

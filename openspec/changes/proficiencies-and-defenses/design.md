@@ -88,7 +88,7 @@ Ela usa `collectActiveEffects`, então vale a mesma regra de fonte ativa, inclus
 
 - **Interface**:
   - um item com origem de fonte aparece com o nome da fonte e sem o botão de remover;
-  - se ele também está na ficha, o botão remove só a marca da ficha e o item continua, com a origem da fonte;
+  - se ele também está na ficha, continua sem o botão de remover enquanto a fonte o conceder;
   - nas caixas fixas, uma caixa concedida aparece marcada e desabilitada, com a origem ao lado.
 - **Por quê** fora do `deriveStats`: as listas não são números, não têm override nem dependências. Um módulo separado mantém o `deriveStats` só numérico.
 
@@ -105,7 +105,7 @@ Ela usa `collectActiveEffects`, então vale a mesma regra de fonte ativa, inclus
   - **Por quê**: no 5.5e, a Exaustão reduz a *rolagem* dos testes de d20, e o valor passivo não é rolado. Não achei uma regra explícita sobre isso, e a leitura literal é a do spec. Se a mesa preferir o contrário, a mudança fica isolada neste ponto.
 - **Deslocamento**: depois de "definir" e "somar", aplica `max(0, valor − 1,5N)`, com a parcela "Exaustão N" valendo o quanto de fato tirou (para não mostrar −4,5 quando o deslocamento era 3).
 - **CD de magia**: não muda, porque não é rolada.
-- **Exaustão 6**: só o aviso, com `role="alert"`, perto do PV, como o aviso de concentração. A ficha não é bloqueada.
+- **Exaustão 6**: só o aviso, com `role="alert"`, na faixa de condições, junto do controle da Exaustão. A ficha não é bloqueada.
 
 ### T5. Aviso de armadura sem treinamento
 

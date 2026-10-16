@@ -122,6 +122,35 @@ export const migrateV7ToV8: SheetMigration = (document) => ({
   ),
 });
 
+/**
+ * Formato 8 -> 9: proficiências, defesas e condições vazias, Exaustão 0 e o
+ * valor de texto em cada efeito (design T2).
+ */
+export const migrateV8ToV9: SheetMigration = (document) => ({
+  ...document,
+  sources: (document.sources as Record<string, unknown>[]).map((source) => ({
+    ...source,
+    effects: (source.effects as Record<string, unknown>[]).map((effect) => ({
+      ...effect,
+      value: "",
+    })),
+  })),
+  proficiencies: {
+    armor: { light: false, medium: false, heavy: false, shield: false },
+    weapons: { simple: false, martial: false, other: [] },
+    tools: [],
+    languages: [],
+  },
+  defenses: {
+    resistances: [],
+    immunities: [],
+    vulnerabilities: [],
+    conditionImmunities: [],
+  },
+  conditions: [],
+  exhaustion: 0,
+});
+
 /** Migrações reais do formato. */
 export const SHEET_MIGRATIONS: readonly SheetMigration[] = [
   migrateV1ToV2,
@@ -131,6 +160,7 @@ export const SHEET_MIGRATIONS: readonly SheetMigration[] = [
   migrateV5ToV6,
   migrateV6ToV7,
   migrateV7ToV8,
+  migrateV8ToV9,
 ];
 
 export class SheetFormatError extends Error {

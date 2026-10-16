@@ -16,6 +16,14 @@ import {
   spellSlotsSchema,
 } from "@/engine/resources/schema";
 import { sourcesSchema } from "@/engine/sources/schema";
+import {
+  conditionsSchema,
+  defensesSchema,
+  emptyDefenses,
+  emptyProficiencies,
+  exhaustionSchema,
+  proficienciesSchema,
+} from "@/engine/traits/schema";
 
 /**
  * Versão atual do formato da ficha (design C2/C3).
@@ -23,7 +31,7 @@ import { sourcesSchema } from "@/engine/sources/schema";
  * Toda mudança no schema abaixo precisa incrementar esta constante e
  * acrescentar em migrate.ts uma migração da versão anterior, com teste.
  */
-export const SHEET_SCHEMA_VERSION = 8;
+export const SHEET_SCHEMA_VERSION = 9;
 
 /** Tamanho máximo do documento serializado, em bytes. */
 export const SHEET_MAX_BYTES = 256 * 1024;
@@ -111,6 +119,12 @@ export const sheetDocumentSchema = z.strictObject({
   sources: sourcesSchema,
   spellSlots: spellSlotsSchema,
   pactSlots: pactSlotsSchema,
+  /** Proficiências marcadas pelo jogador; as fontes somam as suas (T3). */
+  proficiencies: proficienciesSchema,
+  defenses: defensesSchema,
+  /** Condições ativas e nível de Exaustão (design T4, T6). */
+  conditions: conditionsSchema,
+  exhaustion: exhaustionSchema,
 });
 
 export type SheetIdentity = z.infer<typeof identitySchema>;
@@ -136,6 +150,10 @@ export function createSheetDocument(name: string): SheetDocument {
     sources: [],
     spellSlots: emptySpellSlots(),
     pactSlots: { level: 1, max: 0, used: 0 },
+    proficiencies: emptyProficiencies(),
+    defenses: emptyDefenses(),
+    conditions: [],
+    exhaustion: 0,
   });
 }
 

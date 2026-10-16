@@ -145,7 +145,16 @@ export function ResourcesCard({ document, stats, update }: SheetPartProps) {
           aria-label={`Confirmar descanso ${confirming === "short" ? "curto" : "longo"}`}
           className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-accent/40 bg-accent-soft p-3 text-sm"
         >
-          <p className="min-w-0 flex-1">{REST_SUMMARY[confirming]}</p>
+          <p className="min-w-0 flex-1">
+            {REST_SUMMARY[confirming]}
+            {confirming === "long" && document.exhaustion > 0 && (
+              <>
+                {" "}
+                Exaustão {document.exhaustion} cai para{" "}
+                {document.exhaustion - 1}.
+              </>
+            )}
+          </p>
           <Button
             type="button"
             onClick={() => {

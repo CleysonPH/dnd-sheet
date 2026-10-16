@@ -171,6 +171,22 @@ describe("longRest", () => {
     expect(trackerState(rest(longRest, aria()))).toEqual(["Inspiração 3/3"]);
   });
 
+  it("Exaustão 2 e envenenado: Exaustão 1 e continua envenenado", () => {
+    const tired: SheetDocument = {
+      ...thorin(),
+      exhaustion: 2,
+      conditions: ["poisoned"],
+    };
+    const rested = rest(longRest, tired);
+    expect(rested.exhaustion).toBe(1);
+    expect(rested.conditions).toEqual(["poisoned"]);
+    expect(rest(longRest, thorin()).exhaustion).toBe(0);
+  });
+
+  it("o descanso curto não mexe na Exaustão", () => {
+    expect(rest(shortRest, { ...thorin(), exhaustion: 2 }).exhaustion).toBe(2);
+  });
+
   it("recupera todos os espaços", () => {
     const rested = rest(longRest, kai());
     expect(rested.spellSlots[0]).toEqual({ max: 2, used: 0 });

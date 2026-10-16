@@ -72,6 +72,8 @@ export type DerivedStats = {
    * atributo próprio (design K3).
    */
   spellEffects: { saveDc: number; attack: number };
+  /** Quanto a Exaustão tira dos testes de d20 (0 ou negativo, design T4). */
+  exhaustionPenalty: number;
 };
 
 /** PV máximo pela média fixa do 5.5e, com mínimo de 1 PV por nível. */
@@ -193,6 +195,17 @@ export function deriveStats(document: SheetDocument): DerivedStats {
       }
     }
     return { value, parts };
+  }
+
+  // Exaustão (design T4): -2 por nível nos testes de d20 e -1,5 m por nível
+  // no deslocamento, como parcela do valor calculado.
+  const { exhaustion } = document;
+  const exhaustionLabel = `Exaustão ${exhaustion}`;
+  const d20Penalty = exhaustion === 0 ? 0 : -2 * exhaustion;
+  function withExhaustion(total: number, parts: Contribution[]): number {
+    if (exhaustion === 0) return total;
+    parts.push({ label: exhaustionLabel, amount: d20Penalty, kind: "add" });
+    return total + d20Penalty;
   }
 
   // PB: só depende do nível.
@@ -335,7 +348,11 @@ export function deriveStats(document: SheetDocument): DerivedStats {
     }
     const added = adds(list, variables);
     parts.push(...added.parts);
-    resolve(key, modifier + proficiencyAmount + added.total, parts);
+    resolve(
+      key,
+      withExhaustion(modifier + proficiencyAmount + added.total, parts),
+      parts,
+    );
   }
 
   for (const ability of ABILITIES) {
@@ -373,11 +390,14 @@ export function deriveStats(document: SheetDocument): DerivedStats {
     kind: "proficiency",
   };
   const spellAttackAdds = adds(targeting("spellAttack"), variables);
-  resolve("spellAttack", spellMod + pb + spellAttackAdds.total, [
-    spellModPart,
-    proficiencyPart,
-    ...spellAttackAdds.parts,
-  ]);
+  {
+    const parts = [spellModPart, proficiencyPart, ...spellAttackAdds.parts];
+    resolve(
+      "spellAttack",
+      withExhaustion(spellMod + pb + spellAttackAdds.total, parts),
+      parts,
+    );
+  }
   const spellSaveDcAdds = adds(targeting("spellSaveDc"), variables);
   resolve("spellSaveDc", 8 + spellMod + pb + spellSaveDcAdds.total, [
     { label: "Base", amount: 8, kind: "base" },
@@ -400,8 +420,19 @@ export function deriveStats(document: SheetDocument): DerivedStats {
     ]);
   }
 
-  withAdds("initiative", mods.dex, "Modificador de DES", "initiative");
-  const perception = values["skill.perception"].value;
+  {
+    const added = adds(targeting("initiative"), variables);
+    const parts: Contribution[] = [
+      { label: "Modificador de DES", amount: mods.dex, kind: "base" },
+      ...added.parts,
+    ];
+    resolve("initiative", withExhaustion(mods.dex + added.total, parts), parts);
+  }
+  // A passiva não é rolada: usa a Percepção sem a Exaustão (design T4).
+  const perceptionValue = values["skill.perception"];
+  const perception = perceptionValue.overridden
+    ? perceptionValue.value
+    : perceptionValue.calculated - d20Penalty;
   withAdds(
     "passivePerception",
     10 + perception,
@@ -419,7 +450,17 @@ export function deriveStats(document: SheetDocument): DerivedStats {
       variables,
     );
     const added = adds(list, variables);
-    resolve("speed", value + added.total, [...parts, ...added.parts]);
+    const speedParts = [...parts, ...added.parts];
+    const raw = value + added.total;
+    const reduction = Math.min(Math.max(raw, 0), 1.5 * exhaustion);
+    if (reduction > 0) {
+      speedParts.push({
+        label: exhaustionLabel,
+        amount: -reduction,
+        kind: "add",
+      });
+    }
+    resolve("speed", raw - reduction, speedParts);
   }
 
   const { hitDie, damage, hitDiceSpent } = document.hitPoints;
@@ -493,13 +534,15 @@ export function deriveStats(document: SheetDocument): DerivedStats {
       saveDc: spellSaveDcAdds.total,
       attack: spellAttackAdds.total,
     },
+    exhaustionPenalty: d20Penalty,
   };
 }
 
 /**
  * CD de magia e ataque mágico de uma magia com atributo próprio (design K3):
  * o modificador do atributo (já com valor manual), o PB e os efeitos da ficha,
- * sem o valor manual da CD e do ataque da ficha.
+ * sem o valor manual da CD e do ataque da ficha. O ataque perde o mesmo que
+ * o da ficha pela Exaustão (design T4).
  */
 export function spellcastingFor(
   stats: DerivedStats,
@@ -509,7 +552,7 @@ export function spellcastingFor(
   const pb = stats.values.proficiencyBonus.value;
   return {
     saveDc: 8 + mod + pb + stats.spellEffects.saveDc,
-    attack: mod + pb + stats.spellEffects.attack,
+    attack: mod + pb + stats.spellEffects.attack + stats.exhaustionPenalty,
   };
 }
 

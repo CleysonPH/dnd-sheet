@@ -1,26 +1,115 @@
 "use client";
 
-import { Button } from "@/components/form";
+import { useState } from "react";
+
+import { Button, TextField } from "@/components/form";
 import type { ExpressionVariables } from "@/engine/effects/expression";
 import { createEffect, type Effect } from "@/engine/effects/schema";
 import {
   EFFECT_PROFICIENCIES,
+  GRANT_VALUES,
   MAX_EFFECTS_PER_SOURCE,
+  grantValueError,
+  isGrantTarget,
   operationsFor,
   usesExpression,
   type EffectOperation,
   type EffectTarget,
+  type GrantTarget,
 } from "@/engine/effects/targets";
 
 import {
   EFFECT_PROFICIENCY_LABEL,
+  GRANT_SUGGESTIONS,
   OPERATION_LABEL,
   TARGET_GROUPS,
+  defaultGrantValue,
+  grantClosedLabel,
+  grantValueLabel,
   targetOptionLabel,
 } from "./effect-labels";
 import { ExpressionField } from "./expression-field";
 
 const SELECT = "rounded-md border border-line bg-bg px-2 py-2 text-sm";
+
+/**
+ * Valor de "conceder" (design T1): seleção nas listas fechadas; texto com
+ * sugestões nas livres, gravado só quando válido. Em armas, digitar
+ * "Simples" ou "Marciais" grava a categoria.
+ */
+function GrantValueField({
+  target,
+  name,
+  value,
+  onCommit,
+}: {
+  target: GrantTarget;
+  name: string;
+  value: string;
+  onCommit: (value: string) => void;
+}) {
+  const { values, free } = GRANT_VALUES[target];
+  const [raw, setRaw] = useState(grantValueLabel(target, value));
+
+  if (!free) {
+    return (
+      <div className="flex flex-col gap-1">
+        <label htmlFor={name} className="text-sm font-medium">
+          Valor
+        </label>
+        <select
+          id={name}
+          value={value}
+          onChange={(event) => onCommit(event.target.value)}
+          className={SELECT}
+        >
+          {values.map((option) => (
+            <option key={option} value={option}>
+              {grantClosedLabel(target, option)}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  }
+
+  const closedLabels = values.map((option) => grantClosedLabel(target, option));
+  const toValue = (text: string) => {
+    const index = closedLabels.findIndex(
+      (label) =>
+        label.toLocaleLowerCase("pt-BR") ===
+        text.trim().toLocaleLowerCase("pt-BR"),
+    );
+    return index >= 0 ? values[index]! : text.trim();
+  };
+  const error = grantValueError(target, toValue(raw)) ?? undefined;
+
+  return (
+    <div className="flex min-w-0 flex-1 flex-col gap-1">
+      <TextField
+        label="Valor"
+        name={name}
+        value={raw}
+        error={error}
+        autoComplete="off"
+        list={`${name}-suggestions`}
+        onChange={(event) => {
+          const text = event.target.value;
+          setRaw(text);
+          const next = toValue(text);
+          if (!grantValueError(target, next) && next !== value) onCommit(next);
+        }}
+      />
+      <datalist id={`${name}-suggestions`}>
+        {[...closedLabels, ...(GRANT_SUGGESTIONS[target] ?? [])].map(
+          (suggestion) => (
+            <option key={suggestion} value={suggestion} />
+          ),
+        )}
+      </datalist>
+    </div>
+  );
+}
 
 function EffectRow({
   effect,
@@ -53,11 +142,17 @@ function EffectRow({
             onChange={(event) => {
               const target = event.target.value as EffectTarget;
               const allowed = operationsFor(target);
-              // Mantém a operação se ela ainda vale para o novo alvo.
+              // Mantém a operação se ela ainda vale para o novo alvo; num
+              // alvo de "conceder", o valor precisa servir ao alvo.
+              const value =
+                isGrantTarget(target) && grantValueError(target, effect.value)
+                  ? defaultGrantValue(target)
+                  : effect.value;
               onChange({
                 ...effect,
                 target,
                 op: allowed.includes(effect.op) ? effect.op : allowed[0]!,
+                value,
               });
             }}
             className={SELECT}
@@ -92,7 +187,16 @@ function EffectRow({
             ))}
           </select>
         </div>
-        {usesExpression(effect.op) ? (
+        {effect.op === "grant" && isGrantTarget(effect.target) ? (
+          <GrantValueField
+            // Novo campo ao trocar de alvo, para o texto não ficar do anterior.
+            key={effect.target}
+            target={effect.target}
+            name={field("value")}
+            value={effect.value}
+            onCommit={(value) => onChange({ ...effect, value })}
+          />
+        ) : usesExpression(effect.op) ? (
           <ExpressionField
             label="Valor"
             placeholder="ex.: 10 + des.mod + con.mod"

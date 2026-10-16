@@ -4,6 +4,12 @@ import type {
   ProficiencyLevel,
   Skill,
 } from "@/engine/stats/keys";
+import type {
+  ArmorProficiency,
+  Condition,
+  DamageType,
+  WeaponCategory,
+} from "@/engine/traits/keys";
 
 /** Rótulos em português das chaves do engine (design S2). */
 
@@ -74,3 +80,49 @@ export function derivedLabel(key: DerivedKey): string {
       return OTHER_LABEL[key as OtherKey];
   }
 }
+
+export const ARMOR_PROFICIENCY_LABEL: Record<ArmorProficiency, string> = {
+  light: "Leve",
+  medium: "Média",
+  heavy: "Pesada",
+  shield: "Escudo",
+};
+
+export const WEAPON_CATEGORY_LABEL: Record<WeaponCategory, string> = {
+  simple: "Simples",
+  martial: "Marciais",
+};
+
+export const DAMAGE_TYPE_LABEL: Record<DamageType, string> = {
+  acid: "ácido",
+  bludgeoning: "concussão",
+  slashing: "cortante",
+  lightning: "elétrico",
+  force: "energia",
+  fire: "fogo",
+  cold: "frio",
+  necrotic: "necrótico",
+  piercing: "perfurante",
+  psychic: "psíquico",
+  radiant: "radiante",
+  thunder: "trovejante",
+  poison: "veneno",
+};
+
+export const CONDITION_LABEL: Record<Condition, string> = {
+  grappled: "Agarrado",
+  frightened: "Amedrontado",
+  stunned: "Atordoado",
+  prone: "Caído",
+  blinded: "Cego",
+  charmed: "Enfeitiçado",
+  poisoned: "Envenenado",
+  exhaustion: "Exaustão",
+  restrained: "Imobilizado",
+  incapacitated: "Incapacitado",
+  unconscious: "Inconsciente",
+  invisible: "Invisível",
+  paralyzed: "Paralisado",
+  petrified: "Petrificado",
+  deafened: "Surdo",
+};

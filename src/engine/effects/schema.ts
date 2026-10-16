@@ -6,6 +6,8 @@ import {
   EFFECT_PROFICIENCIES,
   EFFECT_TARGETS,
   MAX_EFFECTS_PER_SOURCE,
+  grantValueError,
+  isGrantTarget,
   operationsFor,
   usesExpression,
 } from "./targets";
@@ -28,6 +30,8 @@ export const effectSchema = z
     proficiency: z.enum(EFFECT_PROFICIENCIES),
     noArmor: z.boolean(),
     noShield: z.boolean(),
+    /** Item concedido pela operação "conceder" (design T1). */
+    value: z.string().max(50, "Use no máximo 50 caracteres"),
   })
   .superRefine((effect, ctx) => {
     if (!operationsFor(effect.target).includes(effect.op)) {
@@ -36,6 +40,12 @@ export const effectSchema = z
         message: "Operação incompatível com o alvo",
         path: ["op"],
       });
+    }
+    if (effect.op === "grant" && isGrantTarget(effect.target)) {
+      const error = grantValueError(effect.target, effect.value);
+      if (error) {
+        ctx.addIssue({ code: "custom", message: error, path: ["value"] });
+      }
     }
     if (usesExpression(effect.op)) {
       const parsed = parseExpression(effect.expression);
@@ -81,5 +91,6 @@ export function createEffect(id: string): Effect {
     proficiency: "proficient",
     noArmor: false,
     noShield: false,
+    value: "",
   };
 }

@@ -60,6 +60,20 @@ describe("createSheetDocument", () => {
     expect(document.speed).toBe(9);
     expect(document.overrides).toEqual({});
     expect(document.sources).toEqual([]);
+    expect(document.proficiencies).toEqual({
+      armor: { light: false, medium: false, heavy: false, shield: false },
+      weapons: { simple: false, martial: false, other: [] },
+      tools: [],
+      languages: [],
+    });
+    expect(document.defenses).toEqual({
+      resistances: [],
+      immunities: [],
+      vulnerabilities: [],
+      conditionImmunities: [],
+    });
+    expect(document.conditions).toEqual([]);
+    expect(document.exhaustion).toBe(0);
   });
 
   it("tira os espaços das pontas do nome", () => {
@@ -193,6 +207,69 @@ describe("sheetDocumentSchema", () => {
     expect(
       firstError({ ...valid, overrides: { hitPointsMax: "61" } }),
     ).not.toBeNull();
+  });
+});
+
+describe("proficiências, defesas e condições", () => {
+  function withProficiencies(patch: Record<string, unknown>) {
+    return withPart("proficiencies", patch);
+  }
+
+  it("aceita etiquetas e tira os espaços das pontas", () => {
+    const result = sheetDocumentSchema.parse(
+      withProficiencies({ languages: ["  Élfico ", "Comum"] }),
+    );
+    expect(result.proficiencies.languages).toEqual(["Élfico", "Comum"]);
+  });
+
+  it("recusa etiqueta repetida, sem diferenciar maiúsculas", () => {
+    expect(
+      firstError(withProficiencies({ languages: ["Élfico", "élfico"] })),
+    ).toMatchObject({
+      message: "Item repetido",
+      path: ["proficiencies", "languages", 1],
+    });
+  });
+
+  it("limita a 30 etiquetas de 1 a 50 caracteres", () => {
+    const tags = Array.from({ length: 31 }, (_, i) => `Ferramenta ${i}`);
+    expect(firstError(withProficiencies({ tools: tags }))).not.toBeNull();
+    expect(
+      firstError(withProficiencies({ tools: tags.slice(0, 30) })),
+    ).toBeNull();
+    expect(
+      firstError(withProficiencies({ tools: ["x".repeat(51)] })),
+    ).not.toBeNull();
+    expect(firstError(withProficiencies({ tools: ["   "] }))).not.toBeNull();
+  });
+
+  it("recusa tipo de dano repetido ou desconhecido", () => {
+    expect(
+      firstError(withPart("defenses", { resistances: ["fire", "fire"] })),
+    ).not.toBeNull();
+    expect(
+      firstError(withPart("defenses", { immunities: ["sonic"] })),
+    ).not.toBeNull();
+    expect(
+      firstError(
+        withPart("defenses", {
+          resistances: ["fire"],
+          vulnerabilities: ["fire"],
+          conditionImmunities: ["charmed", "exhaustion"],
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it("aceita as condições ativas sem a Exaustão e Exaustão de 0 a 6", () => {
+    expect(firstError({ ...valid, conditions: ["poisoned"] })).toBeNull();
+    expect(firstError({ ...valid, conditions: ["exhaustion"] })).not.toBeNull();
+    expect(
+      firstError({ ...valid, conditions: ["prone", "prone"] }),
+    ).not.toBeNull();
+    expect(firstError({ ...valid, exhaustion: 6 })).toBeNull();
+    expect(firstError({ ...valid, exhaustion: 7 })).not.toBeNull();
+    expect(firstError({ ...valid, exhaustion: 1.5 })).not.toBeNull();
   });
 });
 

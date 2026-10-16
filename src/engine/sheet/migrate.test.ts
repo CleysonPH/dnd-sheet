@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { createEffect } from "@/engine/effects/schema";
 import { createSource } from "@/engine/sources/rules";
 
 import { SHEET_SCHEMA_VERSION, createSheetDocument } from "./document";
@@ -244,6 +245,39 @@ describe("migrateSheetDocument", () => {
     expect(migrated.spellcastingAbility).toBe("none");
     expect(migrated.sources[0]).toMatchObject({ castingAbility: "sheet" });
     expect(migrated.sources[1]).toEqual(createSource("feat", "Robusto", "f1"));
+  });
+
+  it("leva o formato 8 ao 9 com as listas vazias e o valor dos efeitos", () => {
+    const feat = createSource("feat", "Robusto", "f1");
+    const effect: Record<string, unknown> = {
+      ...createEffect("e1"),
+      target: "hitPointsMax",
+      expression: "nivel * 2",
+    };
+    delete effect.value;
+    const formatEight: Record<string, unknown> = {
+      ...createSheetDocument("Thorin"),
+      schemaVersion: 8,
+      sources: [{ ...feat, effects: [effect] }],
+    };
+    delete formatEight.proficiencies;
+    delete formatEight.defenses;
+    delete formatEight.conditions;
+    delete formatEight.exhaustion;
+
+    const migrated = migrateSheetDocument(formatEight);
+    const fresh = createSheetDocument("Thorin");
+    expect(migrated.schemaVersion).toBe(9);
+    expect(migrated.proficiencies).toEqual(fresh.proficiencies);
+    expect(migrated.defenses).toEqual(fresh.defenses);
+    expect(migrated.conditions).toEqual([]);
+    expect(migrated.exhaustion).toBe(0);
+    expect(migrated.sources[0]?.effects[0]).toEqual({
+      ...createEffect("e1"),
+      target: "hitPointsMax",
+      expression: "nivel * 2",
+      value: "",
+    });
   });
 
   it("recusa documento que não valida depois de migrado", () => {

@@ -39,8 +39,9 @@ export function shortRest(
 
 /**
  * Regra de descanso longo de cada tracker, todos os espaços e a regra do
- * 5.5e: PV ao máximo, sem PV temporário, todos os dados de vida e testes
- * contra a morte zerados.
+ * 5.5e: PV ao máximo, sem PV temporário, todos os dados de vida, testes
+ * contra a morte zerados e 1 nível de Exaustão a menos. As condições ativas
+ * ficam como estão (design T8).
  */
 export function longRest(
   document: SheetDocument,
@@ -53,5 +54,6 @@ export function longRest(
     pactSlots: { ...document.pactSlots, used: 0 },
     hitPoints: { ...document.hitPoints, damage: 0, temp: 0, hitDiceSpent: 0 },
     deathSaves: { successes: 0, failures: 0 },
+    exhaustion: Math.max(0, document.exhaustion - 1),
   };
 }

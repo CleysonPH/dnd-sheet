@@ -380,6 +380,60 @@ describe("fichas", () => {
       expect((await stored(id))?.version).toBe(1);
     });
 
+    it("grava proficiências, defesas, condições, Exaustão e um efeito de conceder", async () => {
+      const { lyra } = await setup();
+      const id = await newSheet(lyra, "Thorin");
+      const base = edited("Thorin");
+      const heavyTraining = {
+        ...createSource("feat", "Treinamento com Armadura Pesada", "f1"),
+        effects: [
+          {
+            ...createEffect("e1"),
+            target: "proficiency.armor" as const,
+            op: "grant" as const,
+            expression: "",
+            value: "heavy",
+          },
+        ],
+      };
+      const document = {
+        ...base,
+        proficiencies: {
+          ...base.proficiencies,
+          armor: { light: true, medium: true, heavy: false, shield: true },
+          languages: ["Comum", "Anão"],
+        },
+        defenses: { ...base.defenses, resistances: ["poison" as const] },
+        conditions: ["poisoned" as const],
+        exhaustion: 2,
+        sources: [heavyTraining],
+      };
+
+      expect(await saveSheet(lyra, id, { baseVersion: 1, document })).toEqual({
+        status: "saved",
+        version: 2,
+      });
+      const saved = (await getSheet(lyra, id))?.document;
+      expect(saved?.proficiencies).toEqual(document.proficiencies);
+      expect(saved?.defenses.resistances).toEqual(["poison"]);
+      expect(saved?.conditions).toEqual(["poisoned"]);
+      expect(saved?.exhaustion).toBe(2);
+      expect(saved?.sources).toEqual([heavyTraining]);
+
+      expect(
+        await saveSheet(lyra, id, {
+          baseVersion: 2,
+          document: {
+            ...document,
+            proficiencies: {
+              ...document.proficiencies,
+              languages: ["Anão", "anão"],
+            },
+          },
+        }),
+      ).toEqual({ status: "invalid", reason: "schema" });
+    });
+
     it("grava trackers e espaços de magia", async () => {
       const { lyra } = await setup();
       const id = await newSheet(lyra, "Ária");
