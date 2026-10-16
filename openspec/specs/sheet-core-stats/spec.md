@@ -210,7 +210,7 @@ Uma ficha nova, e uma ficha gravada antes de existirem estes campos, SHALL come�
 - **THEN** a ficha mantém a identificação, mostra atributos 10, PV 28 de 28 (d8 no nível 5) e dados de vida 5/5 d8
 
 ### Requirement: Organização da ficha na tela
-A ficha SHALL ter, no topo, a faixa com CA, iniciativa, deslocamento, percepção passiva, bônus de proficiência, o bloco de PV com dano e cura, e os dados de vida. Cada atributo SHALL ser mostrado num bloco com valor, modificador, salvaguarda e as perícias daquele atributo. A ficha SHALL ser utilizável sem rolagem horizontal a partir de 360 px. A partir de 1024 px, os blocos de atributo SHALL ficar em 2 colunas e 3 linhas, com o cartão Recursos ao lado.
+A ficha SHALL ter, no topo, a faixa com CA, iniciativa, deslocamento, percepção passiva, bônus de proficiência, o bloco de PV com dano e cura, e os dados de vida. Cada atributo SHALL ser mostrado num bloco com valor, modificador, salvaguarda e as perícias daquele atributo. A ficha SHALL ser utilizável sem rolagem horizontal a partir de 360 px. A partir de 1024 px, os blocos de atributo SHALL ficar em 2 colunas e 3 linhas, com os cartões Recursos, Defesas e Proficiências, nessa ordem, ao lado. A faixa de condições SHALL ficar logo abaixo da faixa de topo. Abaixo de 1024 px, Recursos, Defesas e Proficiências SHALL vir antes dos blocos de atributo.
 
 #### Scenario: Celular
 - **WHEN** Lyra abre a ficha num celular com tela de 375 px de largura
@@ -218,7 +218,7 @@ A ficha SHALL ter, no topo, a faixa com CA, iniciativa, deslocamento, percepçã
 
 #### Scenario: Desktop
 - **WHEN** Lyra abre a ficha numa janela de 1280 px de largura
-- **THEN** a faixa de topo aparece numa linha, os seis blocos de atributo aparecem em 2 colunas e 3 linhas e o cartão Recursos aparece à direita deles
+- **THEN** a faixa de topo aparece numa linha, a faixa de condições logo abaixo dela, os seis blocos de atributo aparecem em 2 colunas e 3 linhas e os cartões Recursos, Defesas e Proficiências aparecem à direita deles, um abaixo do outro
 
 #### Scenario: Perícias dentro do atributo
 - **WHEN** Lyra abre Thorin, com DES 14, sem proficiência em Acrobacia, Furtividade e Prestidigitação
@@ -229,7 +229,7 @@ A ficha SHALL ter, no topo, a faixa com CA, iniciativa, deslocamento, percepçã
 - **THEN** o lugar da CA na faixa de topo mostra o valor calculado, 12, e não mais "—"
 
 ### Requirement: Modos Jogar e Editar
-A ficha SHALL ter dois modos, alternados por uma chave sempre visível. Em Jogar, os valores SHALL aparecer só para leitura, e apenas dano, cura, PV temporário, dados de vida, testes contra a morte, a inspiração heroica, o encerramento da concentração, as ações de mesa sobre as fontes, os recursos e os descansos SHALL ser alteráveis. Em Editar, todos os campos, os valores manuais e as fontes SHALL ser alteráveis. A ficha SHALL abrir em Jogar se algum atributo for diferente de 10, e em Editar caso contrário. Trocar de modo SHALL não alterar a ficha.
+A ficha SHALL ter dois modos, alternados por uma chave sempre visível. Em Jogar, os valores SHALL aparecer só para leitura, e apenas dano, cura, PV temporário, dados de vida, testes contra a morte, a inspiração heroica, o encerramento da concentração, as condições ativas, a Exaustão, as ações de mesa sobre as fontes, os recursos e os descansos SHALL ser alteráveis. Em Editar, todos os campos, os valores manuais e as fontes SHALL ser alteráveis. A ficha SHALL abrir em Jogar se algum atributo for diferente de 10, e em Editar caso contrário. Trocar de modo SHALL não alterar a ficha.
 
 #### Scenario: Ficha preenchida abre em Jogar
 - **WHEN** Lyra abre Thorin, que tem FOR 16
@@ -241,7 +241,7 @@ A ficha SHALL ter dois modos, alternados por uma chave sempre visível. Em Jogar
 
 #### Scenario: Controles de mesa no modo Jogar
 - **WHEN** Thorin está aberto em Jogar
-- **THEN** Lyra pode aplicar dano e cura, alterar o PV temporário, gastar e recuperar dados de vida, equipar e sintonizar itens, mudar a quantidade de itens, preparar magias, gastar e recuperar trackers e espaços de magia, fazer descansos, ligar e desligar a inspiração heroica e encerrar a concentração, e não pode alterar atributos, nível, proficiências, valores manuais, o máximo dos espaços de magia nem criar, editar ou excluir fontes
+- **THEN** Lyra pode aplicar dano e cura, alterar o PV temporário, gastar e recuperar dados de vida, equipar e sintonizar itens, mudar a quantidade de itens, preparar magias, gastar e recuperar trackers e espaços de magia, fazer descansos, ligar e desligar a inspiração heroica, encerrar a concentração, marcar condições e mudar a Exaustão, e não pode alterar atributos, nível, proficiências, defesas, valores manuais, o máximo dos espaços de magia nem criar, editar ou excluir fontes
 
 #### Scenario: Alternar para Editar
 - **WHEN** Thorin está em Jogar e Lyra escolhe Editar
