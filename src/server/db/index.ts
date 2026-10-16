@@ -2,15 +2,15 @@ import "server-only";
 
 import { attachDatabasePool } from "@vercel/functions";
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
 
 import { getEnv } from "@/lib/env";
 
+import { RetryingPool } from "./retrying-pool";
 import * as schema from "./schema";
 
 export type Database = NodePgDatabase<typeof schema>;
 
-let pool: Pool | undefined;
+let pool: RetryingPool | undefined;
 let db: Database | undefined;
 
 /**
@@ -18,9 +18,9 @@ let db: Database | undefined;
  * Na Vercel, attachDatabasePool libera as conexões ociosas antes de a função
  * suspender; fora dela, não faz nada (design Y2).
  */
-export function getPool(): Pool {
+export function getPool(): RetryingPool {
   if (!pool) {
-    pool = new Pool({ connectionString: getEnv().DATABASE_URL });
+    pool = new RetryingPool({ connectionString: getEnv().DATABASE_URL });
     attachDatabasePool(pool);
   }
   return pool;

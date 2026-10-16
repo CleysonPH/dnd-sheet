@@ -9,17 +9,18 @@
   - `npm run build` passa;
   - `VERCEL_ENV=production npm run vercel-build` com o banco de dev aplica as migrações e constrói;
   - `docker compose --profile dev up -d` continua subindo o banco e o Mailpit
-- [ ] 1.5 Atualizar o README: deploy na Vercel, variáveis de produção, seed em produção, recuperação de dados com o histórico do Neon e o comando de `pg_dump` manual (Y3, Y5, Y6). Rodar `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:int`, `npm run build` e `npm run format:check` e verificar que todos passam. Fazer o push para a `main`, com a confirmação do usuário
+- [x] 1.5 Atualizar o README: deploy na Vercel, variáveis de produção, seed em produção, recuperação de dados com o histórico do Neon e o comando de `pg_dump` manual (Y3, Y5, Y6). Rodar `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:int`, `npm run build` e `npm run format:check` e verificar que todos passam. Fazer o push para a `main`, com a confirmação do usuário
 
 ## 2. Infraestrutura (cada passo com a confirmação do usuário)
 
-- [ ] 2.1 Criar no Neon o projeto `dnd-sheet` em `aws-sa-east-1` (Y1). Verificar pelo MCP que o projeto existe, o branch `main` está ativo e as URLs com e sem pooler respondem a `select 1`
-- [ ] 2.2 Criar na Vercel o projeto `dnd-sheet` ligado a `CleysonPH/dnd-sheet` e gravar as variáveis de Production sem mostrar os valores, deixando `SMTP_PASSWORD` para o usuário preencher no painel (Y3). Verificar pelo MCP que o projeto existe, ligado ao repositório, com as variáveis criadas no ambiente Production
-- [ ] 2.3 Depois de o usuário gravar a senha SMTP, disparar o deploy de produção e acompanhar o build (Y3). Verificar pelos logs que as migrações 0000 a 0003 foram aplicadas, que o deploy está `READY` e que o endereço de produção responde por HTTPS com a página de login
+- [x] 2.1 Criar no Neon o projeto `dnd-sheet` em `aws-sa-east-1` (Y1). Verificar pelo MCP que o projeto existe, o branch `main` está ativo e as URLs com e sem pooler respondem a `select 1`
+- [x] 2.2 Criar na Vercel o projeto `dnd-sheet` ligado a `CleysonPH/dnd-sheet` e gravar as variáveis de Production sem mostrar os valores, deixando `SMTP_PASSWORD` para o usuário preencher no painel (Y3). Verificar pelo MCP que o projeto existe, ligado ao repositório, com as variáveis criadas no ambiente Production
+- [x] 2.3 Depois de o usuário gravar a senha SMTP, disparar o deploy de produção e acompanhar o build (Y3). Verificar pelos logs que as migrações 0000 a 0003 foram aplicadas, que o deploy está `READY` e que o endereço de produção responde por HTTPS com a página de login
 
 ## 3. Produção no ar
 
-- [ ] 3.1 Rodar o seed do primeiro admin contra o Neon, com a URL direta só no ambiente do comando (Y5). Verificar com o usuário que ele entra, troca a senha e corrige o e-mail do admin para um endereço real
+- [x] 3.1 Rodar o seed do primeiro admin contra o Neon, com a URL direta só no ambiente do comando (Y5). Verificar com o usuário que ele entra, troca a senha e corrige o e-mail do admin para um endereço real
+- [ ] 3.5 Criar o `RetryingPool` e usá-lo no `getPool` (Y2), com um teste de integração em que um proxy TCP derruba a primeira conexão: o `Pool` comum falha, e o `RetryingPool` conecta na segunda tentativa e faz `select 1`. Uma falha que não é de conexão (SQL inválido) não é repetida. Verificar que `npm run test:int` passa e, depois do push e do deploy, que a primeira requisição depois de mais de 5 minutos parado não gera erro em `get_runtime_errors`
 - [ ] 3.2 Fazer a verificação em produção (Y5). Verificar:
   - "Esqueci a senha" entrega o e-mail com o link, e a redefinição funciona;
   - uma ficha nova aparece na lista com a hora de Brasília;
