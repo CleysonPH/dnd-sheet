@@ -210,7 +210,7 @@ Uma ficha nova, e uma ficha gravada antes de existirem estes campos, SHALL come�
 - **THEN** a ficha mantém a identificação, mostra atributos 10, PV 28 de 28 (d8 no nível 5) e dados de vida 5/5 d8
 
 ### Requirement: Organização da ficha na tela
-A ficha SHALL ter, no topo, a faixa com CA, iniciativa, deslocamento, percepção passiva, bônus de proficiência, o bloco de PV com dano e cura, e os dados de vida. Cada atributo SHALL ser mostrado num bloco com valor, modificador, salvaguarda e as perícias daquele atributo. A ficha SHALL ser utilizável sem rolagem horizontal a partir de 360 px. A partir de 1024 px, os blocos de atributo SHALL ficar em 2 colunas e 3 linhas, com os cartões Recursos, Defesas e Proficiências, nessa ordem, ao lado. A faixa de condições SHALL ficar logo abaixo da faixa de topo. Abaixo de 1024 px, Recursos, Defesas e Proficiências SHALL vir antes dos blocos de atributo.
+A ficha SHALL ter, no topo, a faixa com CA, iniciativa, deslocamento, percepção passiva, bônus de proficiência, o bloco de PV com dano e cura, e os dados de vida. Cada atributo SHALL ser mostrado num bloco com valor, modificador, salvaguarda e as perícias daquele atributo. A ficha SHALL ser utilizável sem rolagem horizontal a partir de 360 px. A partir de 1024 px, os blocos de atributo SHALL ficar em 2 colunas e 3 linhas, com os cartões Ataques, Recursos, Defesas e Proficiências, nessa ordem, ao lado. A faixa de condições SHALL ficar logo abaixo da faixa de topo. Abaixo de 1024 px, Ataques, Recursos, Defesas e Proficiências SHALL vir antes dos blocos de atributo.
 
 #### Scenario: Celular
 - **WHEN** Lyra abre a ficha num celular com tela de 375 px de largura
@@ -218,7 +218,11 @@ A ficha SHALL ter, no topo, a faixa com CA, iniciativa, deslocamento, percepçã
 
 #### Scenario: Desktop
 - **WHEN** Lyra abre a ficha numa janela de 1280 px de largura
-- **THEN** a faixa de topo aparece numa linha, a faixa de condições logo abaixo dela, os seis blocos de atributo aparecem em 2 colunas e 3 linhas e os cartões Recursos, Defesas e Proficiências aparecem à direita deles, um abaixo do outro
+- **THEN** a faixa de topo aparece numa linha, a faixa de condições logo abaixo dela, os seis blocos de atributo aparecem em 2 colunas e 3 linhas e os cartões Ataques, Recursos, Defesas e Proficiências aparecem à direita deles, um abaixo do outro
+
+#### Scenario: Ataques no celular
+- **WHEN** Lyra abre Thorin, com o Machado de Batalha equipado, num celular com tela de 375 px
+- **THEN** o cartão Ataques aparece logo depois da faixa de condições, antes de Recursos, e as linhas de ataque cabem sem rolagem horizontal
 
 #### Scenario: Perícias dentro do atributo
 - **WHEN** Lyra abre Thorin, com DES 14, sem proficiência em Acrobacia, Furtividade e Prestidigitação
