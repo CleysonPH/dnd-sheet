@@ -13,8 +13,20 @@ export type SourceMigration = (
   source: Record<string, unknown>,
 ) => Record<string, unknown>;
 
+/**
+ * Formato 9 -> 10 (design G9): toda fonte ganha a lista de ações, e o item, a
+ * categoria de arma.
+ */
+export const migrateSourceV9ToV10: SourceMigration = (source) => ({
+  ...source,
+  actions: [],
+  ...(source.kind === "item" ? { weaponCategory: "simple" } : {}),
+});
+
 /** Passos por versão de origem: `SOURCE_MIGRATIONS[n]` leva de n para n + 1. */
-export const SOURCE_MIGRATIONS: Readonly<Record<number, SourceMigration>> = {};
+export const SOURCE_MIGRATIONS: Readonly<Record<number, SourceMigration>> = {
+  9: migrateSourceV9ToV10,
+};
 
 /** Primeira versão em que há fontes soltas (o compêndio nasce no formato 9). */
 export const FIRST_SOURCE_VERSION = 9;

@@ -1,3 +1,5 @@
+import { migrateSourceV9ToV10 } from "@/engine/sources/migrate";
+
 import {
   SHEET_SCHEMA_VERSION,
   sheetDocumentSchema,
@@ -151,6 +153,14 @@ export const migrateV8ToV9: SheetMigration = (document) => ({
   exhaustion: 0,
 });
 
+/** Formato 9 -> 10: o passo das fontes em cada fonte da ficha (design G9). */
+export const migrateV9ToV10: SheetMigration = (document) => ({
+  ...document,
+  sources: (document.sources as Record<string, unknown>[]).map(
+    migrateSourceV9ToV10,
+  ),
+});
+
 /** Migrações reais do formato. */
 export const SHEET_MIGRATIONS: readonly SheetMigration[] = [
   migrateV1ToV2,
@@ -161,6 +171,7 @@ export const SHEET_MIGRATIONS: readonly SheetMigration[] = [
   migrateV6ToV7,
   migrateV7ToV8,
   migrateV8ToV9,
+  migrateV9ToV10,
 ];
 
 export class SheetFormatError extends Error {

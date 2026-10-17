@@ -83,6 +83,7 @@ export function createSource<K extends SourceKind>(
     description: "",
     effects: [],
     trackers: [],
+    actions: [],
   };
   const byKind: { [T in SourceKind]: SourceOf<T> } = {
     feat: { ...base, kind: "feat", category: "general" } satisfies Feat,
@@ -105,6 +106,7 @@ export function createSource<K extends SourceKind>(
       armorType: "light",
       armorBase: 10,
       shieldBonus: 2,
+      weaponCategory: "simple",
     } satisfies Item,
     spell: {
       ...base,

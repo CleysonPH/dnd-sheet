@@ -35,6 +35,17 @@ describe("migrateSource", () => {
     expect(migrated).toEqual(robusto);
   });
 
+  it("leva uma fonte do formato 9 ao atual", () => {
+    const axe = {
+      ...createSource("item", "Machado Grande", "i1"),
+      category: "weapon" as const,
+    };
+    const formatNine: Record<string, unknown> = { ...axe };
+    delete formatNine.actions;
+    delete formatNine.weaponCategory;
+    expect(migrateSource(formatNine, 9)).toEqual(axe);
+  });
+
   it("recusa fonte inválida ou versão fora do intervalo", () => {
     expect(() =>
       migrateSource({ ...robusto, name: "" }, SHEET_SCHEMA_VERSION),

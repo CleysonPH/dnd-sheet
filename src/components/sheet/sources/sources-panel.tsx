@@ -1,12 +1,19 @@
 "use client";
 
-import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import {
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 
 import {
   COMPENDIUM_DRAG_TYPE,
   CompendiumPanel,
 } from "@/components/compendium/compendium-panel";
 import { Badge, Button, Card, TextField } from "@/components/form";
+import { actionContext, deriveSourceActions } from "@/engine/attacks/derive";
 import { MAX_SOURCES, type SourceKind } from "@/engine/sources/kinds";
 import {
   ATTUNEMENT_LIMIT,
@@ -153,6 +160,11 @@ export function SourcesPanel({ document, stats, update }: SheetPartProps) {
   const [tab, setTab] = useState<Tab>("features");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [compendiumOpen, setCompendiumOpen] = useState(false);
+  // Contexto das linhas de ação dos cartões (spec sheet-attacks).
+  const actions = useMemo(
+    () => actionContext(document, stats),
+    [document, stats],
+  );
   const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(
     null,
   );
@@ -248,6 +260,7 @@ export function SourcesPanel({ document, stats, update }: SheetPartProps) {
       variables={stats.variables}
       issues={stats.issues.filter((issue) => issue.sourceId === source.id)}
       castingLabel={castingLabel(source)}
+      actionLines={deriveSourceActions(source, actions)}
     />
   );
 

@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { createAction, createPart } from "@/engine/attacks/schema";
 import { createSheetDocument } from "@/engine/sheet/document";
 import { createEffect } from "@/engine/effects/schema";
 import { createTracker } from "@/engine/resources/schema";
@@ -432,6 +433,68 @@ describe("fichas", () => {
           },
         }),
       ).toEqual({ status: "invalid", reason: "schema" });
+    });
+
+    it("grava ações de ataque, salvaguarda e automática", async () => {
+      const { lyra } = await setup();
+      const id = await newSheet(lyra, "Ária");
+      const lute = {
+        ...createSource("item", "Alaúde do Trovão Retumbante", "i1"),
+        category: "weapon" as const,
+        weaponCategory: "simple" as const,
+        actions: [
+          {
+            ...createAction({ kind: "item", category: "weapon" }, "a1"),
+            attackAbility: "cha" as const,
+            parts: [
+              createPart("p1", { die: "d4", ability: "attack" }),
+              createPart("p2", { count: 2, die: "d8", type: "thunder" }),
+            ],
+          },
+        ],
+      };
+      const fireball = {
+        ...createSource("spell", "Bola de Fogo", "s1"),
+        level: 3,
+        actions: [
+          {
+            ...createAction({ kind: "spell" }, "a1"),
+            resolution: "save" as const,
+            onSuccess: "half" as const,
+            parts: [createPart("p1", { count: 8, type: "fire", upcast: 1 })],
+          },
+        ],
+      };
+      const healingWord = {
+        ...createSource("spell", "Palavra Curativa", "s2"),
+        level: 1,
+        actions: [
+          {
+            ...createAction({ kind: "spell" }, "a1"),
+            resolution: "auto" as const,
+            parts: [
+              createPart("p1", {
+                count: 2,
+                die: "d4",
+                ability: "spellcasting",
+                type: "healing",
+              }),
+            ],
+          },
+        ],
+      };
+      const document = {
+        ...edited("Ária"),
+        sources: [lute, fireball, healingWord],
+      };
+
+      expect(await saveSheet(lyra, id, { baseVersion: 1, document })).toEqual({
+        status: "saved",
+        version: 2,
+      });
+      expect((await getSheet(lyra, id))?.document.sources).toEqual(
+        document.sources,
+      );
     });
 
     it("grava trackers e espaços de magia", async () => {

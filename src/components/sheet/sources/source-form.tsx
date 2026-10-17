@@ -25,6 +25,8 @@ import {
 import type { ExpressionVariables } from "@/engine/effects/expression";
 import { CASTING_ABILITIES } from "@/engine/stats/keys";
 
+import { WEAPON_CATEGORIES } from "@/engine/traits/keys";
+
 import { ABILITY_LABEL } from "../labels";
 import { NumberField } from "../number-field";
 import { formatDecimal, parseDecimal, parseInteger } from "../parse";
@@ -37,6 +39,7 @@ import {
   TRAIT_ORIGIN_LABEL,
   spellLevelLabel,
 } from "./labels";
+import { ActionsEditor } from "./actions-editor";
 import { EffectsEditor } from "./effects-editor";
 import { SchemaTextField } from "./schema-text-field";
 import { TrackersEditor } from "./trackers-editor";
@@ -120,6 +123,9 @@ function entries<K extends string>(
   return keys.map((key) => [key, labels[key]] as const);
 }
 
+/** Categoria de uma arma, no singular (a lista de proficiências usa o plural). */
+const WEAPON_KIND_LABEL = { simple: "Simples", martial: "Marcial" } as const;
+
 const LEVELS = Array.from(
   { length: 10 },
   (_, level) => [level, spellLevelLabel(level)] as const,
@@ -183,6 +189,12 @@ export function SourceForm({
       {source.kind === "spell" && (
         <SpellFields spell={source} onChange={onChange} field={field} />
       )}
+
+      <ActionsEditor
+        source={source}
+        variables={variables}
+        onChange={(actions) => onChange({ actions })}
+      />
 
       <TrackersEditor
         sourceId={source.id}
@@ -272,6 +284,19 @@ function ItemFields({
             value={item.armorBase}
             parse={(text) => parseInteger(text, armorBaseSchema)}
             onCommit={(armorBase) => onChange({ armorBase })}
+          />
+        </div>
+      )}
+      {item.category === "weapon" && (
+        <div className="grid gap-3 sm:grid-cols-4">
+          <SelectField
+            label="Categoria de arma"
+            name={field("weaponCategory")}
+            value={item.weaponCategory}
+            options={WEAPON_CATEGORIES.map(
+              (category) => [category, WEAPON_KIND_LABEL[category]] as const,
+            )}
+            onChange={(weaponCategory) => onChange({ weaponCategory })}
           />
         </div>
       )}

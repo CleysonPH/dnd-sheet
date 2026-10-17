@@ -287,6 +287,7 @@ describe("sources", () => {
     description: "",
     effects: [],
     trackers: [],
+    actions: [],
     category: "general",
   };
   const trait = {
@@ -296,6 +297,7 @@ describe("sources", () => {
     description: "Enquanto em **Fúria**",
     effects: [],
     trackers: [],
+    actions: [],
     origin: "class",
     from: "Bárbaro",
   };
@@ -314,8 +316,10 @@ describe("sources", () => {
     armorType: "light",
     armorBase: 10,
     shieldBonus: 2,
+    weaponCategory: "simple",
     effects: [],
     trackers: [],
+    actions: [],
   };
   const spell = {
     id: "s1",
@@ -339,6 +343,7 @@ describe("sources", () => {
     active: false,
     effects: [],
     trackers: [],
+    actions: [],
   };
 
   function withSources(sources: unknown[]) {

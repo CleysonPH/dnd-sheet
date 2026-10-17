@@ -155,16 +155,19 @@ describe("migrateSheetDocument", () => {
         armorType: "light",
         armorBase: 10,
         shieldBonus: 2,
+        weaponCategory: "simple",
+        actions: [],
       },
       {
         ...withoutPrepared(spell),
         effects: [],
         trackers: [],
+        actions: [],
         active: false,
         preparation: "prepared",
         castingAbility: "sheet",
       },
-      { ...trait, effects: [], trackers: [] },
+      { ...trait, effects: [], trackers: [], actions: [] },
     ]);
   });
 
@@ -248,7 +251,10 @@ describe("migrateSheetDocument", () => {
   });
 
   it("leva o formato 8 ao 9 com as listas vazias e o valor dos efeitos", () => {
-    const feat = createSource("feat", "Robusto", "f1");
+    const feat: Record<string, unknown> = {
+      ...createSource("feat", "Robusto", "f1"),
+    };
+    delete feat.actions;
     const effect: Record<string, unknown> = {
       ...createEffect("e1"),
       target: "hitPointsMax",
@@ -267,7 +273,7 @@ describe("migrateSheetDocument", () => {
 
     const migrated = migrateSheetDocument(formatEight);
     const fresh = createSheetDocument("Thorin");
-    expect(migrated.schemaVersion).toBe(9);
+    expect(migrated.schemaVersion).toBe(SHEET_SCHEMA_VERSION);
     expect(migrated.proficiencies).toEqual(fresh.proficiencies);
     expect(migrated.defenses).toEqual(fresh.defenses);
     expect(migrated.conditions).toEqual([]);
@@ -278,6 +284,30 @@ describe("migrateSheetDocument", () => {
       expression: "nivel * 2",
       value: "",
     });
+  });
+
+  it("leva o formato 9 ao 10 com as fontes sem ações e as armas simples", () => {
+    const strip = (source: Record<string, unknown>) => {
+      const copy = { ...source };
+      delete copy.actions;
+      delete copy.weaponCategory;
+      return copy;
+    };
+    const axe = {
+      ...createSource("item", "Machado Grande", "i1"),
+      category: "weapon" as const,
+      equipped: true,
+    };
+    const spell = { ...createSource("spell", "Sono", "s1"), level: 1 };
+    const formatNine: Record<string, unknown> = {
+      ...createSheetDocument("Thorin"),
+      schemaVersion: 9,
+      sources: [strip(axe), strip(spell)],
+    };
+
+    const migrated = migrateSheetDocument(formatNine);
+    expect(migrated.schemaVersion).toBe(10);
+    expect(migrated.sources).toEqual([axe, spell]);
   });
 
   it("recusa documento que não valida depois de migrado", () => {

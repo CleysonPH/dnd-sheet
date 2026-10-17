@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { createAction } from "@/engine/attacks/schema";
 import { createEffect } from "@/engine/effects/schema";
 import { SHEET_SCHEMA_VERSION } from "@/engine/sheet/document";
 import { createSource } from "@/engine/sources/rules";
@@ -79,6 +80,20 @@ describe("compêndio", () => {
 
     const [entry] = await searchEntries(mestre, { query: "robu" });
     expect(entry).toEqual({ id, source: robusto });
+  });
+
+  it("admin salva uma entrada com ações, e a cópia leva as ações", async () => {
+    const { mestre } = await setup();
+    const id = await created(
+      await createEntry(mestre, { kind: "spell", name: "Raio de Fogo" }),
+    );
+    const fireBolt: Source = {
+      ...createSource("spell", "Raio de Fogo", id),
+      actions: [createAction({ kind: "spell" }, "a1")],
+    };
+    expect(await saveEntry(mestre, id, fireBolt)).toEqual({ status: "saved" });
+    const [entry] = await searchEntries(mestre, { query: "raio" });
+    expect(entry?.source.actions).toEqual(fireBolt.actions);
   });
 
   it("busca sem acentos, filtra por tipo, ordena por nome", async () => {
@@ -206,6 +221,29 @@ describe("compêndio", () => {
     expect(
       await sendToCompendium(mestre, createSource("feat", "Mais um", "m")),
     ).toEqual({ ok: false, error: "limit" });
+  });
+
+  it("entrada gravada no formato 9 é lida no formato atual", async () => {
+    const { lyra } = await setup();
+    const axe = {
+      ...createSource("item", "Machado Grande", "i1"),
+      category: "weapon" as const,
+    };
+    const formatNine: Record<string, unknown> = { ...axe };
+    delete formatNine.actions;
+    delete formatNine.weaponCategory;
+    await getDb()
+      .insert(compendiumEntry)
+      .values({
+        id: axe.id,
+        kind: axe.kind,
+        name: axe.name,
+        searchName: searchKey(axe.name),
+        schemaVersion: 9,
+        data: formatNine,
+      });
+    const [entry] = await searchEntries(lyra, { query: "machado" });
+    expect(entry?.source).toEqual(axe);
   });
 
   it("excluir tira a entrada do compêndio", async () => {

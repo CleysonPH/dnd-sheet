@@ -46,7 +46,7 @@ function useOverrideControl() {
 }
 
 /** Parcelas de um valor (design E5): base, efeitos e os não usados. */
-function Contributions({
+export function Contributions({
   parts,
   format,
 }: {
@@ -82,7 +82,7 @@ function Contributions({
 }
 
 /** Caixa dos painéis: no celular presa ao pé da tela; a partir de `sm`, abaixo do valor. */
-function PanelShell({
+export function PanelShell({
   id,
   ariaLabel,
   align,

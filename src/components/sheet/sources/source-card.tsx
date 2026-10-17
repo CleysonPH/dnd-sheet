@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 
 import { Badge, Button } from "@/components/form";
 import { Markdown } from "@/components/markdown";
+import type { ActionLine } from "@/engine/attacks/derive";
 import type { ExpressionVariables } from "@/engine/effects/expression";
 import { currentOf, trackerMax } from "@/engine/resources/trackers";
 import { isItemActive } from "@/engine/sources/rules";
@@ -26,6 +27,7 @@ import {
 } from "./labels";
 import { SendToCompendium } from "@/components/compendium/send-to-compendium";
 
+import { ActionSummaries } from "../attacks/action-summaries";
 import { useIsSheetAdmin } from "../sheet-admin";
 import { describeEffect } from "./effect-labels";
 import { SourceForm, type SourcePatch } from "./source-form";
@@ -243,8 +245,11 @@ export function SourceCard({
   variables,
   issues,
   castingLabel,
+  actionLines,
 }: {
   source: Source;
+  /** Ações da fonte já calculadas (spec sheet-attacks). */
+  actionLines: ActionLine[];
   variables: ExpressionVariables;
   /** CD e ataque de magia com atributo próprio, já formatados. */
   castingLabel?: string;
@@ -306,6 +311,11 @@ export function SourceCard({
         </div>
       </div>
 
+      <ActionSummaries
+        lines={actionLines}
+        label={`Ações de ${source.name}`}
+        className="px-3 pb-2"
+      />
       {source.trackers.length > 0 && (
         <ul
           aria-label={`Trackers de ${source.name}`}

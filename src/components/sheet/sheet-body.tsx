@@ -3,6 +3,7 @@
 import { ABILITIES } from "@/engine/stats/keys";
 
 import { AbilityBlock } from "./ability-block";
+import { AttacksCard } from "./attacks/attacks-card";
 import { ConditionsStrip } from "./conditions-strip";
 import { HitDiceCard } from "./hit-dice-card";
 import { HitPointsCard } from "./hit-points-card";
@@ -30,11 +31,12 @@ export function SheetBody(part: SheetPartProps) {
         <HitDiceCard {...part} />
       </div>
       <ConditionsStrip {...part} />
-      {/* DOM: Recursos, Defesas e Proficiências antes dos atributos (ordem do
-          celular). A partir de lg, atributos 2x3 à esquerda e os três cartões
-          empilhados à direita (design R3, T7). */}
+      {/* DOM: Ataques, Recursos, Defesas e Proficiências antes dos atributos
+          (ordem do celular). A partir de lg, atributos 2x3 à esquerda e os
+          cartões empilhados à direita (design R3, T7, G8). */}
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div className="flex min-w-0 flex-col gap-4 lg:col-start-2 lg:row-start-1">
+          <AttacksCard {...part} />
           <ResourcesCard {...part} />
           <DefensesCard {...part} />
           <ProficienciesCard {...part} />

@@ -22,7 +22,7 @@ Este documento registra decisões de nível de arquitetura. Os detalhes de cada 
 - Compêndio, catálogo compartilhado ou SRD pré-carregado.
 - Mesas/campanhas e visão do mestre (por enquanto só o dono vê a ficha).
 - Cadastro público de contas.
-- Automação completa de regras (rolagem de dados, condições de combate, níveis de classe automáticos).
+- Automação completa de regras (rolagem de dados, condições de combate, níveis de classe automáticos). A change `attacks` mostra o acerto, a CD e o dano já calculados, mas não rola dados.
 - Edição colaborativa em tempo real.
 
 ## Decisions

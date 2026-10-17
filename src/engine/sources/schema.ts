@@ -1,8 +1,10 @@
 import { z } from "zod";
 
+import { actionsSchema } from "@/engine/attacks/schema";
 import { effectsSchema } from "@/engine/effects/schema";
 import { trackersSchema } from "@/engine/resources/schema";
 import { CASTING_ABILITIES } from "@/engine/stats/keys";
+import { WEAPON_CATEGORIES } from "@/engine/traits/keys";
 
 import {
   ARMOR_TYPES,
@@ -60,6 +62,7 @@ const base = {
   description: sourceDescriptionSchema,
   effects: effectsSchema,
   trackers: trackersSchema,
+  actions: actionsSchema,
 };
 
 export const featSchema = z.strictObject({
@@ -89,6 +92,8 @@ export const itemSchema = z.strictObject({
   armorType: z.enum(ARMOR_TYPES),
   armorBase: armorBaseSchema,
   shieldBonus: shieldBonusSchema,
+  /** Usada quando a categoria é arma, na proficiência automática (G2). */
+  weaponCategory: z.enum(WEAPON_CATEGORIES),
 });
 
 export const spellSchema = z.strictObject({

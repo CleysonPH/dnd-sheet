@@ -1,6 +1,10 @@
 import { Badge } from "@/components/form";
 import type { Source } from "@/engine/sources/schema";
 
+import {
+  ActionSummaries,
+  exampleActionLines,
+} from "../sheet/attacks/action-summaries";
 import { describeEffect } from "../sheet/sources/effect-labels";
 import { sourceSummary, spellLevelLabel } from "../sheet/sources/labels";
 
@@ -11,7 +15,10 @@ export const KIND_LABEL: Record<Source["kind"], string> = {
   spell: "Magia",
 };
 
-/** Nome, tipo, dados principais e resumo dos efeitos de uma entrada (B7). */
+/**
+ * Nome, tipo, dados principais, resumo dos efeitos e ações de uma entrada
+ * (B7), estas com os valores de uma ficha nova.
+ */
 export function EntrySummary({
   source,
   badge,
@@ -35,6 +42,11 @@ export function EntrySummary({
       </div>
       {details && <p className="text-xs text-muted">{details}</p>}
       {effects && <p className="text-xs text-muted">{effects}</p>}
+      <ActionSummaries
+        lines={exampleActionLines(source)}
+        label={`Ações de ${source.name}`}
+        className="text-muted"
+      />
     </div>
   );
 }

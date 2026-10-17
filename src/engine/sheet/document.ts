@@ -31,7 +31,7 @@ import {
  * Toda mudança no schema abaixo precisa incrementar esta constante e
  * acrescentar em migrate.ts uma migração da versão anterior, com teste.
  */
-export const SHEET_SCHEMA_VERSION = 9;
+export const SHEET_SCHEMA_VERSION = 10;
 
 /** Tamanho máximo do documento serializado, em bytes. */
 export const SHEET_MAX_BYTES = 256 * 1024;
