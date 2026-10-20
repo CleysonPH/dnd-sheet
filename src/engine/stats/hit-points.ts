@@ -23,6 +23,33 @@ function hitPointsMax(document: SheetDocument): number {
   return deriveStats(document).values.hitPointsMax.value;
 }
 
+type HitPointsState = { damage: number; temp: number };
+
+/**
+ * Regra do dano, comum ao personagem e ao companheiro (design H5): o PV
+ * temporário absorve primeiro e o dano não passa do máximo.
+ */
+export function damageState(
+  state: HitPointsState,
+  max: number,
+  amount: number,
+): HitPointsState {
+  const absorbed = Math.min(state.temp, amount);
+  return {
+    temp: state.temp - absorbed,
+    damage: Math.min(max, state.damage + amount - absorbed),
+  };
+}
+
+/** Regra da cura: o dano é limitado ao máximo antes de subtrair. */
+export function healedDamage(
+  damage: number,
+  max: number,
+  amount: number,
+): number {
+  return Math.max(0, Math.min(damage, max) - amount);
+}
+
 /**
  * O PV temporário absorve o dano primeiro; o resto vira dano sofrido, que
  * não passa do PV máximo (o PV atual não fica abaixo de 0). Chegar a 0 PV
@@ -32,15 +59,11 @@ export function applyDamage(
   document: SheetDocument,
   amount: number,
 ): SheetDocument {
-  const { temp, damage } = document.hitPoints;
-  const absorbed = Math.min(temp, amount);
-  const max = hitPointsMax(document);
   const damaged = {
     ...document,
     hitPoints: {
       ...document.hitPoints,
-      temp: temp - absorbed,
-      damage: Math.min(max, damage + amount - absorbed),
+      ...damageState(document.hitPoints, hitPointsMax(document), amount),
     },
   };
   return deriveStats(damaged).hitPointsCurrent === 0
@@ -57,11 +80,12 @@ export function applyHealing(
   document: SheetDocument,
   amount: number,
 ): SheetDocument {
-  const damage = Math.min(document.hitPoints.damage, hitPointsMax(document));
-  return {
-    ...document,
-    hitPoints: { ...document.hitPoints, damage: Math.max(0, damage - amount) },
-  };
+  const damage = healedDamage(
+    document.hitPoints.damage,
+    hitPointsMax(document),
+    amount,
+  );
+  return { ...document, hitPoints: { ...document.hitPoints, damage } };
 }
 
 /**

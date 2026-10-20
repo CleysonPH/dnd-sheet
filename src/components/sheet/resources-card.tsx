@@ -24,7 +24,7 @@ import { useCanAct, useSheetMode } from "./sheet-mode";
 import { describeRecharge } from "./sources/trackers-editor";
 
 /** − atual / máximo +, com os limites de 0 e do máximo (design R3). */
-function Counter({
+export function Counter({
   label,
   used,
   max,
@@ -73,8 +73,8 @@ function Counter({
 
 const REST_SUMMARY = {
   short:
-    "Aplica a regra de descanso curto de cada tracker e recupera a Magia de Pacto.",
-  long: "Aplica a regra de descanso longo de cada tracker, recupera os espaços de magia, PV ao máximo, sem PV temporário, todos os dados de vida e testes contra a morte zerados.",
+    "Aplica a regra de descanso curto de cada tracker e dos usos dos companheiros e recupera a Magia de Pacto.",
+  long: "Aplica a regra de descanso longo de cada tracker, recupera os espaços de magia, PV ao máximo, sem PV temporário, todos os dados de vida e testes contra a morte zerados. Os companheiros também recuperam os usos, o PV e os dados de vida.",
 } as const;
 
 /** Trackers, espaços de magia e descansos, abaixo da faixa de topo. */
@@ -158,11 +158,9 @@ export function ResourcesCard({ document, stats, update }: SheetPartProps) {
           <Button
             type="button"
             onClick={() => {
-              // As variáveis vêm do documento atual, que o update entrega.
+              // Os valores vêm do documento atual, que o update entrega.
               const rest = confirming === "short" ? shortRest : longRest;
-              update((current) =>
-                rest(current, deriveStats(current).variables),
-              );
+              update((current) => rest(current, deriveStats(current)));
               setConfirming(null);
             }}
           >

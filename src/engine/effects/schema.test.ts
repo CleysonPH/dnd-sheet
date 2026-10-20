@@ -129,3 +129,14 @@ describe("conceder", () => {
     expect(firstError({ ...plusOneAc, value: "qualquer coisa" })).toBeNull();
   });
 });
+
+describe("escopo das expressões (design H2)", () => {
+  it("o efeito de fonte recusa dono.* e circulo", () => {
+    expect(firstError({ ...plusOneAc, expression: "dono.con.mod" })).toBe(
+      "Variável desconhecida: dono.con.mod",
+    );
+    expect(firstError({ ...plusOneAc, expression: "circulo" })).toBe(
+      "Variável desconhecida: circulo",
+    );
+  });
+});

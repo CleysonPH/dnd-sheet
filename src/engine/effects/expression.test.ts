@@ -133,3 +133,65 @@ describe("conj.mod", () => {
     );
   });
 });
+
+describe("escopo do companheiro (design H2)", () => {
+  /** Hound: FOR 14, DES 14, CON 15, INT 3, SAB 12, CAR 13; dono = Thorin. */
+  const hound: ExpressionVariables = {
+    scores: { str: 14, dex: 14, con: 15, int: 3, wis: 12, cha: 13 },
+    mods: { str: 2, dex: 2, con: 2, int: -4, wis: 1, cha: 1 },
+    level: 5,
+    pb: 2,
+    spellcastingAbility: null,
+    owner: { ...thorin, spellcastingAbility: "wis" },
+    spellLevel: 4,
+  };
+
+  function runCompanion(text: string, variables = hound): number {
+    const parsed = parseExpression(text, "companion");
+    if (!parsed.ok) throw new Error(parsed.error);
+    return evaluate(parsed.expression, variables);
+  }
+
+  it("recusa dono.* e circulo no escopo da ficha", () => {
+    expect(error("dono.con.mod")).toBe("Variável desconhecida: dono.con.mod");
+    expect(error("5 + 10 * circulo")).toBe("Variável desconhecida: circulo");
+  });
+
+  it("aceita as variáveis do dono e o círculo no companheiro", () => {
+    expect(runCompanion("12 + dono.con.mod")).toBe(15);
+    expect(runCompanion("dono.pb")).toBe(3);
+    expect(runCompanion("dono.for")).toBe(16);
+    expect(runCompanion("5 + 10 * circulo")).toBe(45);
+  });
+
+  it("usa os atributos e o PB da criatura sem o prefixo", () => {
+    expect(runCompanion("for.mod + pb")).toBe(4);
+  });
+
+  it("recusa variáveis do dono desconhecidas", () => {
+    const parsed = parseExpression("dono.nada", "companion");
+    expect(parsed.ok).toBe(false);
+  });
+
+  it("conj.mod é o do dono", () => {
+    expect(runCompanion("conj.mod")).toBe(1);
+    expect(
+      runCompanion("conj.mod", {
+        ...hound,
+        owner: { ...thorin, spellcastingAbility: null },
+      }),
+    ).toBe(0);
+  });
+
+  it("circulo sem invocação vale 0", () => {
+    expect(runCompanion("circulo", { ...hound, spellLevel: undefined })).toBe(
+      0,
+    );
+  });
+
+  it("dono.* sem dono lança EvaluationError", () => {
+    const parsed = parseExpression("dono.pb", "companion");
+    if (!parsed.ok) throw new Error(parsed.error);
+    expect(() => evaluate(parsed.expression, thorin)).toThrow(EvaluationError);
+  });
+});

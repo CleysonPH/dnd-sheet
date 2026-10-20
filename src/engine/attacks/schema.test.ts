@@ -5,6 +5,7 @@ import { sourceSchema } from "@/engine/sources/schema";
 
 import {
   actionSchema,
+  actionSchemaFor,
   actionsSchema,
   createAction,
   createPart,
@@ -112,5 +113,42 @@ describe("createAction", () => {
     });
 
     expect(createAction({ kind: "feat" }, "a").parts[0]?.die).toBe("d6");
+  });
+});
+
+describe("escopo das expressões (design H2)", () => {
+  it("a ação de fonte recusa dono.* e circulo", () => {
+    expect(
+      actionSchema.safeParse({ ...lute, attackBonus: "dono.con.mod" }).success,
+    ).toBe(false);
+    expect(
+      actionSchema.safeParse({ ...lute, dcExpression: "8 + circulo" }).success,
+    ).toBe(false);
+  });
+
+  it("a ação do companheiro aceita dono.* e circulo", () => {
+    const schema = actionSchemaFor("companion");
+    const bite = {
+      ...lute,
+      attackBonus: "dono.con.mod",
+      dcExpression: "8 + dono.con.mod + pb",
+      parts: [createPart("p1", { count: 2, die: "d4", bonus: "2 + circulo" })],
+    };
+    expect(schema.safeParse(bite).success).toBe(true);
+  });
+});
+
+describe("descrição da ação (design H9)", () => {
+  it("aceita até 500 caracteres e recusa 501", () => {
+    expect(
+      actionSchema.safeParse({ ...lute, description: "a".repeat(500) }).success,
+    ).toBe(true);
+    const result = actionSchema.safeParse({
+      ...lute,
+      description: "a".repeat(501),
+    });
+    expect(result.success ? null : result.error.issues[0]?.message).toBe(
+      "Use no máximo 500 caracteres",
+    );
   });
 });

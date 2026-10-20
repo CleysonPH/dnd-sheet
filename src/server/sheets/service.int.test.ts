@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { createAction, createPart } from "@/engine/attacks/schema";
+import { createCompanion } from "@/engine/companions/schema";
 import { createSheetDocument } from "@/engine/sheet/document";
 import { createEffect } from "@/engine/effects/schema";
 import { createTracker } from "@/engine/resources/schema";
@@ -495,6 +496,63 @@ describe("fichas", () => {
       expect((await getSheet(lyra, id))?.document.sources).toEqual(
         document.sources,
       );
+    });
+
+    it("grava um companheiro com ações e usos", async () => {
+      const { lyra } = await setup();
+      const id = await newSheet(lyra, "Brann");
+      const hound = {
+        ...createCompanion("c1"),
+        name: "Hound",
+        allChecks: true,
+        armorClass: "12 + dono.con.mod",
+        hitPointsMax: "5 + 5 * nivel",
+        hitDiceCount: "nivel",
+        actions: [
+          {
+            ...createAction({ kind: "companion" }, "a1"),
+            name: "Mordida",
+            attackAbility: "none" as const,
+            proficiency: "always" as const,
+            attackBonus: "dono.con.mod",
+            parts: [
+              createPart("p1", {
+                count: 2,
+                die: "d4",
+                bonus: "2 + dono.con.mod",
+                type: "piercing",
+              }),
+            ],
+          },
+        ],
+        trackers: [{ ...createTracker("k1"), name: "Moxie", max: "dono.pb" }],
+        damage: 4,
+        conditions: ["frightened" as const],
+      };
+      const document = { ...edited("Brann"), companions: [hound] };
+
+      expect(await saveSheet(lyra, id, { baseVersion: 1, document })).toEqual({
+        status: "saved",
+        version: 2,
+      });
+      expect((await getSheet(lyra, id))?.document.companions).toEqual([hound]);
+    });
+
+    it("recusa companheiro com expressão inválida", async () => {
+      const { lyra } = await setup();
+      const id = await newSheet(lyra, "Brann");
+      const document = {
+        ...edited("Brann"),
+        companions: [
+          { ...createCompanion("c1"), armorClass: "dono.con.mod +" },
+        ],
+      };
+
+      expect(await saveSheet(lyra, id, { baseVersion: 1, document })).toEqual({
+        status: "invalid",
+        reason: "schema",
+      });
+      expect((await stored(id))?.version).toBe(1);
     });
 
     it("grava trackers e espaços de magia", async () => {

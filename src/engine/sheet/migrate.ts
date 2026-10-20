@@ -1,4 +1,7 @@
-import { migrateSourceV9ToV10 } from "@/engine/sources/migrate";
+import {
+  migrateSourceV10ToV11,
+  migrateSourceV9ToV10,
+} from "@/engine/sources/migrate";
 
 import {
   SHEET_SCHEMA_VERSION,
@@ -161,6 +164,18 @@ export const migrateV9ToV10: SheetMigration = (document) => ({
   ),
 });
 
+/**
+ * Formato 10 -> 11 (design H8): a descrição das ações em cada fonte e a
+ * lista de companheiros, vazia.
+ */
+export const migrateV10ToV11: SheetMigration = (document) => ({
+  ...document,
+  sources: (document.sources as Record<string, unknown>[]).map(
+    migrateSourceV10ToV11,
+  ),
+  companions: [],
+});
+
 /** Migrações reais do formato. */
 export const SHEET_MIGRATIONS: readonly SheetMigration[] = [
   migrateV1ToV2,
@@ -172,6 +187,7 @@ export const SHEET_MIGRATIONS: readonly SheetMigration[] = [
   migrateV7ToV8,
   migrateV8ToV9,
   migrateV9ToV10,
+  migrateV10ToV11,
 ];
 
 export class SheetFormatError extends Error {

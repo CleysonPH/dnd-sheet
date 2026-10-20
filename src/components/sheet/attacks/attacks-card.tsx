@@ -12,7 +12,7 @@ import { useSheetMode } from "../sheet-mode";
 import { RANGE_LABEL, formatCheck, formatDamage, lineName } from "./labels";
 
 /** Acerto ou CD com o painel de origem, sem valor manual (design G8). */
-function CheckValue({
+export function CheckValue({
   line,
   open,
   onToggle,
@@ -110,6 +110,11 @@ export function AttacksCard({ document, stats }: SheetPartProps) {
                       : "Sem teste"}
                   {line.attacks > 1 && ` · ×${line.attacks}`}
                 </p>
+                {line.description && (
+                  <p className="mt-1 text-xs break-words text-muted">
+                    {line.description}
+                  </p>
+                )}
               </div>
               <div className="ml-auto flex min-w-0 flex-wrap items-baseline justify-end gap-x-3 gap-y-1 text-sm">
                 <CheckValue

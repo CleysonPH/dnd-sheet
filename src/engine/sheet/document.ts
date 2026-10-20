@@ -15,6 +15,7 @@ import {
   pactSlotsSchema,
   spellSlotsSchema,
 } from "@/engine/resources/schema";
+import { companionsSchema } from "@/engine/companions/schema";
 import { sourcesSchema } from "@/engine/sources/schema";
 import {
   conditionsSchema,
@@ -31,7 +32,7 @@ import {
  * Toda mudança no schema abaixo precisa incrementar esta constante e
  * acrescentar em migrate.ts uma migração da versão anterior, com teste.
  */
-export const SHEET_SCHEMA_VERSION = 10;
+export const SHEET_SCHEMA_VERSION = 11;
 
 /** Tamanho máximo do documento serializado, em bytes. */
 export const SHEET_MAX_BYTES = 256 * 1024;
@@ -125,6 +126,8 @@ export const sheetDocumentSchema = z.strictObject({
   /** Condições ativas e nível de Exaustão (design T4, T6). */
   conditions: conditionsSchema,
   exhaustion: exhaustionSchema,
+  /** Companheiros do personagem (design H1). */
+  companions: companionsSchema,
 });
 
 export type SheetIdentity = z.infer<typeof identitySchema>;
@@ -154,6 +157,7 @@ export function createSheetDocument(name: string): SheetDocument {
     defenses: emptyDefenses(),
     conditions: [],
     exhaustion: 0,
+    companions: [],
   });
 }
 

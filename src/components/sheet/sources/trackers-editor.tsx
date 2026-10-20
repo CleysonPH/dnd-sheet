@@ -1,7 +1,10 @@
 "use client";
 
 import { Button } from "@/components/form";
-import type { ExpressionVariables } from "@/engine/effects/expression";
+import type {
+  ExpressionScope,
+  ExpressionVariables,
+} from "@/engine/effects/expression";
 import {
   MAX_TRACKERS_PER_SOURCE,
   RECHARGE_MODES,
@@ -37,12 +40,14 @@ function RechargeField({
   name,
   rule,
   variables,
+  scope,
   onChange,
 }: {
   label: string;
   name: string;
   rule: Recharge;
   variables: ExpressionVariables;
+  scope: ExpressionScope;
   onChange: (rule: Recharge) => void;
 }) {
   return (
@@ -71,6 +76,7 @@ function RechargeField({
           value={rule.amount}
           placeholder="ex.: 1"
           variables={variables}
+          scope={scope}
           onCommit={(amount) => onChange({ ...rule, amount })}
         />
       )}
@@ -78,16 +84,24 @@ function RechargeField({
   );
 }
 
-/** Trackers de uma fonte, até 10 (design R4). O usado fica no cartão Recursos. */
+/**
+ * Trackers de uma fonte ou usos de um companheiro, até 10 (design R4, H7). O
+ * usado fica no cartão Recursos ou no cartão do companheiro.
+ */
 export function TrackersEditor({
   sourceId,
   trackers,
   variables,
+  scope = "sheet",
+  title = "Trackers",
   onChange,
 }: {
+  /** Id da fonte ou do companheiro, para os ids dos campos. */
   sourceId: string;
   trackers: Tracker[];
   variables: ExpressionVariables;
+  scope?: ExpressionScope;
+  title?: string;
   onChange: (trackers: Tracker[]) => void;
 }) {
   const replace = (id: string, patch: Partial<Tracker>) =>
@@ -96,7 +110,7 @@ export function TrackersEditor({
   return (
     <section className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
-        <h4 className="text-sm font-semibold">Trackers</h4>
+        <h4 className="text-sm font-semibold">{title}</h4>
         <Button
           type="button"
           variant="secondary"
@@ -136,6 +150,7 @@ export function TrackersEditor({
                     value={tracker.max}
                     placeholder="ex.: max(1, car.mod)"
                     variables={variables}
+                    scope={scope}
                     onCommit={(max) => replace(tracker.id, { max })}
                   />
                   <div className="sm:pt-6">
@@ -157,6 +172,7 @@ export function TrackersEditor({
                     name={field("short")}
                     rule={tracker.shortRest}
                     variables={variables}
+                    scope={scope}
                     onChange={(shortRest) => replace(tracker.id, { shortRest })}
                   />
                   <RechargeField
@@ -164,6 +180,7 @@ export function TrackersEditor({
                     name={field("long")}
                     rule={tracker.longRest}
                     variables={variables}
+                    scope={scope}
                     onChange={(longRest) => replace(tracker.id, { longRest })}
                   />
                 </div>

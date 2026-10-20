@@ -2,7 +2,9 @@ import type { Ability } from "@/engine/stats/keys";
 
 /*
  * Expressões dos efeitos (design E4): inteiros, + - * /, parênteses, min, max
- * e as variáveis for..car, for.mod..car.mod, nivel e pb.
+ * e as variáveis for..car, for.mod..car.mod, nivel e pb. No escopo do
+ * companheiro (design H2), também dono.for..dono.car, dono.*.mod, dono.pb e
+ * circulo.
  *
  *   expr    = term (("+" | "-") term)*
  *   term    = unary (("*" | "/") unary)*
@@ -21,13 +23,23 @@ export const ABILITY_VARIABLES: Record<string, Ability> = {
   car: "cha",
 };
 
-export type Variable =
+/** Onde a expressão é usada: numa fonte ou num companheiro (design H2). */
+export type ExpressionScope = "sheet" | "companion";
+
+type OwnerVariable =
   | { kind: "score"; ability: Ability }
   | { kind: "mod"; ability: Ability }
+  | { kind: "pb" };
+
+export type Variable =
+  | OwnerVariable
   | { kind: "level" }
-  | { kind: "pb" }
   /** `conj.mod`: modificador do atributo de conjuração (design K4). */
-  | { kind: "spellcasting" };
+  | { kind: "spellcasting" }
+  /** `dono.*`: valor do dono, só no companheiro. */
+  | { kind: "owner"; inner: OwnerVariable }
+  /** `circulo`: círculo atual da invocação, só no companheiro. */
+  | { kind: "spellLevel" };
 
 export type Expression =
   | { type: "number"; value: number }
@@ -79,21 +91,37 @@ function tokenize(text: string): Token[] {
   return tokens;
 }
 
-function variableFor(name: string): Variable {
-  if (name === "nivel" || name === "nível") return { kind: "level" };
+function abilityVariable(name: string): OwnerVariable | null {
   if (name === "pb") return { kind: "pb" };
-  if (name === "conj.mod") return { kind: "spellcasting" };
   const [base, suffix, extra] = name.split(".");
   const ability = ABILITY_VARIABLES[base!];
   if (ability && extra === undefined) {
     if (suffix === undefined) return { kind: "score", ability };
     if (suffix === "mod") return { kind: "mod", ability };
   }
+  return null;
+}
+
+function variableFor(name: string, scope: ExpressionScope): Variable {
+  if (name === "nivel" || name === "nível") return { kind: "level" };
+  if (name === "conj.mod") return { kind: "spellcasting" };
+  const own = abilityVariable(name);
+  if (own) return own;
+  if (scope === "companion") {
+    if (name === "circulo" || name === "círculo") return { kind: "spellLevel" };
+    if (name.startsWith("dono.")) {
+      const inner = abilityVariable(name.slice("dono.".length));
+      if (inner) return { kind: "owner", inner };
+    }
+  }
   throw new ParseError(`Variável desconhecida: ${name}`);
 }
 
 /** Converte o texto em árvore; erros vêm com a mensagem em português. */
-export function parseExpression(text: string): ParseResult {
+export function parseExpression(
+  text: string,
+  scope: ExpressionScope = "sheet",
+): ParseResult {
   let tokens: Token[];
   try {
     tokens = tokenize(text);
@@ -155,7 +183,7 @@ export function parseExpression(text: string): ParseResult {
         expect(")", "Falta fechar parênteses");
         return { type: "call", fn: token.value, args };
       }
-      return { type: "variable", variable: variableFor(token.value) };
+      return { type: "variable", variable: variableFor(token.value, scope) };
     }
     if (token.value === "(") {
       const inner = expr();
@@ -180,13 +208,20 @@ export function parseExpression(text: string): ParseResult {
 
 const cache = new Map<string, ParseResult>();
 
-/** `parseExpression` com cache por texto: deriveStats roda a cada edição. */
-export function parseExpressionCached(text: string): ParseResult {
-  let result = cache.get(text);
+/**
+ * `parseExpression` com cache por escopo e texto: deriveStats roda a cada
+ * edição.
+ */
+export function parseExpressionCached(
+  text: string,
+  scope: ExpressionScope = "sheet",
+): ParseResult {
+  const key = `${scope}:${text}`;
+  let result = cache.get(key);
   if (!result) {
-    result = parseExpression(text);
+    result = parseExpression(text, scope);
     if (cache.size > 500) cache.clear();
-    cache.set(text, result);
+    cache.set(key, result);
   }
   return result;
 }
@@ -198,9 +233,47 @@ export type ExpressionVariables = {
   pb: number;
   /** Atributo de conjuração da ficha; null sem atributo (`conj.mod` = 0). */
   spellcastingAbility: Ability | null;
+  /** Variáveis do dono, no companheiro (`dono.*` e `conj.mod`). */
+  owner?: ExpressionVariables;
+  /** Círculo atual da invocação, no companheiro (`circulo`). */
+  spellLevel?: number;
 };
 
 export class EvaluationError extends Error {}
+
+/** Escopo em que as variáveis foram montadas: com dono, é o companheiro. */
+export function scopeOf(variables: ExpressionVariables): ExpressionScope {
+  return variables.owner ? "companion" : "sheet";
+}
+
+function variableValue(
+  variable: Variable,
+  variables: ExpressionVariables,
+): number {
+  switch (variable.kind) {
+    case "score":
+      return variables.scores[variable.ability];
+    case "mod":
+      return variables.mods[variable.ability];
+    case "pb":
+      return variables.pb;
+    case "level":
+      return variables.level;
+    case "spellcasting": {
+      // No companheiro, `conj.mod` é o do dono (design H2).
+      if (variables.owner) return variableValue(variable, variables.owner);
+      const ability = variables.spellcastingAbility;
+      return ability ? variables.mods[ability] : 0;
+    }
+    case "owner":
+      if (!variables.owner) {
+        throw new EvaluationError("Variável do dono fora de um companheiro");
+      }
+      return variableValue(variable.inner, variables.owner);
+    case "spellLevel":
+      return variables.spellLevel ?? 0;
+  }
+}
 
 /** Avalia a árvore; "/" é divisão inteira para baixo. */
 export function evaluate(
@@ -210,16 +283,8 @@ export function evaluate(
   switch (expression.type) {
     case "number":
       return expression.value;
-    case "variable": {
-      const { variable } = expression;
-      if (variable.kind === "score") return variables.scores[variable.ability];
-      if (variable.kind === "mod") return variables.mods[variable.ability];
-      if (variable.kind === "spellcasting") {
-        const ability = variables.spellcastingAbility;
-        return ability ? variables.mods[ability] : 0;
-      }
-      return variable.kind === "level" ? variables.level : variables.pb;
-    }
+    case "variable":
+      return variableValue(expression.variable, variables);
     case "negate":
       return -evaluate(expression.operand, variables);
     case "call": {

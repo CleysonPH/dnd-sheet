@@ -246,6 +246,29 @@ describe("compêndio", () => {
     expect(entry?.source).toEqual(axe);
   });
 
+  it("entrada do formato 10 com ações é lida no 11, sem descrição", async () => {
+    const { lyra } = await setup();
+    const sword = {
+      ...createSource("item", "Espada Longa", "i2"),
+      category: "weapon" as const,
+      actions: [createAction({ kind: "item", category: "weapon" }, "a1")],
+    };
+    const action: Record<string, unknown> = { ...sword.actions[0] };
+    delete action.description;
+    await getDb()
+      .insert(compendiumEntry)
+      .values({
+        id: sword.id,
+        kind: sword.kind,
+        name: sword.name,
+        searchName: searchKey(sword.name),
+        schemaVersion: 10,
+        data: { ...sword, actions: [action] },
+      });
+    const [entry] = await searchEntries(lyra, { query: "espada" });
+    expect(entry?.source).toEqual(sword);
+  });
+
   it("excluir tira a entrada do compêndio", async () => {
     const { mestre } = await setup();
     const id = await created(

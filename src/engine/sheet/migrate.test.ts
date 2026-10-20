@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
+import { createAction } from "@/engine/attacks/schema";
 import { createEffect } from "@/engine/effects/schema";
 import { createSource } from "@/engine/sources/rules";
+import { deriveStats } from "@/engine/stats/derive";
 
 import { SHEET_SCHEMA_VERSION, createSheetDocument } from "./document";
 import {
@@ -304,10 +306,41 @@ describe("migrateSheetDocument", () => {
       schemaVersion: 9,
       sources: [strip(axe), strip(spell)],
     };
+    delete formatNine.companions;
 
     const migrated = migrateSheetDocument(formatNine);
-    expect(migrated.schemaVersion).toBe(10);
+    expect(migrated.schemaVersion).toBe(SHEET_SCHEMA_VERSION);
     expect(migrated.sources).toEqual([axe, spell]);
+  });
+
+  it("leva o formato 10 ao 11 sem companheiros e com os mesmos valores", () => {
+    const sheet = {
+      ...createSheetDocument("Brann"),
+      sources: [
+        {
+          ...createSource("item", "Machado Grande", "i1"),
+          equipped: true,
+          actions: [createAction({ kind: "item", category: "weapon" }, "a1")],
+        },
+      ],
+    };
+    const formatTen: Record<string, unknown> = {
+      ...sheet,
+      schemaVersion: 10,
+      sources: sheet.sources.map((source) => ({
+        ...source,
+        actions: source.actions.map((action) => {
+          const copy: Record<string, unknown> = { ...action };
+          delete copy.description;
+          return copy;
+        }),
+      })),
+    };
+    delete formatTen.companions;
+
+    const migrated = migrateSheetDocument(formatTen);
+    expect(migrated).toEqual(sheet);
+    expect(deriveStats(migrated)).toEqual(deriveStats(sheet));
   });
 
   it("recusa documento que não valida depois de migrado", () => {

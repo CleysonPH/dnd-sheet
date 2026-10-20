@@ -22,6 +22,7 @@ import {
   type Spell,
 } from "@/engine/sources/schema";
 
+import { createAction } from "@/engine/attacks/schema";
 import type { ExpressionVariables } from "@/engine/effects/expression";
 import { CASTING_ABILITIES } from "@/engine/stats/keys";
 
@@ -191,8 +192,12 @@ export function SourceForm({
       )}
 
       <ActionsEditor
-        source={source}
+        ownerId={source.id}
+        actions={source.actions}
+        newAction={(id) => createAction(source, id)}
+        upcastApplies={source.kind === "spell" && source.level >= 1}
         variables={variables}
+        hint="Ataques, salvaguardas e curas que a fonte dá. Uma arma versátil tem duas ações: uma mão e duas mãos."
         onChange={(actions) => onChange({ actions })}
       />
 

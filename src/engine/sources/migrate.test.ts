@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { createAction } from "@/engine/attacks/schema";
 import { SHEET_SCHEMA_VERSION } from "@/engine/sheet/document";
 
 import { SourceFormatError, migrateSource } from "./migrate";
@@ -44,6 +45,17 @@ describe("migrateSource", () => {
     delete formatNine.actions;
     delete formatNine.weaponCategory;
     expect(migrateSource(formatNine, 9)).toEqual(axe);
+  });
+
+  it("leva uma fonte do formato 10 com ações ao 11, sem descrição", () => {
+    const sword = {
+      ...createSource("item", "Espada Longa", "i1"),
+      actions: [createAction({ kind: "item", category: "weapon" }, "a1")],
+    };
+    const withoutDescription: Record<string, unknown> = { ...sword.actions[0] };
+    delete withoutDescription.description;
+    const formatTen = { ...sword, actions: [withoutDescription] };
+    expect(migrateSource(formatTen, 10)).toEqual(sword);
   });
 
   it("recusa fonte inválida ou versão fora do intervalo", () => {

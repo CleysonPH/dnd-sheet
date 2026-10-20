@@ -23,9 +23,19 @@ export const migrateSourceV9ToV10: SourceMigration = (source) => ({
   ...(source.kind === "item" ? { weaponCategory: "simple" } : {}),
 });
 
+/** Formato 10 -> 11 (design H9): toda ação ganha a descrição, vazia. */
+export const migrateSourceV10ToV11: SourceMigration = (source) => ({
+  ...source,
+  actions: (source.actions as Record<string, unknown>[]).map((action) => ({
+    ...action,
+    description: "",
+  })),
+});
+
 /** Passos por versão de origem: `SOURCE_MIGRATIONS[n]` leva de n para n + 1. */
 export const SOURCE_MIGRATIONS: Readonly<Record<number, SourceMigration>> = {
   9: migrateSourceV9ToV10,
+  10: migrateSourceV10ToV11,
 };
 
 /** Primeira versão em que há fontes soltas (o compêndio nasce no formato 9). */

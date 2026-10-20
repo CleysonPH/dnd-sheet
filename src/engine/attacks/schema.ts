@@ -1,6 +1,7 @@
 import { z } from "zod";
 
-import { parseExpression } from "@/engine/effects/expression";
+import type { ExpressionScope } from "@/engine/effects/expression";
+import { expressionSchema } from "@/engine/effects/expression-schema";
 import { ABILITIES } from "@/engine/stats/keys";
 import { DAMAGE_TYPES } from "@/engine/traits/keys";
 
@@ -18,8 +19,8 @@ export type ActionRange = (typeof ACTION_RANGES)[number];
 
 /** Atributo do acerto ou de uma parte: acuidade é o maior de FOR e DES. */
 export const ACTION_ABILITIES = [
-  ...ABILITIES,
   "none",
+  ...ABILITIES,
   "finesse",
   "spellcasting",
 ] as const;
@@ -50,18 +51,18 @@ function intRange(min: number, max: number) {
 }
 
 /** Expressão com a gramática dos efeitos, sempre validada. */
-export const actionExpressionSchema = z
-  .string()
-  .max(100, "Use no máximo 100 caracteres")
-  .superRefine((text, ctx) => {
-    const parsed = parseExpression(text);
-    if (!parsed.ok) ctx.addIssue({ code: "custom", message: parsed.error });
-  });
+export const actionExpressionSchema = expressionSchema("sheet");
 
 export const actionNameSchema = z
   .string()
   .trim()
   .max(50, "Use no máximo 50 caracteres");
+
+/** Descrição da ação: o que os valores não mostram (design H9). */
+export const actionDescriptionSchema = z
+  .string()
+  .trim()
+  .max(500, "Use no máximo 500 caracteres");
 
 function uniqueIds(
   label: string,
@@ -81,45 +82,63 @@ function uniqueIds(
   };
 }
 
-export const partSchema = z.strictObject({
-  id: z.string().min(1).max(64),
-  count: intRange(0, 40),
-  die: z.enum(DICE),
-  ability: z.enum(PART_ABILITIES),
-  bonus: actionExpressionSchema,
-  type: z.enum(PART_TYPES),
-  /** Multiplica os dados por 1/2/3/4 nos níveis 1/5/11/17. */
-  scaleByLevel: z.boolean(),
-  /** Dados extras por círculo acima; só em magias de 1º círculo ou acima. */
-  upcast: intRange(0, 20),
-});
+function partSchemaFor(scope: ExpressionScope) {
+  return z.strictObject({
+    id: z.string().min(1).max(64),
+    count: intRange(0, 40),
+    die: z.enum(DICE),
+    ability: z.enum(PART_ABILITIES),
+    bonus: expressionSchema(scope),
+    type: z.enum(PART_TYPES),
+    /** Multiplica os dados por 1/2/3/4 nos níveis 1/5/11/17. */
+    scaleByLevel: z.boolean(),
+    /** Dados extras por círculo acima; só em magias de 1º círculo ou acima. */
+    upcast: intRange(0, 20),
+  });
+}
 
-export const actionSchema = z.strictObject({
-  id: z.string().min(1).max(64),
-  name: actionNameSchema,
-  resolution: z.enum(ACTION_RESOLUTIONS),
-  range: z.enum(ACTION_RANGES),
-  attackAbility: z.enum(ACTION_ABILITIES),
-  proficiency: z.enum(ACTION_PROFICIENCIES),
-  attackBonus: actionExpressionSchema,
-  saveAbility: z.enum(ABILITIES),
-  dcMode: z.enum(DC_MODES),
-  dcAdjust: intRange(-10, 10),
-  dcExpression: actionExpressionSchema,
-  onSuccess: z.enum(SAVE_OUTCOMES),
-  /** Multiplica os ataques pelos mesmos níveis (raios da Rajada Mística). */
-  scaleAttacks: z.boolean(),
-  parts: z
-    .array(partSchema)
-    .min(1, "A ação precisa de ao menos uma parte")
-    .max(MAX_PARTS_PER_ACTION, `Use no máximo ${MAX_PARTS_PER_ACTION} partes`)
-    .superRefine(uniqueIds("parte")),
-});
+export const partSchema = partSchemaFor("sheet");
 
-export const actionsSchema = z
-  .array(actionSchema)
-  .max(MAX_ACTIONS_PER_SOURCE, `Use no máximo ${MAX_ACTIONS_PER_SOURCE} ações`)
-  .superRefine(uniqueIds("ação"));
+/** Ação com as expressões validadas no escopo dado (design H2). */
+export function actionSchemaFor(scope: ExpressionScope) {
+  const expression = expressionSchema(scope);
+  return z.strictObject({
+    id: z.string().min(1).max(64),
+    name: actionNameSchema,
+    description: actionDescriptionSchema,
+    resolution: z.enum(ACTION_RESOLUTIONS),
+    range: z.enum(ACTION_RANGES),
+    attackAbility: z.enum(ACTION_ABILITIES),
+    proficiency: z.enum(ACTION_PROFICIENCIES),
+    attackBonus: expression,
+    saveAbility: z.enum(ABILITIES),
+    dcMode: z.enum(DC_MODES),
+    dcAdjust: intRange(-10, 10),
+    dcExpression: expression,
+    onSuccess: z.enum(SAVE_OUTCOMES),
+    /** Multiplica os ataques pelos mesmos níveis (raios da Rajada Mística). */
+    scaleAttacks: z.boolean(),
+    parts: z
+      .array(partSchemaFor(scope))
+      .min(1, "A ação precisa de ao menos uma parte")
+      .max(MAX_PARTS_PER_ACTION, `Use no máximo ${MAX_PARTS_PER_ACTION} partes`)
+      .superRefine(uniqueIds("parte")),
+  });
+}
+
+export const actionSchema = actionSchemaFor("sheet");
+
+export function actionsSchemaFor(scope: ExpressionScope) {
+  return z
+    .array(actionSchemaFor(scope))
+    .max(
+      MAX_ACTIONS_PER_SOURCE,
+      `Use no máximo ${MAX_ACTIONS_PER_SOURCE} ações`,
+    )
+    .superRefine(uniqueIds("ação"));
+}
+
+export const actionsSchema = actionsSchemaFor("sheet");
 
 export type Part = z.infer<typeof partSchema>;
 export type Action = z.infer<typeof actionSchema>;
@@ -153,6 +172,7 @@ export function createAction(
   return {
     id,
     name: "",
+    description: "",
     resolution: "attack",
     range: spell ? "ranged" : "melee",
     attackAbility: spell ? "spellcasting" : "str",

@@ -14,16 +14,18 @@ import {
   PART_ABILITIES,
   PART_TYPES,
   SAVE_OUTCOMES,
+  actionDescriptionSchema,
   actionNameSchema,
   actionSchema,
-  createAction,
   createPart,
   partSchema,
   type Action,
   type Part,
 } from "@/engine/attacks/schema";
-import type { ExpressionVariables } from "@/engine/effects/expression";
-import type { Source } from "@/engine/sources/schema";
+import type {
+  ExpressionScope,
+  ExpressionVariables,
+} from "@/engine/effects/expression";
 import { ABILITIES } from "@/engine/stats/keys";
 
 import {
@@ -100,6 +102,7 @@ function PartRow({
   upcastApplies,
   canRemove,
   variables,
+  scope,
   onChange,
   onRemove,
 }: {
@@ -110,6 +113,7 @@ function PartRow({
   upcastApplies: boolean;
   canRemove: boolean;
   variables: ExpressionVariables;
+  scope: ExpressionScope;
   onChange: (part: Part) => void;
   onRemove: () => void;
 }) {
@@ -157,6 +161,7 @@ function PartRow({
           value={part.bonus}
           placeholder="ex.: 1"
           variables={variables}
+          scope={scope}
           onCommit={(bonus) => onChange({ ...part, bonus })}
         />
         {upcastApplies && (
@@ -195,9 +200,11 @@ function ActionRow({
   action,
   index,
   total,
-  source,
+  ownerId,
+  upcastApplies,
   open,
   variables,
+  scope,
   onToggle,
   onChange,
   onMove,
@@ -206,17 +213,18 @@ function ActionRow({
   action: Action;
   index: number;
   total: number;
-  source: Source;
+  ownerId: string;
+  upcastApplies: boolean;
   open: boolean;
   variables: ExpressionVariables;
+  scope: ExpressionScope;
   onToggle: () => void;
   onChange: (action: Action) => void;
   onMove: (offset: -1 | 1) => void;
   onRemove: () => void;
 }) {
-  const field = (name: string) => `action-${source.id}-${action.id}-${name}`;
+  const field = (name: string) => `action-${ownerId}-${action.id}-${name}`;
   const isAttack = action.resolution === "attack";
-  const upcastApplies = source.kind === "spell" && source.level >= 1;
   const replacePart = (next: Part) =>
     onChange({
       ...action,
@@ -324,6 +332,7 @@ function ActionRow({
                 value={action.attackBonus}
                 placeholder="ex.: 1"
                 variables={variables}
+                scope={scope}
                 onCommit={(attackBonus) => onChange({ ...action, attackBonus })}
               />
             </div>
@@ -366,6 +375,7 @@ function ActionRow({
                   value={action.dcExpression}
                   placeholder="ex.: 8 + con.mod + pb"
                   variables={variables}
+                  scope={scope}
                   onCommit={(dcExpression) =>
                     onChange({ ...action, dcExpression })
                   }
@@ -415,6 +425,7 @@ function ActionRow({
                 upcastApplies={upcastApplies}
                 canRemove={action.parts.length > 1}
                 variables={variables}
+                scope={scope}
                 onChange={replacePart}
                 onRemove={() =>
                   onChange({
@@ -425,23 +436,46 @@ function ActionRow({
               />
             ))}
           </ul>
+          <SchemaTextField
+            label="Descrição"
+            name={field("description")}
+            value={action.description}
+            schema={actionDescriptionSchema}
+            multiline
+            hint="O que os valores não mostram: efeitos extras no acerto, propriedades da arma, alvos."
+            onCommit={(description) => onChange({ ...action, description })}
+          />
         </>
       )}
     </li>
   );
 }
 
-/** Ações de uma fonte, até 6 (spec sheet-attacks, design G8). */
+/**
+ * Ações de uma fonte ou de um companheiro, até 6 (spec sheet-attacks, design
+ * G8 e H7).
+ */
 export function ActionsEditor({
-  source,
+  ownerId,
+  actions,
+  newAction,
+  upcastApplies,
   variables,
+  scope = "sheet",
+  hint,
   onChange,
 }: {
-  source: Source;
+  /** Id da fonte ou do companheiro, para os ids dos campos. */
+  ownerId: string;
+  actions: Action[];
+  newAction: (id: string) => Action;
+  /** Mostra "Dados por círculo" (magias de círculo 1 ou acima). */
+  upcastApplies: boolean;
   variables: ExpressionVariables;
+  scope?: ExpressionScope;
+  hint: string;
   onChange: (actions: Action[]) => void;
 }) {
-  const { actions } = source;
   // Ações novas abrem; as existentes começam recolhidas.
   const [openIds, setOpenIds] = useState<ReadonlySet<string>>(new Set());
   const toggle = (id: string) =>
@@ -469,7 +503,7 @@ export function ActionsEditor({
           variant="secondary"
           disabled={actions.length >= MAX_ACTIONS_PER_SOURCE}
           onClick={() => {
-            const action = createAction(source, crypto.randomUUID());
+            const action = newAction(crypto.randomUUID());
             setOpenIds((current) => new Set(current).add(action.id));
             onChange([...actions, action]);
           }}
@@ -477,10 +511,7 @@ export function ActionsEditor({
           Adicionar ação
         </Button>
       </div>
-      <p className="text-xs text-muted">
-        Ataques, salvaguardas e curas que a fonte dá. Uma arma versátil tem duas
-        ações: uma mão e duas mãos.
-      </p>
+      <p className="text-xs text-muted">{hint}</p>
       {actions.length === 0 ? (
         <p className="text-sm text-muted">Sem ações.</p>
       ) : (
@@ -491,9 +522,11 @@ export function ActionsEditor({
               action={action}
               index={index}
               total={actions.length}
-              source={source}
+              ownerId={ownerId}
+              upcastApplies={upcastApplies}
               open={openIds.has(action.id)}
               variables={variables}
+              scope={scope}
               onToggle={() => toggle(action.id)}
               onChange={(next) =>
                 onChange(actions.map((a) => (a.id === action.id ? next : a)))

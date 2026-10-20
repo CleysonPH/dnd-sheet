@@ -2,6 +2,8 @@ import {
   ABILITY_VARIABLES,
   evaluate,
   parseExpressionCached,
+  scopeOf,
+  type ExpressionVariables,
 } from "@/engine/effects/expression";
 import type { SheetDocument } from "@/engine/sheet/document";
 import { spellsByLevel } from "@/engine/sources/rules";
@@ -11,7 +13,7 @@ import {
   type Contribution,
   type DerivedStats,
 } from "@/engine/stats/derive";
-import type { Ability } from "@/engine/stats/keys";
+import { ABILITIES, type Ability } from "@/engine/stats/keys";
 import { deriveTraits, type Traits } from "@/engine/traits/derive";
 import { tagKey } from "@/engine/traits/keys";
 
@@ -46,6 +48,8 @@ export type ActionLine = {
   sourceName: string;
   actionId: string;
   name: string;
+  /** Descrição livre da ação (design H9). */
+  description: string;
   resolution: ActionResolution;
   range: ActionRange;
   toHit: ResolvedValue | null;
@@ -57,12 +61,43 @@ export type ActionLine = {
   parts: DamageTerm[];
 };
 
+/** Atributo, ataque mágico e CD de conjuração já resolvidos. */
+export type SpellValues = {
+  ability: Ability | null;
+  attack: number;
+  saveDc: number;
+};
+
+/**
+ * Valores resolvidos para calcular as ações (design H4): os da ficha, ou os
+ * da criatura com a conjuração do dono no companheiro.
+ */
 export type ActionContext = {
-  stats: DerivedStats;
-  level: number;
+  mods: Record<Ability, number>;
+  pb: number;
+  /** Conjuração padrão: a da ficha, ou a do dono no companheiro. */
+  spell: SpellValues;
   exhaustion: number;
+  exhaustionPenalty: number;
+  /** Nível para a escala dos níveis 5/11/17. */
+  level: number;
+  variables: ExpressionVariables;
   /** Chaves das proficiências com armas: categorias e `tag:` + nome. */
   weaponKeys: Set<string>;
+  host: "sheet" | "companion";
+  /** Valores da ficha, para as magias com atributo próprio; null no companheiro. */
+  stats: DerivedStats | null;
+};
+
+/** Dono das ações: uma fonte da ficha ou um companheiro (design H4). */
+export type ActionHost = {
+  id: string;
+  name: string;
+  /** Proficiência da ação com `proficiency = auto`. */
+  autoProficient: boolean;
+  /** Dados por círculo valem só em magias de círculo 1 ou acima. */
+  upcastApplies: boolean;
+  spell: SpellValues;
 };
 
 const ABILITY_SHORT = Object.fromEntries(
@@ -78,16 +113,43 @@ export function actionContext(
   traits: Traits = deriveTraits(document),
 ): ActionContext {
   return {
-    stats,
-    level: document.identity.level,
+    mods: Object.fromEntries(
+      ABILITIES.map((ability) => [
+        ability,
+        stats.values[`mod.${ability}`].value,
+      ]),
+    ) as Record<Ability, number>,
+    pb: stats.values.proficiencyBonus.value,
+    spell: {
+      ability: stats.variables.spellcastingAbility,
+      attack: stats.values.spellAttack.value,
+      saveDc: stats.values.spellSaveDc.value,
+    },
     exhaustion: document.exhaustion,
+    exhaustionPenalty: stats.exhaustionPenalty,
+    level: document.identity.level,
+    variables: stats.variables,
     weaponKeys: new Set(traits.weapons.map((entry) => entry.key)),
+    host: "sheet",
+    stats,
   };
 }
 
 /** Multiplicador dos níveis 1/5/11/17 (truques, Sopro, Rajada Mística). */
 export function levelMultiplier(level: number): number {
   return 1 + Number(level >= 5) + Number(level >= 11) + Number(level >= 17);
+}
+
+/** Proficiência automática de uma fonte (design G3). */
+function sourceAutoProficient(
+  source: Source,
+  weaponKeys: ReadonlySet<string>,
+): boolean {
+  if (source.kind !== "item" || source.category !== "weapon") return true;
+  return (
+    weaponKeys.has(source.weaponCategory) ||
+    weaponKeys.has(`tag:${tagKey(source.name)}`)
+  );
 }
 
 /** Proficiência da ação (design G3). */
@@ -97,29 +159,35 @@ export function isProficient(
   weaponKeys: ReadonlySet<string>,
 ): boolean {
   if (action.proficiency !== "auto") return action.proficiency === "always";
-  if (source.kind !== "item" || source.category !== "weapon") return true;
-  return (
-    weaponKeys.has(source.weaponCategory) ||
-    weaponKeys.has(`tag:${tagKey(source.name)}`)
-  );
+  return sourceAutoProficient(source, weaponKeys);
 }
 
-/** Atributo de conjuração da fonte: o próprio da magia ou o da ficha. */
-function spellcastingAbilityOf(
-  source: Source,
-  context: ActionContext,
-): Ability | null {
-  if (source.kind === "spell" && source.castingAbility !== "sheet") {
-    return source.castingAbility;
-  }
-  return context.stats.variables.spellcastingAbility;
+/**
+ * Uma fonte como dono de ações: a magia com atributo próprio usa o ataque e
+ * a CD dele, já com os efeitos e o valor manual (G4, G5).
+ */
+export function sourceHost(source: Source, context: ActionContext): ActionHost {
+  const ownAbility =
+    source.kind === "spell" && source.castingAbility !== "sheet"
+      ? source.castingAbility
+      : null;
+  return {
+    id: source.id,
+    name: source.name,
+    autoProficient: sourceAutoProficient(source, context.weaponKeys),
+    upcastApplies: source.kind === "spell" && source.level >= 1,
+    spell:
+      ownAbility && context.stats
+        ? { ability: ownAbility, ...spellcastingFor(context.stats, ownAbility) }
+        : context.spell,
+  };
 }
 
 function evaluateText(text: string, context: ActionContext): number {
-  const parsed = parseExpressionCached(text);
+  const parsed = parseExpressionCached(text, scopeOf(context.variables));
   if (!parsed.ok) return 0;
   try {
-    return evaluate(parsed.expression, context.stats.variables);
+    return evaluate(parsed.expression, context.variables);
   } catch {
     return 0;
   }
@@ -130,19 +198,19 @@ type ResolvedAbility = { ability: Ability | null; label: string };
 /** Atributo concreto de um atributo da ação, com o rótulo da parcela. */
 function resolveAbility(
   ability: ActionAbility,
-  source: Source,
+  host: ActionHost,
   context: ActionContext,
 ): ResolvedAbility {
-  const mod = (a: Ability) => context.stats.values[`mod.${a}`].value;
+  const { mods } = context;
   switch (ability) {
     case "none":
       return { ability: null, label: "Sem atributo" };
     case "finesse": {
-      const chosen = mod("str") > mod("dex") ? "str" : "dex";
+      const chosen = mods.str > mods.dex ? "str" : "dex";
       return { ability: chosen, label: `Acuidade (${ABILITY_SHORT[chosen]})` };
     }
     case "spellcasting": {
-      const chosen = spellcastingAbilityOf(source, context);
+      const chosen = host.spell.ability;
       return {
         ability: chosen,
         label: chosen
@@ -155,22 +223,26 @@ function resolveAbility(
   }
 }
 
-function modifierOf(resolved: ResolvedAbility, context: ActionContext) {
-  return resolved.ability
-    ? context.stats.values[`mod.${resolved.ability}`].value
-    : 0;
+/**
+ * Modificador do atributo resolvido. A conjuração no companheiro é do dono,
+ * então o modificador vem das variáveis do dono.
+ */
+function modifierOf(
+  resolved: ResolvedAbility,
+  requested: ActionAbility,
+  context: ActionContext,
+): number {
+  if (!resolved.ability) return 0;
+  const owner = context.variables.owner;
+  if (requested === "spellcasting" && owner) {
+    return owner.mods[resolved.ability];
+  }
+  return context.mods[resolved.ability];
 }
 
-/** Ataque mágico e CD de magia da fonte, já com valor manual (G4, G5). */
-function spellValues(source: Source, context: ActionContext) {
-  const { stats } = context;
-  if (source.kind === "spell" && source.castingAbility !== "sheet") {
-    return spellcastingFor(stats, source.castingAbility);
-  }
-  return {
-    attack: stats.values.spellAttack.value,
-    saveDc: stats.values.spellSaveDc.value,
-  };
+/** Sufixo dos rótulos de conjuração no companheiro. */
+function spellLabel(label: string, context: ActionContext): string {
+  return context.host === "companion" ? `${label} do dono` : label;
 }
 
 function withBonus(
@@ -187,7 +259,7 @@ function withBonus(
 
 function toHitOf(
   action: Action,
-  source: Source,
+  host: ActionHost,
   context: ActionContext,
   attackAbility: ResolvedAbility,
 ): ResolvedValue {
@@ -197,9 +269,14 @@ function toHitOf(
     action.attackAbility === "spellcasting" &&
     action.proficiency === "auto"
   ) {
-    const attack = spellValues(source, context).attack;
     return withBonus(
-      [{ label: "Ataque mágico", amount: attack, kind: "base" }],
+      [
+        {
+          label: spellLabel("Ataque mágico", context),
+          amount: host.spell.attack,
+          kind: "base",
+        },
+      ],
       bonus,
       "Bônus da ação",
     );
@@ -207,14 +284,18 @@ function toHitOf(
   const parts: Contribution[] = [
     {
       label: attackAbility.label,
-      amount: modifierOf(attackAbility, context),
+      amount: modifierOf(attackAbility, action.attackAbility, context),
       kind: "base",
     },
   ];
-  if (isProficient(action, source, context.weaponKeys)) {
+  const proficient =
+    action.proficiency === "auto"
+      ? host.autoProficient
+      : action.proficiency === "always";
+  if (proficient) {
     parts.push({
       label: "Proficiência",
-      amount: context.stats.values.proficiencyBonus.value,
+      amount: context.pb,
       kind: "proficiency",
     });
   }
@@ -224,7 +305,7 @@ function toHitOf(
   if (context.exhaustion > 0) {
     parts.push({
       label: `Exaustão ${context.exhaustion}`,
-      amount: context.stats.exhaustionPenalty,
+      amount: context.exhaustionPenalty,
       kind: "add",
     });
   }
@@ -233,7 +314,7 @@ function toHitOf(
 
 function dcOf(
   action: Action,
-  source: Source,
+  host: ActionHost,
   context: ActionContext,
 ): ResolvedValue {
   if (action.dcMode === "expression") {
@@ -246,8 +327,8 @@ function dcOf(
   return withBonus(
     [
       {
-        label: "CD de magia",
-        amount: spellValues(source, context).saveDc,
+        label: spellLabel("CD de magia", context),
+        amount: host.spell.saveDc,
         kind: "base",
       },
     ],
@@ -256,43 +337,48 @@ function dcOf(
   );
 }
 
-/** Linha de uma ação da fonte. */
+/** Linha de uma ação de uma fonte ou de um companheiro. */
 export function deriveActionLine(
   action: Action,
-  source: Source,
+  host: ActionHost,
   context: ActionContext,
 ): ActionLine {
   const multiplier = levelMultiplier(context.level);
   const isAttack = action.resolution === "attack";
-  const attackAbility = resolveAbility(action.attackAbility, source, context);
-  const upcastApplies = source.kind === "spell" && source.level >= 1;
+  const attackAbility = resolveAbility(action.attackAbility, host, context);
 
   const parts = action.parts.map((part): DamageTerm => {
-    const ability =
+    const requested: ActionAbility =
       part.ability === "attack"
         ? isAttack
-          ? attackAbility
-          : resolveAbility("none", source, context)
-        : resolveAbility(part.ability, source, context);
+          ? action.attackAbility
+          : "none"
+        : part.ability;
+    const ability =
+      part.ability === "attack" && isAttack
+        ? attackAbility
+        : resolveAbility(requested, host, context);
     return {
       count: part.count * (part.scaleByLevel ? multiplier : 1),
       die: part.die,
       modifier:
-        modifierOf(ability, context) + evaluateText(part.bonus, context),
+        modifierOf(ability, requested, context) +
+        evaluateText(part.bonus, context),
       type: part.type,
-      upcast: upcastApplies ? part.upcast : 0,
+      upcast: host.upcastApplies ? part.upcast : 0,
     };
   });
 
   return {
-    sourceId: source.id,
-    sourceName: source.name,
+    sourceId: host.id,
+    sourceName: host.name,
     actionId: action.id,
     name: action.name,
+    description: action.description,
     resolution: action.resolution,
     range: action.range,
-    toHit: isAttack ? toHitOf(action, source, context, attackAbility) : null,
-    dc: action.resolution === "save" ? dcOf(action, source, context) : null,
+    toHit: isAttack ? toHitOf(action, host, context, attackAbility) : null,
+    dc: action.resolution === "save" ? dcOf(action, host, context) : null,
     saveAbility: action.resolution === "save" ? action.saveAbility : null,
     onSuccess: action.resolution === "save" ? action.onSuccess : null,
     attacks: action.scaleAttacks ? multiplier : 1,
@@ -305,8 +391,9 @@ export function deriveSourceActions(
   source: Source,
   context: ActionContext,
 ): ActionLine[] {
+  const host = sourceHost(source, context);
   return source.actions.map((action) =>
-    deriveActionLine(action, source, context),
+    deriveActionLine(action, host, context),
   );
 }
 

@@ -7,6 +7,7 @@ import {
   pactSlotsSchema,
   spellSlotsSchema,
   trackerSchema,
+  trackerSchemaFor,
   trackersSchema,
 } from "./schema";
 
@@ -94,5 +95,33 @@ describe("espaços de magia", () => {
     expect(
       firstError({ level: 0, max: 2, used: 0 }, pactSlotsSchema),
     ).not.toBeNull();
+  });
+});
+
+describe("escopo das expressões (design H2)", () => {
+  it("o tracker de fonte recusa dono.* e circulo", () => {
+    expect(firstError({ ...tracker, max: "dono.pb" }, trackerSchema)).toBe(
+      "Variável desconhecida: dono.pb",
+    );
+    expect(
+      firstError(
+        { ...tracker, longRest: { mode: "amount", amount: "circulo" } },
+        trackerSchema,
+      ),
+    ).toBe("Variável desconhecida: circulo");
+  });
+
+  it("o uso do companheiro aceita dono.* e circulo", () => {
+    const schema = trackerSchemaFor("companion");
+    expect(
+      firstError(
+        {
+          ...tracker,
+          max: "dono.pb",
+          longRest: { mode: "amount", amount: "circulo" },
+        },
+        schema,
+      ),
+    ).toBeNull();
   });
 });

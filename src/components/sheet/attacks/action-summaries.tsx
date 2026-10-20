@@ -27,6 +27,9 @@ export function ActionSummaries({
         <li key={line.actionId} className="text-xs">
           {line.name && <span className="font-medium">{line.name}: </span>}
           {describeLine(line)}
+          {line.description && (
+            <span className="block text-muted">{line.description}</span>
+          )}
         </li>
       ))}
     </ul>

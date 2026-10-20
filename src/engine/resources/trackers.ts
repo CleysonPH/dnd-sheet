@@ -2,6 +2,7 @@ import {
   EvaluationError,
   evaluate,
   parseExpressionCached,
+  scopeOf,
   type ExpressionVariables,
 } from "@/engine/effects/expression";
 import type { SheetDocument } from "@/engine/sheet/document";
@@ -28,7 +29,7 @@ export function trackerMax(
   tracker: Tracker,
   variables: ExpressionVariables,
 ): { max: number; error?: string } {
-  const parsed = parseExpressionCached(tracker.max);
+  const parsed = parseExpressionCached(tracker.max, scopeOf(variables));
   if (!parsed.ok) return { max: 0, error: parsed.error };
   try {
     return { max: Math.max(0, evaluate(parsed.expression, variables)) };
@@ -45,7 +46,7 @@ export function currentOf(max: number, used: number): number {
 
 /** Avalia uma expressão de quantidade: negativa ou com erro vale 0. */
 function amountOf(text: string, variables: ExpressionVariables): number {
-  const parsed = parseExpressionCached(text);
+  const parsed = parseExpressionCached(text, scopeOf(variables));
   if (!parsed.ok) return 0;
   try {
     return Math.max(0, evaluate(parsed.expression, variables));

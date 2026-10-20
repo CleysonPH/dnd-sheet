@@ -39,7 +39,7 @@ export const ACTION_ABILITY_LABEL: Record<PartAbility, string> = {
   ...(Object.fromEntries(
     ABILITIES.map((ability) => [ability, ABILITY_LABEL[ability].name]),
   ) as Record<(typeof ABILITIES)[number], string>),
-  none: "Nenhum",
+  none: "Sem atributo",
   finesse: "Acuidade (FOR ou DES)",
   spellcasting: "Conjuração",
   attack: "O do ataque",

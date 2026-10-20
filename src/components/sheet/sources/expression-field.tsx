@@ -7,14 +7,19 @@ import {
   EvaluationError,
   evaluate,
   parseExpression,
+  type ExpressionScope,
   type ExpressionVariables,
 } from "@/engine/effects/expression";
 
 const MAX_LENGTH = 100;
 
 /** Resultado da expressão com as variáveis atuais, ou o erro. */
-function preview(text: string, variables: ExpressionVariables) {
-  const parsed = parseExpression(text);
+function preview(
+  text: string,
+  variables: ExpressionVariables,
+  scope: ExpressionScope,
+) {
+  const parsed = parseExpression(text, scope);
   if (!parsed.ok) return { ok: false as const, message: parsed.error };
   try {
     return { ok: true as const, value: evaluate(parsed.expression, variables) };
@@ -36,6 +41,7 @@ export function ExpressionField({
   value,
   placeholder,
   variables,
+  scope = "sheet",
   onCommit,
 }: {
   label: string;
@@ -43,10 +49,12 @@ export function ExpressionField({
   value: string;
   placeholder?: string;
   variables: ExpressionVariables;
+  /** Escopo das variáveis aceitas (design H2). */
+  scope?: ExpressionScope;
   onCommit: (expression: string) => void;
 }) {
   const [raw, setRaw] = useState(value);
-  const result = preview(raw, variables);
+  const result = preview(raw, variables, scope);
   const tooLong = raw.length > MAX_LENGTH;
   const error = tooLong
     ? `Use no máximo ${MAX_LENGTH} caracteres`
@@ -69,7 +77,7 @@ export function ExpressionField({
           setRaw(text);
           if (
             text.length <= MAX_LENGTH &&
-            parseExpression(text).ok &&
+            parseExpression(text, scope).ok &&
             text !== value
           ) {
             onCommit(text);

@@ -4,6 +4,7 @@ import { ABILITIES } from "@/engine/stats/keys";
 
 import { AbilityBlock } from "./ability-block";
 import { AttacksCard } from "./attacks/attacks-card";
+import { CompanionsSection } from "./companions/companions-section";
 import { ConditionsStrip } from "./conditions-strip";
 import { HitDiceCard } from "./hit-dice-card";
 import { HitPointsCard } from "./hit-points-card";
@@ -47,6 +48,8 @@ export function SheetBody(part: SheetPartProps) {
           ))}
         </div>
       </div>
+      {/* Companheiros entre os atributos e as fontes (design H7). */}
+      <CompanionsSection {...part} />
       <SourcesPanel {...part} />
     </>
   );

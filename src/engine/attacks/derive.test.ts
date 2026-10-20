@@ -15,6 +15,7 @@ import {
   deriveAttackList,
   deriveSourceActions,
   levelMultiplier,
+  sourceHost,
   type ActionLine,
 } from "./derive";
 import { createAction, createPart, type Action, type Part } from "./schema";
@@ -441,11 +442,8 @@ describe("salvaguardas e ações automáticas", () => {
     const doc = { ...thorin, sources: [battleaxe] };
     const [first] = battleaxe.actions;
     if (!first) throw new Error("sem ação");
-    const l = deriveActionLine(
-      first,
-      battleaxe,
-      actionContext(doc, deriveStats(doc)),
-    );
+    const context = actionContext(doc, deriveStats(doc));
+    const l = deriveActionLine(first, sourceHost(battleaxe, context), context);
     expect(l).toMatchObject({
       sourceName: "Machado de Batalha",
       name: "Uma mão",

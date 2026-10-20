@@ -1,6 +1,7 @@
 import { z } from "zod";
 
-import { parseExpression } from "@/engine/effects/expression";
+import type { ExpressionScope } from "@/engine/effects/expression";
+import { expressionSchema } from "@/engine/effects/expression-schema";
 
 /*
  * Recursos da ficha (design R1): trackers das fontes e espaços de magia.
@@ -23,52 +24,60 @@ export const trackerNameSchema = z
   .max(50, "Use no máximo 50 caracteres");
 
 /** Máximo do tracker: expressão com a gramática dos efeitos. */
-export const trackerMaxSchema = z
-  .string()
-  .max(100, "Use no máximo 100 caracteres")
-  .superRefine((text, ctx) => {
-    const parsed = parseExpression(text);
-    if (!parsed.ok) ctx.addIssue({ code: "custom", message: parsed.error });
-  });
+export const trackerMaxSchema = expressionSchema("sheet");
 
 /**
  * Regra de um descanso: não recupera, recupera tudo ou recupera `amount`.
  * `amount` fica sempre presente e válido, para que trocar o modo não apague
  * nada (design R1).
  */
-export const rechargeSchema = z.strictObject({
-  mode: z.enum(RECHARGE_MODES),
-  amount: trackerMaxSchema,
-});
-
-export const trackerSchema = z.strictObject({
-  id: z.string().min(1).max(64),
-  name: trackerNameSchema,
-  max: trackerMaxSchema,
-  used: intRange(0, 999),
-  shortRest: rechargeSchema,
-  longRest: rechargeSchema,
-});
-
-export const trackersSchema = z
-  .array(trackerSchema)
-  .max(
-    MAX_TRACKERS_PER_SOURCE,
-    `Use no máximo ${MAX_TRACKERS_PER_SOURCE} trackers`,
-  )
-  .superRefine((trackers, ctx) => {
-    const seen = new Set<string>();
-    trackers.forEach((tracker, index) => {
-      if (seen.has(tracker.id)) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Id de tracker repetido",
-          path: [index, "id"],
-        });
-      }
-      seen.add(tracker.id);
-    });
+function rechargeSchemaFor(scope: ExpressionScope) {
+  return z.strictObject({
+    mode: z.enum(RECHARGE_MODES),
+    amount: expressionSchema(scope),
   });
+}
+
+export const rechargeSchema = rechargeSchemaFor("sheet");
+
+/** Tracker com as expressões validadas no escopo dado (design H2). */
+export function trackerSchemaFor(scope: ExpressionScope) {
+  const recharge = rechargeSchemaFor(scope);
+  return z.strictObject({
+    id: z.string().min(1).max(64),
+    name: trackerNameSchema,
+    max: expressionSchema(scope),
+    used: intRange(0, 999),
+    shortRest: recharge,
+    longRest: recharge,
+  });
+}
+
+export const trackerSchema = trackerSchemaFor("sheet");
+
+export function trackersSchemaFor(scope: ExpressionScope) {
+  return z
+    .array(trackerSchemaFor(scope))
+    .max(
+      MAX_TRACKERS_PER_SOURCE,
+      `Use no máximo ${MAX_TRACKERS_PER_SOURCE} trackers`,
+    )
+    .superRefine((trackers, ctx) => {
+      const seen = new Set<string>();
+      trackers.forEach((tracker, index) => {
+        if (seen.has(tracker.id)) {
+          ctx.addIssue({
+            code: "custom",
+            message: "Id de tracker repetido",
+            path: [index, "id"],
+          });
+        }
+        seen.add(tracker.id);
+      });
+    });
+}
+
+export const trackersSchema = trackersSchemaFor("sheet");
 
 export const slotCountSchema = intRange(0, 20);
 

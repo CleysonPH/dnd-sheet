@@ -4,6 +4,7 @@ import {
   createSheetDocument,
   type SheetDocument,
 } from "@/engine/sheet/document";
+import { createCompanion, type Companion } from "@/engine/companions/schema";
 import { createSource } from "@/engine/sources/rules";
 import { deriveStats } from "@/engine/stats/derive";
 
@@ -39,7 +40,8 @@ function withTrackers(
 }
 
 const vars = (doc: SheetDocument) => deriveStats(doc).variables;
-const rest = (fn: typeof shortRest, doc: SheetDocument) => fn(doc, vars(doc));
+const rest = (fn: typeof shortRest, doc: SheetDocument) =>
+  fn(doc, deriveStats(doc));
 
 function trackerState(doc: SheetDocument) {
   return resolveTrackers(doc, vars(doc)).map(
@@ -191,5 +193,79 @@ describe("longRest", () => {
     const rested = rest(longRest, kai());
     expect(rested.spellSlots[0]).toEqual({ max: 2, used: 0 });
     expect(rested.pactSlots.used).toBe(0);
+  });
+});
+
+describe("descansos e companheiros (design H6)", () => {
+  const defender: Companion = {
+    ...createCompanion("c1"),
+    name: "Steel Defender",
+    hitPointsMax: "5 + 5 * nivel",
+    hitDiceCount: "nivel",
+    damage: 10,
+    trackers: [
+      {
+        ...createTracker("t1"),
+        name: "Reparar",
+        max: "3",
+        used: 3,
+        shortRest: none,
+        longRest: all,
+      },
+      {
+        ...createTracker("t2"),
+        name: "Defletir",
+        max: "1",
+        used: 1,
+        shortRest: all,
+        longRest: all,
+      },
+    ],
+  };
+  const withCompanion = (companion: Companion): SheetDocument => ({
+    ...createSheetDocument("Artífice"),
+    companions: [companion],
+  });
+
+  it("o descanso curto recarrega Defletir e não Reparar, sem mexer no PV", () => {
+    const [rested] = rest(shortRest, withCompanion(defender)).companions;
+    expect(rested?.trackers.map((tracker) => tracker.used)).toEqual([3, 0]);
+    expect(rested?.damage).toBe(10);
+  });
+
+  it("o descanso longo restaura o Hound e mantém amedrontado", () => {
+    const hound: Companion = {
+      ...defender,
+      name: "Hound",
+      damage: 20,
+      temp: 4,
+      hitDiceSpent: 3,
+      conditions: ["frightened"],
+    };
+    const [rested] = rest(longRest, withCompanion(hound)).companions;
+    expect(rested).toMatchObject({
+      damage: 0,
+      temp: 0,
+      hitDiceSpent: 0,
+      conditions: ["frightened"],
+    });
+    expect(rested?.trackers.map((tracker) => tracker.used)).toEqual([0, 0]);
+  });
+
+  it("os usos do companheiro avaliam as variáveis dele", () => {
+    const summoned: Companion = {
+      ...defender,
+      summon: { enabled: true, minLevel: 2, level: 3 },
+      trackers: [
+        {
+          ...createTracker("t1"),
+          max: "circulo",
+          used: 3,
+          shortRest: amount("dono.pb - 1"),
+        },
+      ],
+    };
+    const [rested] = rest(shortRest, withCompanion(summoned)).companions;
+    expect(rested?.trackers[0]?.used).toBe(2);
   });
 });
